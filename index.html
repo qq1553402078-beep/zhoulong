@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>中台拍摄工作台</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6fa;color:#182438;font:14px system-ui,sans-serif}header{background:#14223b;color:white;padding:22px 5%;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}header strong{font-size:20px}nav{display:flex;gap:8px}button,input,select,textarea{font:inherit}button{border:0;border-radius:8px;padding:9px 14px;cursor:pointer;background:#e9eff8;color:#203853}nav button{background:#263753;color:#e4edff}nav .active,.primary{background:#2855d9;color:white}main{max-width:1420px;margin:auto;padding:28px 5%}h1{font-size:28px;margin:0 0 8px}p{line-height:1.65;color:#52637b;margin:8px 0 18px}.bar{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:20px 0}.spacer{flex:1}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin:22px 0}.card,.panel{background:white;border:1px solid #dde5f0;border-radius:12px}.card{padding:16px;color:#52637b}.card b{display:block;margin-top:8px;font-size:27px;color:#162b4f}.panel{overflow:auto}table{width:100%;border-collapse:collapse;text-align:left}th,td{padding:13px 14px;border-bottom:1px solid #e8edf5;vertical-align:top}th{background:#edf2fb;white-space:nowrap;color:#364a67}td{min-width:72px}td.notes{min-width:235px;white-space:pre-wrap;overflow-wrap:anywhere}.empty{text-align:center;padding:38px;color:#52637b}.tag{display:inline-block;background:#eaf0ff;color:#2548a4;border-radius:6px;padding:4px 7px;white-space:nowrap}.late{background:#fff0ed;color:#a02b23}label{display:grid;gap:5px;color:#394e69}input,select,textarea{width:100%;border:1px solid #ccd7e7;border-radius:7px;padding:8px;background:white;color:#172438}dialog{width:min(840px,95vw);max-height:90vh;border:0;border-radius:14px;padding:24px;color:inherit;box-shadow:0 16px 64px #14223b44}dialog::backdrop{background:#14223b88}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.wide{grid-column:1/-1}textarea{min-height:75px}a{color:#2855d9}small{color:#5c708d}.danger{color:#a02b23}.plan{padding:18px;margin:12px 0}.plan h3{margin:0}.plan p{margin:8px 0}.crew td:nth-child(n+3){white-space:nowrap}
+.entry{padding:18px;margin:20px 0}.entry h2{font-size:17px;margin:0 0 12px}.entry textarea{min-height:60px}.entry .bar{margin:10px 0 0}.assign{min-width:110px;padding:5px 7px}.report th,.report td{white-space:nowrap}.report tbody tr:nth-child(even){background:#f6f8fc}.report td:nth-child(n+3),.report th:nth-child(n+3){text-align:right}.report-meta{padding:16px 18px;border-bottom:1px solid #dde5f0}.report-meta strong{font-size:17px}td.actions button{margin-bottom:5px;white-space:nowrap}.entry select{min-width:145px}
+.intro{background:#eaf0ff;border:1px solid #dce6ff;border-radius:14px;padding:24px;margin-bottom:24px}.intro p{max-width:760px}.home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;margin:16px 0 24px}.home-grid .panel{padding:18px}.home-grid h3{margin:0 0 8px}.home-grid p{margin:0}.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 24px}.home-title{font-size:20px;margin:24px 0 12px}.formulas{margin-top:20px}.formulas th:first-child{min-width:155px}.formulas td{line-height:1.6}
+.schedule-page{--ink:#243a32;--muted:#59685e;--line:#dcded3;--paper:#fffef9;color:var(--ink)}body:has(.schedule-page){background:#f4f2ea}body:has(.schedule-page) header{background:#162d26}body:has(.schedule-page) nav button{background:transparent;color:#dee9dc}body:has(.schedule-page) nav .active{background:#dce7cb;color:#173129}.schedule-page h1,.schedule-page h2{font-family:"Noto Serif SC","Songti SC",SimSun,serif}.schedule-hero{padding:clamp(24px,5vw,58px);border-radius:22px;background:radial-gradient(ellipse at 92% 15%,#536c4f 0%,transparent 58%),linear-gradient(115deg,#142d25,#28463b);color:#fffdf2;display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap}.schedule-hero h1{font-size:clamp(32px,5vw,56px);letter-spacing:.06em}.schedule-hero p{color:#d8e4d3;margin:8px 0 0}.schedule-hero time{font-size:22px;color:#e2edcc;font-variant-numeric:tabular-nums}.schedule-page .card,.schedule-page .panel{background:var(--paper);border-color:var(--line);border-radius:16px}.schedule-page .card{color:var(--muted);padding:18px}.schedule-page .card b{color:var(--ink)}.schedule-page .entry{padding:clamp(16px,3vw,28px)}.schedule-page .entry h2{font-size:25px}.schedule-page .entry textarea{min-height:100px}.schedule-page input,.schedule-page select,.schedule-page textarea{border-color:#cbd4c7;background:#fffefa}.schedule-page label,.schedule-page p{color:var(--muted)}.schedule-page button{background:#e7ebdf;color:#253e32}.schedule-page .primary{background:#214538;color:white}.schedule-page input:focus,.schedule-page textarea:focus,.schedule-page select:focus{outline:2px solid #65855f;outline-offset:1px}.schedule-page .tag{background:#e9efdf;color:#33513b}.schedule-page .late{background:#fae8df;color:#a23f2a}.schedule-page th{background:#e8ebdf;color:#384b3d}.schedule-page td,.schedule-page th{border-color:#e5e7dc}.schedule-page tbody tr:hover{background:#f5f7ec}.schedule-page td.notes{min-width:210px}.schedule-tools{align-items:center}.schedule-tools label{min-width:125px}.schedule-tools .search{flex:1;min-width:165px}.schedule-section h2{margin:24px 0 0}.schedule-page .empty{padding:44px 14px}.schedule-page .schedule-count{font-variant-numeric:tabular-nums}
+.org-map{padding:clamp(16px,3vw,36px);border:1px solid #e5dfda;border-radius:20px;background:radial-gradient(ellipse at 10% 48%,#eef0ff 0,transparent 24%),radial-gradient(ellipse at 94% 90%,#fdf1e5 0,transparent 31%),#fffdf8;color:#202438}.org-layout{display:grid;grid-template-columns:minmax(115px,.55fr) minmax(350px,2.3fr) minmax(215px,1.18fr);gap:20px;align-items:center}.org-root,.org-node,.org-leaves span,.mentor-name{border:1px solid var(--branch);background:var(--wash);color:#25253a}.org-root{--branch:#b1b2e7;--wash:#e4e5ff;border-radius:43% 50% 44% 36%;text-align:center;padding:26px 12px;font:bold clamp(19px,2.2vw,30px) "KaiTi","STKaiti",serif;position:relative}.org-root::after{content:"";position:absolute;left:100%;top:50%;width:20px;border-top:2px solid #a4a3cd}.org-tree{display:grid;gap:15px;position:relative;padding:4px 0 4px 23px}.org-tree::before{content:"";position:absolute;left:0;top:26px;bottom:26px;border-left:2px solid #a4a3cd;border-radius:25%}.org-branch{position:relative;display:grid;grid-template-columns:112px 1fr;align-items:center;gap:15px}.org-branch::before{content:"";position:absolute;left:-23px;top:50%;width:23px;height:12px;border-top:2px solid var(--branch);border-radius:9px 0 0 0}.org-node,.mentor-name{border-radius:16px 12px 15px 12px;text-align:center;padding:10px 6px;font:bold 18px "KaiTi","STKaiti",serif}.org-leaves{display:flex;align-items:center;flex-wrap:wrap;gap:6px;position:relative}.org-leaves::before{content:"";position:absolute;right:100%;top:50%;width:15px;border-top:2px solid var(--branch)}.org-leaves span{padding:4px 9px;border-radius:9px;white-space:nowrap}.org-detail{grid-column:2;margin-top:-9px;color:#59596d;font-size:12px}.mentor-box{padding:16px;border:1px dashed #dca9b7;border-radius:19px;background:#fff5f5}.mentor-box h3{margin:0 0 16px;font:bold 22px "KaiTi","STKaiti",serif}.mentor-row{display:grid;gap:8px;margin-top:14px}.mentor-row .org-leaves{padding-left:12px;border-left:2px solid var(--branch)}.mentor-row .org-leaves::before{display:none}@media(max-width:1000px){.org-layout{grid-template-columns:minmax(110px,.45fr) minmax(0,2fr)}.mentor-box{grid-column:2}}@media(max-width:610px){.org-layout{grid-template-columns:1fr;gap:14px}.org-root{justify-self:start;padding:12px 20px}.org-root::after{display:none}.mentor-box{grid-column:auto}.org-branch{grid-template-columns:95px 1fr}.org-node{font-size:16px}.org-tree{padding-left:15px}.org-branch::before{left:-15px;width:15px}}
+body,body:has(.schedule-page){background:#f4efe5;color:#282923}header,body:has(.schedule-page) header{background:#202921;border-bottom:1px solid #b5a37d}nav button,body:has(.schedule-page) nav button{background:transparent;color:#e7ddc8}nav .active,body:has(.schedule-page) nav .active{background:#e9dbb9;color:#242d23}main h1,main h2,main h3{font-family:"Noto Serif SC",Songti,SimSun,serif}main h1{font-size:clamp(34px,5vw,57px);letter-spacing:.06em}.primary{background:#344b38}.panel,.card{background:#fffcf5;border-color:#ded7c9}th{background:#e9e4d7;color:#323f33}td,th{border-color:#e4ded1}.studio-cover{display:grid;grid-template-columns:minmax(240px,.76fr) minmax(0,1.5fr);background:#263528;color:#fff5dd;border-radius:20px;overflow:hidden;margin-bottom:30px}.studio-cover .cover-text{align-self:center;padding:clamp(24px,4vw,58px)}.studio-cover h1{line-height:1.17;margin-bottom:16px}.studio-cover p{color:#e3decb;margin-bottom:22px}.studio-cover img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 42%;min-height:320px}.studio-cover button{background:#ebd8ad;color:#243429}.home-title{padding-top:12px;border-top:1px solid #d8cfbd}.org-map{background:radial-gradient(ellipse at 10% 48%,#e8e9fb 0,transparent 26%),radial-gradient(ellipse at 90% 90%,#f9e8d6 0,transparent 31%),#fffbf2}.schedule-page .worksheet{max-height:72vh}.worksheet th{position:sticky;top:0;z-index:1}.worksheet input,.worksheet select,.worksheet textarea{min-width:88px;padding:6px;border-color:transparent;background:transparent}.worksheet input:hover,.worksheet select:hover,.worksheet textarea:hover{border-color:#cbd4c7;background:#fffefa}.worksheet textarea{min-height:64px}.worksheet .task-name{min-width:156px}.worksheet .date-cell{min-width:145px}.worksheet .quantity{min-width:62px}.worksheet .wide-cell{min-width:200px}.worksheet .row-edit{background:#f2f3e8}.worksheet .row-edit td{padding:14px}.worksheet .row-edit .grid{grid-template-columns:repeat(auto-fit,minmax(155px,1fr))}.worksheet .row-edit label input,.worksheet .row-edit label select{border-color:#cbd4c7;background:#fffefa}.month-actuals{margin:20px 0 25px}.month-actuals h2{margin:0 0 12px}.month-actuals table td:nth-child(n+2),.month-actuals table th:nth-child(n+2){text-align:right}.month-actuals .report-meta p{margin:8px 0 0}.plan{border-left:4px solid #a79a74;padding:22px}@media(max-width:700px){.studio-cover{grid-template-columns:1fr}.studio-cover img{min-height:0;height:auto}}
+.ops-contact{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;margin:12px 0;padding:14px 18px;background:#e9dfc6;border:1px solid #d5c7a8;border-radius:12px}.ops-contact strong{font-size:17px}.ops-flow{margin:16px 0;padding:14px 18px}.ops-flow p{margin:8px 0}.ops-flow summary,.worksheet summary{cursor:pointer}.schedule-page .worksheet{background:#20261f;color:#f5ebd7}.schedule-page .worksheet th{background:#998444;color:#fff9e5;text-align:center;border-color:#b7a671}.schedule-page .worksheet td{border:1px solid #565d4e}.schedule-page .worksheet td:first-child{background:#534b2d}.schedule-page .worksheet tbody tr:hover{background:#2b332a}.schedule-page .worksheet input,.schedule-page .worksheet textarea,.schedule-page .worksheet select{color:#fff6df;background:#252e24;border-color:#626854}.schedule-page .worksheet input[type=date],.schedule-page .worksheet input[type=datetime-local]{color-scheme:dark}.schedule-page .worksheet input::placeholder,.schedule-page .worksheet textarea::placeholder{color:#ccc8b7}.schedule-page .worksheet .row-edit,.schedule-page .worksheet .row-edit td{background:#30392d}.schedule-page .worksheet .row-edit label,.schedule-page .worksheet .empty{color:#eee5cf}.schedule-page .worksheet a{color:#f1d693}.ops-requirement{min-width:300px}.ops-content{min-width:180px}.ops-date{min-width:142px}.ops-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.schedule-page .worksheet{border:1px solid #596453;box-shadow:0 12px 28px #222b211a}.schedule-page .worksheet th{background:#b8a271;color:#211f17;padding:16px 12px;letter-spacing:.04em}.schedule-page .worksheet td{padding:14px 12px}.schedule-page .worksheet .ops-requirement{width:43%;min-width:340px}.schedule-page .worksheet .ops-requirement textarea{min-height:126px;resize:vertical;line-height:1.65}.schedule-page .worksheet input,.schedule-page .worksheet select{min-height:36px}.reference-links{display:grid;gap:6px;margin-top:8px}.reference-links a{overflow-wrap:anywhere;font-size:12px}.daily-output{margin:18px 0 26px}.daily-output .bar{margin:0}.daily-output input[type=number]{max-width:160px}.daily-output .report-meta{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}.daily-output p{margin:0}
+.schedule-page .worksheet{max-height:none}.schedule-page{max-width:1640px;padding-inline:3%}.schedule-page .new-task td{background:#394738}.schedule-page .new-task .ops-requirement textarea{min-height:85px}.schedule-page .capture td{padding:9px 11px;min-width:0;vertical-align:middle;overflow-wrap:anywhere}.schedule-page .capture th{padding:9px 11px}.schedule-page .capture .capture-notes{width:44%;white-space:pre-wrap;line-height:1.35}.schedule-page .capture table{table-layout:fixed}.schedule-page .capture th:nth-child(4){white-space:normal}.schedule-page .capture-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.schedule-page .capture-heading h1{font-size:26px;margin:0}.capture-links{display:block;font-size:11px;overflow-wrap:anywhere}
+.output-chart{padding:18px clamp(14px,3vw,28px);border-bottom:1px solid #ded7c9;background:#f9f6ec}.output-chart .chart-switch{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}.chart-switch button{background:#ebe6d8;color:#394236}.chart-switch button[aria-pressed=true]{background:#344b38;color:#fff}.chart-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}.chart-row{display:grid;grid-template-columns:minmax(76px,120px) minmax(40px,1fr) 85px;gap:10px;align-items:center}.chart-track{height:13px;border-radius:10px;background:#e8e4d7;overflow:hidden}.chart-bar{height:100%;border-radius:10px;background:linear-gradient(90deg,#345341,#799267)}.chart-value{text-align:right;font-variant-numeric:tabular-nums}.output-chart .empty{text-align:left;padding:12px 0;margin:0}.chart-caption{color:#59685e;font-size:12px;margin-top:12px}
+.management{margin:20px 0 28px}.management h2{margin:0 0 6px}.management p{margin:6px 0}.management .cards{padding:0 18px;margin:14px 0}.management .card{background:#f3efe2}.management .card b{font-size:22px}.management details{padding:12px 18px;border-top:1px solid #ded7c9}.management summary{cursor:pointer;font-weight:650}.management .target-input{width:115px}.target-progress{display:flex;align-items:center;gap:8px;min-width:135px}.target-progress progress{width:90px;accent-color:#476747}.mix-row{display:grid;grid-template-columns:minmax(100px,165px) minmax(60px,1fr) minmax(76px,115px);gap:12px;align-items:center;margin:8px 0}.mix-row .chart-track{height:12px}.mix-row strong{text-align:right}.management-actions{padding:12px 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.management-actions label{min-width:135px}.management-notes textarea{min-height:72px}.management [role=status]{color:#31563a}.chart-table-scroll{overflow:auto}
+.team-rings{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:12px;padding:0 18px 14px}.team-ring-card{border:1px solid #ded7c9;border-radius:14px;background:#f9f6ec;padding:18px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}.team-ring-card h3{margin:0 0 8px;font-size:18px}.team-ring{width:126px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;flex:none;background:conic-gradient(var(--ring-fill));position:relative}.team-ring::before{content:"";position:absolute;inset:13px;background:#f9f6ec;border-radius:50%}.team-ring strong{position:relative;font-size:23px;font-variant-numeric:tabular-nums}.ring-details{flex:1;min-width:145px}.ring-details p{font-size:13px}.ring-key{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--key)}.team-rings-note{padding:0 18px 12px}
+.rest-grid td[data-shift]{text-align:center}.rest-grid td[data-shift="休"]{background:#a52e42}.rest-grid td[data-shift="上班"]{background:#e2efdf}.rest-grid td[data-shift="未安排"]{background:#efede8}.rest-grid td[data-shift] select{border-color:transparent;background:transparent;color:#444942;font-weight:600}.rest-grid td[data-shift="休"] select{color:#fff;font-weight:800}.rest-grid td[data-shift="上班"] select{color:#224d2b}.rest-grid td[data-shift] select option{background:#fff;color:#242823}.rest-grid td[data-shift] select:focus-visible{outline:2px solid currentColor;outline-offset:1px}
+.goal-group td{background:#eee8d9}.goal-group button{background:transparent;color:#273f30;font-weight:750;text-align:left;white-space:nowrap;padding:5px 0}.goal-group button::before{content:"▸";display:inline-block;width:16px}.goal-group button[aria-expanded="true"]::before{content:"▾"}.goal-members td:first-child{padding-left:34px}.goal-members[hidden]{display:none}
+body:has(.people-page){background:#071326;color:#edf4ff}body:has(.people-page) header{background:#08172d;border-color:#264569}body:has(.people-page) nav .active{background:#1764c1;color:#fff}.people-page{max-width:1520px;padding-inline:4%;--dash-border:#243f65;--dash-panel:#0c1e37;--dash-muted:#a9bedb;--dash-text:#edf4ff;color:var(--dash-text)}.people-page .dashboard-title{margin-bottom:20px;padding:22px clamp(18px,4vw,42px);border:1px solid #28476e;border-radius:16px;background:linear-gradient(105deg,#102b50 20%,#10345de8 65%,#10223dc7),url("./team.jpg") center 40%/cover}.dashboard-title h1{margin:8px 0;font-family:system-ui,sans-serif;font-size:clamp(28px,4vw,48px);letter-spacing:.025em}.dashboard-title time{color:#66e3d5;font-size:20px;font-weight:700}.people-page .panel,.people-page .card,.people-page .team-ring-card{background:var(--dash-panel);border-color:var(--dash-border)}.people-page .report-meta,.people-page .management details,.people-page .home-title,.people-page .output-chart,.people-page td,.people-page th{border-color:var(--dash-border)}.people-page h2,.people-page h3{font-family:system-ui,sans-serif}.people-page p,.people-page label,.people-page small,.people-page .chart-caption,.people-page .empty{color:var(--dash-muted)}.people-page .card{background:#102746;color:#bfdaff;border-top:2px solid #4389eb}.people-page .card:nth-child(2){border-top-color:#f6ac69}.people-page .card:nth-child(3){border-top-color:#3ad6bf}.people-page .card:nth-child(4){border-top-color:#a495f7}.people-page .card b,.people-page .team-ring strong{color:#6ee0d5}.people-page .card b{font-size:28px}.people-page .team-ring::before{background:var(--dash-panel)}.people-page .report tbody tr:nth-child(even){background:#102644}.people-page th{background:#163255;color:#dce9fc}.people-page .goal-group td{background:#152e50}.people-page .goal-group button,.people-page a{color:#83c3ff}.people-page input,.people-page select,.people-page textarea{background:#0a1b32;border-color:#34537b;color:var(--dash-text);color-scheme:dark}.people-page .primary{background:#1764c1;color:#fff}.people-page .chart-switch button{background:#162d4d;color:#dce9fc}.people-page .chart-switch button[aria-pressed=true]{background:#1764c1;color:#fff}.people-page .output-chart{background:#102443}.people-page .chart-track{background:#1c365a}.people-page .chart-bar{background:linear-gradient(90deg,#2778eb,#45d8c5)}.people-page .management [role=status]{color:#7ae7d6}.people-page .target-progress progress{accent-color:#43d4be}.dashboard-focus{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;padding:0 18px 16px}.dashboard-focus article{padding:13px;border:1px solid var(--dash-border);border-radius:10px;background:#102746}.dashboard-focus strong{color:#bde2ff}
+.admin-page .admin-section{margin:14px 0;padding:18px 22px}.admin-section summary{cursor:pointer;font-size:17px;font-weight:700}.admin-section .grid{margin-top:15px}.admin-section textarea{min-height:105px}.admin-page .admin-actions{position:sticky;bottom:0;z-index:2;padding:12px 16px;background:#fffaf0;border:1px solid #ded7c9;border-radius:12px}.admin-page .admin-preview{width:min(260px,100%);border-radius:10px;display:block}.admin-page [role=status]{color:#31543d}.admin-page .admin-meta{margin:12px 0}
+.people-page{max-width:1400px;padding-top:18px}.people-page .dashboard-title{margin-bottom:12px;padding:14px clamp(16px,3vw,32px)}.dashboard-title h1{font-size:clamp(26px,3.4vw,40px);margin:4px 0}.dashboard-title time{font-size:16px}.people-page .management{margin:12px 0 20px}.management>.report-meta{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:12px 16px}.management>.report-meta h2{font-size:18px;margin:0}.management>.report-meta .bar{margin:0;align-items:center}.management>.report-meta label{display:flex;align-items:center;gap:8px}.management>.report-meta input{width:auto;padding:5px 8px}.management>.cards{padding:0 14px;margin:10px 0;gap:9px}.management>.cards .card{padding:10px 12px}.management>.cards .card b{margin-top:4px;font-size:24px}.team-rings{padding:0 14px 8px;gap:9px}.team-ring-card{padding:12px;gap:12px}.team-ring{width:96px}.team-ring::before{inset:10px}.team-ring strong{font-size:19px}.team-ring-card h3{margin:0 0 4px;font-size:16px}.ring-details p{margin:3px 0}.team-rings-note{padding:0 14px 8px}.dashboard-focus{padding:0 14px 10px;gap:8px}.dashboard-focus article{padding:8px 10px}.dashboard-focus p{margin:3px 0}.management details{padding:9px 14px}
+.reference-links .reference-jump{display:inline-flex;align-items:center;gap:5px;width:fit-content;padding:5px 9px;border:1px solid #918058;border-radius:7px;background:#354638;color:#fff1cc;font-weight:650;text-decoration:none}.reference-jump:hover,.reference-jump:focus-visible{outline:2px solid #d7b86c;outline-offset:2px}.reference-links .reference-address{font-size:11px;overflow-wrap:anywhere}.capture .reference-links{margin-top:4px}
+.mobile-schedule,.mobile-edit-toggle{display:none}.worksheet .reference-editor{min-height:64px!important;margin-top:5px}.mobile-task{padding:15px;margin:10px 0;background:#fffdf6;border:1px solid #ded7c9;border-radius:13px}.mobile-task h3{margin:8px 0 10px;font-size:17px}.mobile-task .mobile-task-meta{display:flex;align-items:center;justify-content:space-between;gap:10px}.mobile-task dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}.mobile-task dt{color:#586656;font-size:12px}.mobile-task dd{margin:3px 0 0;overflow-wrap:anywhere}.mobile-task .mobile-notes{white-space:pre-wrap;overflow-wrap:anywhere;margin:10px 0}.mobile-task .reference-links{display:flex;flex-wrap:wrap;gap:8px}.mobile-task .reference-jump{min-height:40px;padding:9px 12px}.mobile-task .reference-jump:hover,.mobile-task .reference-jump:focus-visible{outline-color:#31573d}
+@media(max-width:760px){header,body:has(.schedule-page) header{padding:12px 4%;gap:8px}header nav{width:100%;overflow-x:auto;padding-bottom:4px}header nav button{flex:none;white-space:nowrap}.schedule-page{padding:14px 4%}.schedule-hero{padding:17px;border-radius:14px}.schedule-hero h1{font-size:30px}.schedule-hero time{font-size:17px}.schedule-page .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0}.schedule-page .card{padding:9px 10px}.schedule-page .card b{font-size:21px;margin-top:3px}.schedule-tools{gap:7px;margin:10px 0}.schedule-tools .search{min-width:100%;order:2}.mobile-schedule,.mobile-edit-toggle{display:block}.schedule-page .worksheet.edit-grid{display:none}.schedule-page.mobile-editing .worksheet.edit-grid{display:block}.schedule-page.mobile-editing .mobile-schedule{display:none}.mobile-editing .edit-grid table{min-width:900px}.schedule-page .capture{overflow:auto}.schedule-page .capture table{min-width:640px}}
+</style>
+<link rel="stylesheet" href="./studio-theme.css">
+<link rel="stylesheet" href="./studio-editorial.css">
+<header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
+<a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
+<script>
+const defaultRoster={
+ '基础摄影':['曹傲宇','陈丽娜','游苗'],'创新组':['杨建勋','勾应颖'],'拍剪助理':['刘意'],'摄影助理':['白炳锦','张亚涛'],'模特':['夏艺方','何雨馨','穆灿','张智','钱小蝶'],'修片':['何梓瑜']
+};
+const settingsKey='studio-ops-settings-v1';
+const defaults={
+ title:'中台拍摄工作台',homeTitle:'中台拍摄部门',intro:'承接运营拍摄需求，从人员排班、现场拍摄到修片和素材交付。主拍与模特每天按任务配对。',
+ photo:'',leader:'周翔龙',opsLead:'周翔龙',opsSummary:'中台对接、问题汇总、整改复核',specialty:'',
+ mentors:'杨建勋：游苗、陈丽娜、白炳锦\n勾应颖：刘意、张亚涛',
+ products:['秘与紧致丹','秘与洗液','山药秘与葛根粉','除臭贴','LILIA二硫化硒洗发水','毛囊炎','LILOO紧致丹','其他'],
+ types:['产品展示','内料展示','口播 · KOC达人','口播 · 营销活动','口播 · 人设','意识流','产品使用 · 美好展示','产品使用 · 痛点展示','产品使用 · 使用展示'],
+ shooting:'产品展示：拍摄产品外观、包装及细节。\n内料展示：呈现产品内料的形态、质地及流动效果。\n口播：KOC 达人、营销活动、人设。根据任务确认台词、场景和模特。\n意识流：以意境和氛围为主，表达自由、放松、洒脱与享受的状态。\n产品使用展示：产品美好展示、产品痛点展示、产品使用展示。',
+ shiftIntro:'团队实行调休制，每天均有人值班。排班时根据当日任务和在岗人员确认承诺交付时间。',
+ normalTitle:'常规任务 · 1–2 天',normalText:'从运营下发任务起算，根据任务数量和拍摄类型确认交付时间。',
+ urgentTitle:'加急任务 · 当天',urgentText:'按当天交付安排人员，排班时填写具体承诺时间。',
+ orderFlow:'运营统一通过千量云视频管家下单。微信或临时沟通的需求同步补到工单。确认拍摄数量、道具、参考图或视频、脚本、模特、设备及核心要求。',
+ deliveryFlow:'阶段素材上传云管家供运营确认，有偏差及时调整。交付前自检画质、色调、对标匹配、卖点和漏拍。涉及道具采购时原则上预留 2–4 天。',
+ feedbackFlow:'素材问题汇总给周翔龙，记录问题、整改结果和复核结论。',
+ planTitle:'中台产能规划',planIntro:'常规任务下发后 1–2 天交付，按任务数量和类型确认截止时间。加急任务当天排产。',planNotes:'',
+ brandLine:'CENTRAL STUDIO',brandSubtitle:'摄影 · 内容 · 创意',scheduleButton:'进入工作安排',peopleButton:'查看人效看板',
+ productsTitle:'承接品类',shootingTitle:'承接的拍摄类型',deliveryTitle:'任务交付时效',orgTitle:'中台组织架构',
+ galleryTitle:'镜头之外，也一起。',galleryIntro:'有工作的专注，也有生活的热烈。属于我们的影像手记。',
+ artCaption:'光影 · 质感 · 表达 · 自由 · 体验 / AI 创意视觉示意',
+ footerBrand:'CENTRAL STUDIO',footerText:'中台 · 拍摄与创作',
+ scheduleTitle:'拍摄排班',scheduleIntro:'按运营工单排班，拍摄内容和运营要求可直接在表内修改。',
+ restTitle:'中台休息表',peopleTitle:'中台人效与产出看板',
+ navHome:'首页',navSchedule:'工作安排',navRest:'休息表',navPeople:'个人人效',navPlan:'产能规划',navAdmin:'管理后台',
+ artwork:'',gallery:null,roster:defaultRoster
+};
+let settings={...defaults};
+try{settings={...defaults,...JSON.parse(localStorage.getItem(settingsKey)||'{}')}}catch{}
+let roster,products,types,staff,roleNames,restStaff;
+function applySettings(){
+ if(!settings.roster['拍剪助理']){
+  const oldRoster=settings.roster;
+  settings.roster={...defaultRoster,...oldRoster,'创新组':(oldRoster['创新组']||[]).filter(name=>name!=='刘意'),'拍剪助理':['刘意']};
+ }
+ ({roster,products,types}=settings);
+ staff=Object.entries(roster).flatMap(([role,names])=>names.map(name=>({role,name})));
+ roleNames={lead:[...roster['基础摄影'],...roster['创新组'],...roster['摄影助理']],assistant:[...roster['摄影助理'],...(roster['拍剪助理']||[])],model:roster['模特'],retouch:roster['修片']};
+ restStaff=staff.some(p=>p.name===settings.leader)?staff:[...staff,{name:settings.leader,role:'部门负责人'}];
+}
+applySettings();
+const key='studio-ops-v1';
+let tasks=[];
+try{tasks=JSON.parse(localStorage.getItem(key)||'[]')}catch{}
+tasks.forEach(t=>{if(t.type)t.type=t.type.replace(/意识流花瓣故事/g,'意识流')});
+const main=document.querySelector('#main');
+const today=()=>new Date(Date.now()+8*3600000).toISOString().slice(0,10);
+const dateTime=()=>new Date(Date.now()+8*3600000).toISOString().slice(0,16);
+const plusDay=(date,n)=>new Date(Date.parse(date+'T00:00:00Z')+n*86400000).toISOString().slice(0,10);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const options=(items,val)=>items.map(v=>'<option '+(v===val?'selected':'')+'>'+esc(v)+'</option>').join('');
+const safeLink=v=>{try{return /^https?:$/.test(new URL(v).protocol)?v:''}catch{return ''}};
+function referenceLinks(task,compact=false){
+ const links=[...new Set(([task.link,task.notes].join('\n').match(/https?:\/\/[^\s<>，。；、）】]+/g)||[]).filter(safeLink))];
+ if(!links.length)return '';
+ return '<div class="reference-links">'+links.map((url,index)=>{
+  const host=new URL(url).hostname.toLowerCase();
+  const isDomain=domain=>host===domain||host.endsWith('.'+domain);
+  const platform=isDomain('feishu.cn')||isDomain('larksuite.com')?'飞书':isDomain('dingtalk.com')?'钉钉':'';
+  const label=(platform?platform+'对标':'打开对标')+(links.length>1?' '+(index+1):'');
+  const href=' href="'+esc(url)+'" target="_blank" rel="noopener noreferrer"';
+  return '<a class="reference-jump"'+href+' title="'+esc(url)+'">'+label+' ↗</a>'+(compact?'':'<a class="reference-address"'+href+'>'+esc(url)+'</a>');
+ }).join('')+'</div>';
+}
+const roles=['lead','assistant','model','retouch'];
+const done=t=>t.status==='已验收';
+const validCount=v=>Number.isSafeInteger(Number(v))&&Number(v)>0;
+const assignmentTimes=t=>t.assignmentCount==null||t.assignmentCount===''?1:(validCount(t.assignmentCount)?Number(t.assignmentCount):0);
+const assignmentTotal=entries=>entries.reduce((total,t)=>total+assignmentTimes(t),0);
+function acceptanceRecords(t){
+ const base=done(t)&&t.acceptDate?[{date:t.acceptDate,times:Number(t.acceptanceCount||1),quantity:Number(t.accepted||0)}]:[];
+ const extra=Array.isArray(t.acceptanceBatches)?t.acceptanceBatches:[];
+ return [...base,...extra].filter(r=>r&&/^\d{4}-\d{2}-\d{2}$/.test(r.date)&&validCount(r.times)&&Number.isFinite(Number(r.quantity))&&Number(r.quantity)>=0).map(r=>({date:r.date,times:Number(r.times),quantity:Number(r.quantity)}));
+}
+function acceptanceRow(record,formId){
+ const field=(name,label,type,value,attrs='')=>'<label>'+label+'<input form="'+formId+'" name="'+name+'" type="'+type+'" value="'+esc(value)+'" required '+attrs+'></label>';
+ return '<div class="acceptance-row">'+field('batchDate','追加验收日期','date',record.date)+field('batchTimes','验收次数','number',record.times??1,'min="1" step="1"')+field('batchQuantity','本批验收条数','number',record.quantity,'min="0" step="1"')+'<button type="button" data-remove-batch aria-label="移除本条追加验收记录">移除</button></div>';
+}
+function acceptanceEditor(t,formId){
+ return '<fieldset class="acceptance-editor"><legend>多次验收 · 支持跨月</legend><p>上方记录首批验收；后续批次在这里追加。每条填写该批次数与条数，按各自验收日期归月。追加记录保存后即计入验收。</p><div class="acceptance-rows">'+(Array.isArray(t.acceptanceBatches)?t.acceptanceBatches:[]).map(r=>acceptanceRow(r,formId)).join('')+'</div><button type="button" data-add-batch="'+formId+'">＋ 追加一次验收</button><p class="acceptance-hint">填写完毕后，点击此任务的「保存」。同批条数不要重复填入首批与追加记录。</p></fieldset>';
+}
+function bindAcceptanceButtons(){
+ document.querySelectorAll('[data-remove-batch]').forEach(button=>button.onclick=()=>button.closest('.acceptance-row').remove());
+}
+
+const sum=(rows,field)=>rows.reduce((n,t)=>n+Number(t[field]||0),0);
+const count=n=>Number(n).toLocaleString('zh-CN',{maximumFractionDigits:2});
+const card=(name,v)=>'<div class="card">'+name+'<b>'+v+'</b></div>';
+const newId=()=>globalThis.crypto?.randomUUID?.()||Date.now()+'-'+Math.random();
+const statuses=['待拍摄','拍摄中','后期中','已交付','已验收'];
+let tab='home', day=tasks.some(t=>t.date===today())?today():(tasks.map(t=>t.date).filter(Boolean).sort().at(-1)||today()), month=day.slice(0,7), person='';
+let scheduleStatus='', scheduleQuery='';
+let savedTask=null;
+let addingRow=false, captureMode=false;
+let mobileEditing=false;
+let scheduleToolsOpen=false;
+let outputDay=day;
+let chartPeriod=0;
+let mixPhotographer='',mixBasis='tasks';
+const expandedGoalGroups=new Set();
+const dailyKey='studio-ops-daily-output-v1';
+const managementKey='studio-ops-management-v1';
+const restKey='studio-ops-rest-v1';
+let restWeek=weekOf(today());
+let restMonth=today().slice(0,7);
+function weekOf(date){return plusDay(date,-((new Date(date+'T00:00:00Z').getUTCDay()+6)%7))}
+function readRest(){try{return JSON.parse(localStorage.getItem(restKey)||'{}')||{}}catch{return {}}}
+const resting=(roster,date,name)=>roster[date]?.[name]==='休';
+function readDaily(){
+ try{return JSON.parse(localStorage.getItem(dailyKey)||'{}')||{}}catch{return {}}
+}
+const members=value=>Array.isArray(value)?value:String(value||'').split('、').map(x=>x.trim()).filter(Boolean);
+const participates=(t,name)=>[...roles,'handModel'].some(k=>members(t[k]).includes(name));
+function updateMultiSummary(input){const d=input.closest('details');d.querySelector('summary').textContent=Array.from(d.querySelectorAll('input:checked')).map(x=>x.value).join('、')||'请选择（多选）';}
+function assignmentHint(name,date,id){return tasks.filter(t=>t.date===date&&t.id!==id&&participates(t,name)).map(t=>'已安排：'+(t.lead||'摄影师待定')+' · '+(t.product||t.title||'任务')).join('；')}
+function staffingSummary(date){
+ if(!date)return '';
+ const off=readRest(),available=staff.filter(p=>!resting(off,date,p.name));
+ const missing=available.filter(p=>(roleNames.lead.includes(p.name)||roleNames.model.includes(p.name))&&!tasks.some(t=>t.date===date&&participates(t,p.name)));
+ return '<section class="staffing-summary"><strong>当日人员核对</strong><p>未安排摄影师 / 模特：'+(missing.map(p=>esc(p.name)).join(' · ')||'已全部安排')+'</p><small>休息：'+(staff.filter(p=>resting(off,date,p.name)).map(p=>esc(p.name)).join(' · ')||'无')+'。已安排人员可再次选择，选项内显示现有搭档。</small></section>';
+}
+
+function save(next){try{localStorage.setItem(key,JSON.stringify(next));tasks=next;return true}catch{alert('无法保存到浏览器，请检查存储权限或空间。');return false}}
+function render(){
+ document.querySelector('#siteTitle').textContent=settings.title;
+ document.title=settings.title;
+ for(const button of document.querySelectorAll('nav button')){
+  const route=button.dataset.tab;
+  button.textContent=settings['nav'+route[0].toUpperCase()+route.slice(1)];
+ }
+ const footerLabels=document.querySelectorAll('.site-footer > span');
+ if(footerLabels.length===2){
+  footerLabels[0].textContent=settings.footerBrand;
+  footerLabels[1].textContent=settings.footerText;
+ }
+ main.className=tab==='schedule'?'schedule-page'+(mobileEditing?' mobile-editing':''):tab+'-page';
+ document.querySelectorAll('nav button').forEach(b=>{const active=b.dataset.tab===tab;b.classList.toggle('active',active);b.setAttribute('aria-current',active?'page':'false')});
+ if(tab==='home') home();
+ if(tab==='schedule') schedule();
+ if(tab==='rest') restView();
+ if(tab==='people') people();
+ if(tab==='plan') plan();
+ if(tab==='admin') adminView();
+}
+function home(){
+ const shooting=labelledLines(settings.shooting);
+ const section=(title,body)=>'<article class="delivery-card"><h3>'+esc(title)+'</h3><p>'+esc(body)+'</p></article>';
+ const dailyTasks=tasks.filter(t=>t.date===today());
+ const availability=readRest()[today()]||{};
+ const available=restStaff.filter(p=>availability[p.name]==='上班').length;
+ const off=restStaff.filter(p=>availability[p.name]==='休').length;
+ const title=(number,label,en)=>'<div class="section-heading"><span class="section-index">'+number+' / '+en+'</span><h2>'+label+'</h2></div>';
+ const lens='<svg class="lens-art" viewBox="0 0 320 320" aria-hidden="true"><circle cx="160" cy="160" r="144"/><circle cx="160" cy="160" r="113"/><circle cx="160" cy="160" r="70"/><path d="M160 0v43M160 277v43M0 160h43M277 160h43M160 47l98 57v112l-98 57-98-57V104zM160 90l61 35v70l-61 35-61-35v-70z"/><circle cx="160" cy="160" r="4"/></svg>';
+ main.innerHTML='<section class="studio-cover"><div class="cover-heading"><div class="cover-text"><div class="eyebrow">'+esc(settings.brandLine)+' <span>'+esc(settings.brandSubtitle)+'</span></div><h1>'+esc(settings.homeTitle)+'</h1><p>'+esc(settings.intro)+'</p><div class="cover-actions"><button class="primary" id="openSchedule">'+esc(settings.scheduleButton)+' <span aria-hidden="true">↗</span></button><button id="openPeople">'+esc(settings.peopleButton)+' <span aria-hidden="true">→</span></button></div></div><div class="cover-art">'+lens+'<span>FOCUS ON<br>WHAT MATTERS.</span></div></div><figure class="cover-photo"><img src="'+esc(settings.photo||'./infinite-progress-original.jpg')+'" alt="无限进步 · 字标" fetchpriority="high" width="1200" height="675"><figcaption><span>保持热爱，无限进步。</span><span>KEEP CREATING / KEEP EVOLVING</span></figcaption></figure><div class="cover-foot"><span><i></i> 创作从这里开始</span><a href="#services">探索中台 ↓</a></div></section>'+
+ '<div class="workspace-shortcuts"><button data-workspace="schedule"><span class="shortcut-icon" aria-hidden="true">▦</span><span><strong>工作安排</strong><small>今天 '+dailyTasks.length+' 项拍摄任务</small></span><span aria-hidden="true">↗</span></button><button data-workspace="people"><span class="shortcut-icon" aria-hidden="true">◔</span><span><strong>人效与产出</strong><small>日 / 周 / 月 · 目标与完成进度</small></span><span aria-hidden="true">↗</span></button><button data-workspace="rest"><span class="shortcut-icon" aria-hidden="true">◷</span><span><strong>出勤与调休</strong><small>今天已排 '+available+' 人上班 · '+off+' 人休息</small></span><span aria-hidden="true">↗</span></button></div>'+
+ '<section class="home-products">'+title('01',esc(settings.productsTitle),'OUR PRODUCTS')+'<div class="chips">'+products.filter(p=>p!=='其他').map(p=>'<span class="tag">'+esc(p)+'</span>').join('')+'</div></section>'+
+ '<section id="services" class="service-section">'+title('02',esc(settings.shootingTitle),'WHAT WE CREATE')+'<p class="art-caption">'+esc(settings.artCaption)+'</p><div class="service-list">'+shooting.map(([name,detail],i)=>'<article class="service-item">'+shootingArt(i)+'<span class="service-number">'+String(i+1).padStart(2,'0')+'</span><h3>'+esc(name)+'</h3><p>'+esc(detail)+'</p><button type="button" class="service-mark" data-service="'+esc(name)+'" aria-label="查看'+esc(name)+'安排">↗</button></article>').join('')+'</div></section>'+
+ '<section class="delivery-section">'+title('03',esc(settings.deliveryTitle),'OUR COMMITMENT')+'<p>'+esc(settings.shiftIntro)+'</p><div class="delivery-grid">'+section(settings.normalTitle,settings.normalText)+section(settings.urgentTitle,settings.urgentText)+'</div></section>'+
+ '<section class="org-section">'+title('04',esc(settings.orgTitle),'THE PEOPLE')+'<span id="org-title" class="sr-only">中台组织架构</span>'+orgMap()+'</section>'+teamGallery();
+ bindTeamGallery();
+ document.querySelector('#openSchedule').onclick=()=>navigateTab('schedule');
+ document.querySelector('#openPeople').onclick=()=>navigateTab('people');
+ document.querySelectorAll('[data-workspace]').forEach(button=>button.onclick=()=>{if(button.dataset.workspace==='schedule')day=today();navigateTab(button.dataset.workspace)});
+ document.querySelectorAll('[data-service]').forEach(button=>button.onclick=()=>{scheduleQuery=button.dataset.service==='产品使用展示'?'产品使用':button.dataset.service;day='';scheduleStatus='';navigateTab('schedule')});
+}
+function getTeamPhotos(){return settings.gallery===null?defaultTeamPhotos():settings.gallery;}
+function defaultTeamPhotos(){return [{"src": "./team-gallery/01.jpg", "caption": "一起，向自由出发"}, {"src": "./team-gallery/new-0.jpg", "caption": "暖光里的默契"}, {"src": "./team-gallery/new-1.jpg", "caption": "把日常拍成风景"}, {"src": "./team-gallery/new-5.jpg", "caption": "镜头背后的认真"}, {"src": "./team-gallery/new-2.jpg", "caption": "黑白之间 · 群像"}, {"src": "./team-gallery/new-3.jpg", "caption": "黑白之间 · 姿态"}, {"src": "./team-gallery/new-7.jpg", "caption": "一起奔赴新一年"}, {"src": "./team-gallery/new-4.jpg", "caption": "古巷里的伙伴"}, {"src": "./team-gallery/02.jpg", "caption": "日常里的默契"}, {"src": "./team-gallery/03.jpg", "caption": "古巷同行"}, {"src": "./team-gallery/04.jpg", "caption": "节日相聚"}, {"src": "./team-gallery/05.jpg", "caption": "在一起的日常"}, {"src": "./team-gallery/06.jpg", "caption": "围坐一桌"}, {"src": "./team-gallery/07.jpg", "caption": "分享甜蜜"}, {"src": "./team-gallery/08.jpg", "caption": "热闹的夜晚"}, {"src": "./team-gallery/09.jpg", "caption": "冬日同行"}, {"src": "./team-gallery/10.jpg", "caption": "镜头里的我们"}, {"src": "./team-gallery/11.jpg", "caption": "夜市小聚"}, {"src": "./team-gallery/12.jpg", "caption": "节日心意"}, {"src": "./team-gallery/new-6.jpg", "caption": "我们的默契"}, {"src": "./team-gallery/new-8.jpg", "caption": "创意封面实验"}];}
+function teamGallery(){
+ const teamPhotos=getTeamPhotos();
+ if(!teamPhotos.length)return '';
+ const tile=(p,i)=>'<button class="team-photo" data-photo="'+i+'"><img loading="lazy" src="'+esc(p.src)+'" alt="'+esc(p.caption)+'"><span><small>'+String(i+1).padStart(2,'0')+' / OUR MOMENTS</small><strong>'+esc(p.caption)+' ↗</strong></span></button>';
+ return '<section class="team-journal"><div class="section-heading"><span class="section-index">05 / LIFE TOGETHER</span><h2>'+esc(settings.galleryTitle)+'</h2></div><p>'+esc(settings.galleryIntro)+'</p><div class="team-photo-grid curated-grid">'+teamPhotos.slice(0,8).map(tile).join('')+'</div><details class="gallery-more"><summary>展开相册 · 更多 '+(teamPhotos.length-8)+' 张影像</summary><div class="team-photo-grid archive-grid">'+teamPhotos.slice(8).map((p,i)=>tile(p,i+8)).join('')+'</div></details></section><dialog class="team-lightbox" aria-label="团队相册"><form method="dialog"><button aria-label="关闭相册">关闭 ×</button></form><img alt="团队照片"><div class="photo-controls"><button data-photo-prev>← 上一张</button><span></span><button data-photo-next>下一张 →</button></div></dialog>';
+}
+function bindTeamGallery(){
+ const teamPhotos=getTeamPhotos();
+ const box=document.querySelector('.team-lightbox');if(!box)return;let index=0;
+ const show=i=>{index=(i+teamPhotos.length)%teamPhotos.length;box.querySelector('img').src=teamPhotos[index].src;box.querySelector('img').alt=teamPhotos[index].caption;box.querySelector('.photo-controls span').textContent=(index+1)+' / '+teamPhotos.length};
+ document.querySelectorAll('[data-photo]').forEach(b=>b.onclick=()=>{show(Number(b.dataset.photo));box.showModal()});
+ box.querySelector('[data-photo-prev]').onclick=()=>show(index-1);box.querySelector('[data-photo-next]').onclick=()=>show(index+1);
+ box.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')show(index-1);if(e.key==='ArrowRight')show(index+1)});
+}
+const artworkDefaults=['model-1.png','model-2.png','editorial-interview.png','editorial-coast.png','editorial-use.png'].map(file=>'./shooting-art/'+file);
+function shootingArt(index){
+ const labels=['产品与石材的光影静物','通透内料与折射光影','自然口播与人物表达','海边迎风的自由与松弛','自然光下的产品使用'];
+ return '<div class="service-visual editorial-photo"><img src="'+esc(settings.artwork.split(/\r?\n/)[index]?.trim()||artworkDefaults[index%5])+'" alt="'+labels[index%5]+' · AI 创意示意" loading="lazy" width="1024" height="1536"></div>';
+}
+function weekRail(date){
+ const start=weekOf(date||today());
+ return '<div class="week-rail" aria-label="本周排班日期">'+Array.from({length:7},(_,i)=>{
+  const d=plusDay(start,i),n=tasks.filter(t=>t.date===d).length;
+  return '<button type="button" data-schedule-day="'+d+'" aria-pressed="'+(d===date)+'"><span>周'+'一二三四五六日'[i]+'</span><strong>'+d.slice(8)+'</strong><small>'+n+' 项安排</small></button>';
+ }).join('')+'</div>';
+}
+function labelledLines(text){
+ return text.split(/\r?\n/).map(line=>{
+  const divider=line.search(/[:：]/);
+  return divider<0?[line.trim(),'']:[line.slice(0,divider).trim(),line.slice(divider+1).trim()];
+ }).filter(([label])=>label);
+}
+function orgMap(){
+ const branches=[
+  ['部门负责人',[settings.leader],'#b39ae0','#eee6ff',''],
+  ['创新组',roster['创新组'],'#88b6e3','#e9f4ff',''],
+  ['基础拍摄组',roster['基础摄影'],'#e2a0a9','#fce8ed',settings.specialty],
+  ['摄影助理',roster['摄影助理'],'#dbb77c','#fff2d9',''],
+  ['拍剪助理',roster['拍剪助理'],'#b39ae0','#eee6ff',''],
+  ['模特组',roster['模特'],'#9dc2a2','#e7f4e6',''],
+  ['修片',roster['修片'],'#87bfbb','#e2f5f2','']
+ ];
+ const leaves=names=>'<div class="org-leaves">'+names.map(name=>'<span>'+esc(name)+'</span>').join('')+'</div>';
+ const palette=(line,wash)=>' style="--branch:'+line+';--wash:'+wash+'"';
+ const mentor=(name,names,line,wash)=>'<div class="mentor-row"'+palette(line,wash)+'><div class="mentor-name">'+esc(name)+'带教</div>'+leaves(names)+'</div>';
+ return '<section class="org-map" aria-labelledby="org-title"><div class="org-layout"><div class="org-root">中台部门</div><div class="org-tree">'+
+ branches.map(([label,names,line,wash,detail])=>'<div class="org-branch"'+palette(line,wash)+'><div class="org-node">'+label+'</div>'+leaves(names)+(detail?'<div class="org-detail">'+esc(detail)+'</div>':'')+'</div>').join('')+
+ '</div><aside class="mentor-box"><h3>带教关系</h3>'+labelledLines(settings.mentors).map(([name,names],i)=>mentor(name,names.split(/[、，,]/).map(n=>n.trim()).filter(Boolean),i%2?'#e2a0a9':'#b39ae0',i%2?'#fce8ed':'#eee6ff')).join('')+'</aside></div></section>';
+}
+function schedule(){
+ const daily=tasks.filter(t=>!day||t.date===day);
+ const rows=daily.filter(t=>(!scheduleStatus||t.status===scheduleStatus)&&(!scheduleQuery||[t.title,t.notes,t.product,t.type,...roles.map(k=>t[k])].join(' ').toLowerCase().includes(scheduleQuery.toLowerCase()))).sort((a,b)=>a.date.localeCompare(b.date)||Number(b.priority==='加急')-Number(a.priority==='加急')||a.due.localeCompare(b.due));
+ const headings=['日期','摄影师','手模','模特','拍摄内容','运营要求'];
+ if(captureMode){
+  main.innerHTML='<div class="capture-heading"><h1>拍摄安排 · '+esc(day||'全部日期')+'</h1><button id="exitCapture">返回编辑</button></div><div class="panel worksheet capture"><table><colgroup><col style="width:10%"><col style="width:10%"><col style="width:9%"><col style="width:10%"><col style="width:17%"><col style="width:44%"></colgroup><thead><tr>'+headings.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+
+  (rows.length?rows.map(t=>'<tr>'+[t.date,t.lead,t.handModel,t.model,t.title].map(x=>'<td>'+esc(x||'—')+'</td>').join('')+'<td class="capture-notes">'+esc(t.notes)+referenceLinks(t,true)+'</td></tr>').join(''):'<tr><td colspan="6" class="empty">暂无匹配任务。</td></tr>')+'</tbody></table></div>';
+  document.querySelector('#exitCapture').onclick=()=>{captureMode=false;render()};
+  return;
+ }
+ const draftDate=day||today();
+ const newTask={id:'',date:draftDate,assigned:draftDate<today()?draftDate+'T09:00':dateTime(),due:plusDay(draftDate,1)+'T18:00',status:'待拍摄',priority:'常规'};
+ main.innerHTML='<div class="ops-contact"><strong>运营对接负责人　'+esc(settings.opsLead)+'</strong><span>'+esc(settings.opsSummary)+'</span></div><section class="schedule-hero"><div><div class="eyebrow">PRODUCTION / 每日工作安排</div><h1>'+esc(settings.scheduleTitle)+'</h1><p>'+esc(settings.scheduleIntro)+'</p></div><time>'+esc(day||'全部日期')+'</time></section>'+
+ '<details class="panel ops-flow"><summary>运营对接流程</summary><p><strong>下单与确认</strong>　'+esc(settings.orderFlow)+'</p><p><strong>拍摄与交付</strong>　'+esc(settings.deliveryFlow)+'</p><p><strong>反馈与复核</strong>　'+esc(settings.feedbackFlow)+'</p></details>'+
+ '<div class="cards">'+card('排班任务',daily.length)+card('待交付',daily.filter(t=>!['已交付','已验收'].includes(t.status)).length)+card('已验收条数',count(daily.reduce((total,t)=>total+sum(acceptanceRecords(t),'quantity'),0)))+card('逾期待交付',daily.filter(t=>!t.delivery&&t.due&&t.due<dateTime()).length)+'</div>'+
+ weekRail(day)+staffingSummary(day)+'<section class="schedule-section"><h2>任务安排表</h2><div class="bar schedule-tools"><button id="addRow" class="primary">＋ 新增一行</button><button id="captureSchedule">截图视图</button><button id="copySchedule">复制排班与链接</button><button id="mobileEdit" class="mobile-edit-toggle">'+(mobileEditing?'返回任务卡片':'切换编辑表格')+'</button><button id="prev" aria-label="前一天">‹</button><label>排班日期<input id="day" type="date" value="'+day+'"></label><button id="next" aria-label="后一天">›</button><button id="today">今天</button><button id="all">全部日期</button><button id="toggleTools" class="mobile-tools-toggle" aria-expanded="'+scheduleToolsOpen+'">筛选与备份 '+(scheduleToolsOpen?'−':'+')+'</button><div class="schedule-tools-extra '+(scheduleToolsOpen?'tools-open':'')+'"><form id="search" class="search"><label>查找任务<input name="query" type="search" placeholder="输入任务、品类或人名，按回车搜索" value="'+esc(scheduleQuery)+'"></label></form><label>任务状态<select id="statusFilter">'+options(['全部状态',...statuses],scheduleStatus||'全部状态')+'</select></label><span class="schedule-count">'+rows.length+' 条</span><button id="backup">导出备份</button><button id="restore">导入备份</button><input id="file" type="file" accept=".json,application/json" hidden></div></div></section>'+
+ '<div id="scheduleSaved"><span role="status">'+(savedTask?'已保存「'+esc(savedTask.title)+'」，安排日期 '+esc(savedTask.date)+'。 ':'')+'</span>'+(savedTask?'<button id="showSavedPeople">查看该月个人人效</button>':'')+'</div><div class="mobile-schedule">'+(rows.length?rows.map(mobileTask).join(''):'<p>当前日期没有匹配的安排。</p>')+'</div><div class="panel worksheet edit-grid"><table><thead><tr>'+['日期','摄影师','手模','模特（以摄影师调动为准）','拍摄内容','运营要求'].map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+
+ (addingRow?taskRow(newTask,-1):'')+(rows.length?rows.map(taskRow).join(''):addingRow?'':'<tr><td colspan="6" class="empty">当前没有任务。点「新增一行」直接填写。</td></tr>')+'</tbody></table></div><p><small>主表可直接编辑。展开「工单与交付」补录工单、拍摄条数和验收。</small></p><datalist id="productList">'+options(products)+'</datalist><datalist id="typeList">'+options(types)+'</datalist>';
+ document.querySelectorAll('[data-schedule-day]').forEach(button=>button.onclick=()=>{day=button.dataset.scheduleDay;render()});
+ document.querySelector('#addRow').onclick=()=>{addingRow=true;mobileEditing=true;render();document.querySelector('.new-task [name="product"]')?.focus?.()};
+ document.querySelector('#toggleTools').onclick=()=>{scheduleToolsOpen=!scheduleToolsOpen;render()};
+ document.querySelectorAll('[data-edit-task]').forEach(button=>button.onclick=()=>{mobileEditing=true;render();document.querySelector('[data-task-id="'+button.dataset.editTask+'"]')?.scrollIntoView?.({block:'start'})});
+ document.querySelector('#mobileEdit').onclick=()=>{mobileEditing=!mobileEditing;render()};
+ document.querySelector('#copySchedule').onclick=async()=>{
+  if(!rows.length){alert('当前没有可复制的任务。');return}
+  const lines=rows.map(t=>[
+   [t.date,t.product,t.type].filter(Boolean).join(' · ')||t.title,
+   [['摄影师',t.lead],['手模',t.handModel],['模特',t.model]].filter(([,name])=>name).map(([label,name])=>label+' '+name).join(' / '),
+   t.notes,
+   ...String(t.link||'').split(/\r?\n/).map(link=>link.trim()).filter(link=>safeLink(link)&&!t.notes?.includes(link))
+  ].filter(Boolean).join('\n'));
+  try{await navigator.clipboard.writeText('拍摄排班 '+(day||'全部日期')+'\n\n'+lines.join('\n\n'));document.querySelector('#copySchedule').textContent='已复制，可粘贴到群里'}catch{alert('无法访问剪贴板，请检查浏览器权限。')}
+ };
+ document.querySelector('#captureSchedule').onclick=()=>{captureMode=true;render();document.querySelector('.capture-heading')?.scrollIntoView?.()};
+ document.querySelector('#cancelRow')?.addEventListener?.('click',()=>{addingRow=false;render()});
+ document.querySelector('#day').onchange=e=>{day=e.target.value;render()};
+ if(savedTask)document.querySelector('#showSavedPeople').onclick=()=>{
+  month=savedTask.date.slice(0,7);
+  person='';
+  tab='people';
+  render();
+  document.querySelector('#month')?.scrollIntoView?.({block:'start'});
+ };
+ document.querySelector('#prev').onclick=()=>{day=plusDay(day||today(),-1);render()};
+ document.querySelector('#next').onclick=()=>{day=plusDay(day||today(),1);render()};
+ document.querySelector('#today').onclick=()=>{day=today();render()};
+ document.querySelector('#all').onclick=()=>{day='';scheduleStatus='';scheduleQuery='';savedTask=null;render()};
+ document.querySelector('#statusFilter').onchange=e=>{scheduleStatus=e.target.value==='全部状态'?'':e.target.value;render()};
+ document.querySelector('#search').onsubmit=e=>{e.preventDefault();scheduleQuery=e.currentTarget.elements.query.value.trim();render()};
+ document.querySelector('#search').elements?.query?.addEventListener('search',e=>{if(!e.target.value&&scheduleQuery){scheduleQuery='';render()}});
+ document.querySelectorAll('[data-row-form]').forEach(rowForm=>rowForm.onsubmit=e=>{
+  e.preventDefault();
+  const original=tasks.find(t=>t.id===rowForm.dataset.rowForm);
+  const formData=new FormData(rowForm);
+  const next={...original,...Object.fromEntries(formData)};
+  for(const k of [...roles,'handModel','product','type'])next[k]=formData.getAll(k).join('、');
+  const batchDates=formData.getAll('batchDate'),batchTimes=formData.getAll('batchTimes'),batchQuantities=formData.getAll('batchQuantity');
+  next.acceptanceBatches=batchDates.map((date,index)=>({date,times:Number(batchTimes[index]),quantity:Number(batchQuantities[index])}));
+  delete next.batchDate;delete next.batchTimes;delete next.batchQuantity;
+  if(!next.product&&!next.type){alert('请选择品类或拍摄类型。');return}
+  if(!original||next.product!==original.product||next.type!==original.type)next.title=[next.product,next.type].filter(Boolean).join(' · ');
+  if(!original){
+   next.id=newId();
+   if(!next.link)next.link=next.notes?.match(/https?:\/\/[^\s<>，。；]+/)?.[0]||'';
+  }
+  const error=taskError(next);
+  if(error){alert(error);return}
+  if(save(original?tasks.map(t=>t.id===next.id?next:t):[...tasks,next])){if(!original)addingRow=false;mobileEditing=false;showSavedTask(next)}
+ });
+ bindAcceptanceButtons();
+ document.querySelectorAll('[data-add-batch]').forEach(button=>button.onclick=()=>{
+  const rows=button.parentElement.querySelector('.acceptance-rows');
+  rows.insertAdjacentHTML('beforeend',acceptanceRow({},button.dataset.addBatch));
+  bindAcceptanceButtons();
+  rows.lastElementChild.querySelector('input').focus();
+ });
+ document.querySelectorAll('.worksheet input[name="date"]').forEach(field=>field.onchange=()=>{
+  const availability=readRest();
+  for(const picker of document.querySelectorAll('[data-staff-picker]'))if(picker.form===field.form)updateStaffOptions(picker,availability,field.value);
+ });
+ document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>{
+  if(confirm('删除这条任务？')&&save(tasks.filter(t=>t.id!==b.dataset.delete)))render();
+ });
+ document.querySelector('#backup').onclick=()=>{
+  const url=URL.createObjectURL(new Blob([JSON.stringify(tasks,null,2)],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download='中台排班-'+today()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ };
+ const file=document.querySelector('#file');
+ document.querySelector('#restore').onclick=()=>file.click();
+ file.onchange=async()=>{
+  try{
+   const data=JSON.parse(await file.files[0].text());
+   if(!Array.isArray(data)||data.some(t=>!t||!['id','date','title','due','status'].every(k=>typeof t[k]==='string'&&t[k])))throw Error();
+   const merged=new Map(tasks.map(t=>[t.id,t]));
+   for(const t of data)if(!merged.has(t.id))merged.set(t.id,t);
+   if(save([...merged.values()]))render();
+  }catch{alert('请选择从本工作台导出的 JSON 备份。')}
+  file.value='';
+ };
+}
+function mobileTask(t){
+ const people=[['摄影师',t.lead],['手模',t.handModel],['模特',t.model]];
+ return '<article class="mobile-task"'+(savedTask?.id===t.id?' data-saved-card':'')+'><div class="mobile-task-meta"><time datetime="'+esc(t.date)+'">'+esc(t.date)+'</time><span class="tag">'+esc(t.priority==='加急'?'加急 · '+t.status:t.status)+'</span></div>'+
+ '<h3>'+esc([t.product,t.type].filter(Boolean).join(' · ')||t.title)+'</h3><dl>'+people.map(([label,name])=>'<div><dt>'+label+'</dt><dd>'+esc(name||'待分配')+'</dd></div>').join('')+'</dl>'+
+ (t.notes?'<div class="mobile-notes"><strong>运营要求</strong><br>'+esc(t.notes)+'</div>':'')+referenceLinks(t,true)+'<button type="button" class="edit-mobile-task" data-edit-task="'+esc(t.id)+'">编辑安排 ↗</button></article>';
+}
+function showSavedTask(task){
+ savedTask=task;
+ day=task.date;
+ scheduleStatus='';
+ scheduleQuery='';
+ month=task.date.slice(0,7);
+ outputDay=task.date;
+ person='';
+ render();
+ document.querySelector('#scheduleSaved')?.scrollIntoView?.({block:'start'});
+ document.querySelector('[data-saved-row]')?.scrollIntoView?.({block:'nearest'});
+}
+function taskRow(t,index){
+ t={...t,assignmentCount:t.assignmentCount??1,acceptanceCount:t.acceptanceCount??1};
+ const formId='task-row-'+index;
+ const input=(k,label,type='text',attrs='')=>'<input aria-label="'+label+'" form="'+formId+'" name="'+k+'" type="'+type+'" value="'+esc(t[k])+'" '+attrs+'>';
+ const select=(k,label,values)=>'<select aria-label="'+label+'" form="'+formId+'" name="'+k+'">'+options(values,t[k]||'').replace('<option selected></option>','<option value="" selected>选择'+label+'</option>').replace('<option ></option>','<option value="">选择'+label+'</option>')+'</select>';
+ const availability=readRest();
+ const staffSelect=(k,label,names)=>{
+ const chosen=members(t[k]),isStaff=[...roles,'handModel'].includes(k);
+ return '<details class="multi-picker"><summary>'+esc(chosen.join('、')||'选择'+label)+' <small>多选</small></summary><div class="multi-options">'+[...new Set([...names,...chosen])].filter(Boolean).map(name=>{
+ const off=isStaff&&resting(availability,t.date,name),hint=isStaff?assignmentHint(name,t.date,t.id):'';
+ return '<label><input type="checkbox" '+(isStaff?'data-staff-picker ':'')+'form="'+formId+'" name="'+k+'" value="'+esc(name)+'" '+(chosen.includes(name)?'checked ':'')+(off&&!chosen.includes(name)?'disabled ':'')+' onchange="updateMultiSummary(this)"><span>'+esc(name)+(off?' · 休息':'')+(hint?'<small class="busy-hint">'+esc(hint)+'</small>':'')+'</span></label>';
+ }).join('')+'</div></details>';
+ };
+ const quantity='min="0" step="1" placeholder="—"';
+ const overtime=t.due&&!t.delivery&&t.due<dateTime()?'<span class="tag late">逾期待交付</span>':'';
+ const detail=[
+  ['接单次数',input('assignmentCount','接单次数','number','min="1" step="1" required')],
+  ['云管家工单链接',input('workOrder','云管家工单链接','url')],
+  ['运营联系人',input('opsContact','运营联系人')],
+  ['运营确认',select('opsApproval','运营确认',['','待确认','已确认','待调整'])],
+  ['反馈与整改记录',input('opsFeedback','反馈与整改记录')],
+  ['摄助',staffSelect('assistant','摄助',roleNames.assistant)],
+  ['修片',staffSelect('retouch','修片',roleNames.retouch)],
+  ['承诺交付时间',input('due','承诺交付时间','datetime-local','required')],
+  ['状态',select('status','状态',statuses)],
+  ['优先级',select('priority','优先级',['常规','加急'])],
+  ['计划条数',input('target','计划条数','number',quantity)],
+  ['实际拍摄条数',input('actual','实际拍摄条数','number',quantity)],
+  ['首批验收次数',input('acceptanceCount','首批验收次数','number','min="1" step="1" required')],
+  ['首批验收条数',input('accepted','首批验收条数','number',quantity)],
+  ['运营下发时间',input('assigned','运营下发时间','datetime-local','required')],
+  ['首次交付时间',input('delivery','首次交付时间','datetime-local')],
+  ['首批验收日期',input('acceptDate','首批验收日期','date')]
+ ];
+ return '<tr data-task-id="'+esc(t.id)+'"'+(!t.id?' class="new-task"':savedTask?.id===t.id?' data-saved-row style="outline:2px solid #e0bd70;outline-offset:-2px"':'')+'><td class="ops-date" data-label="日期">'+input('date','排班日期','date','required')+'</td>'+
+ '<td data-label="摄影师">'+staffSelect('lead','摄影师',roleNames.lead)+'</td><td data-label="手模">'+staffSelect('handModel','手模',roleNames.model)+'</td><td data-label="模特">'+staffSelect('model','模特',roleNames.model)+'</td>'+
+ '<td class="ops-content" data-label="品类 / 拍摄类型">'+staffSelect('product','品类',['',...new Set([...products,...(t.product?[t.product]:[])])])+staffSelect('type','拍摄类型',['',...new Set([...types,...(t.type?[t.type]:[])])])+'</td>'+
+ '<td class="ops-requirement" data-label="运营要求与对标链接"><textarea aria-label="运营要求" form="'+formId+'" name="notes" placeholder="填写数量、脚本、道具、参考和核心拍摄要求">'+esc(t.notes)+'</textarea><textarea class="reference-editor" aria-label="参考链接，每行一个" form="'+formId+'" name="link" placeholder="参考链接，每行一个">'+esc(t.link)+'</textarea>'+
+ referenceLinks(t)+
+ '<div class="ops-actions"><form id="'+formId+'" data-row-form="'+esc(t.id)+'"><button class="primary">'+(t.id?'保存':'保存新安排')+'</button></form>'+(t.id?'<button type="button" data-delete="'+esc(t.id)+'">删除</button>':'<button type="button" id="cancelRow">取消</button>')+(safeLink(t.workOrder)?'<a target="_blank" rel="noopener noreferrer" href="'+esc(t.workOrder)+'">打开工单</a>':'')+overtime+'</div></td></tr>'+
+ '<tr class="row-edit"><td colspan="6"><details><summary>工单与交付 · '+esc(t.status)+' · '+esc(t.title)+'</summary><div class="grid">'+detail.map(([label,field])=>'<label>'+label+field+'</label>').join('')+'</div>'+acceptanceEditor(t,formId)+'</details></td></tr>';
+}
+function taskError(t){
+ if(!t.title.trim())return '请输入运营任务名称。';
+ if(t.assignmentCount!=null&&!validCount(t.assignmentCount))return '接单次数应为大于 0 的整数。';
+ if(t.acceptanceCount!=null&&!validCount(t.acceptanceCount))return '首批验收次数应为大于 0 的整数。';
+ if(Array.isArray(t.acceptanceBatches)&&t.acceptanceBatches.length){
+  if(!t.delivery)return '填写追加验收记录前，请填写首次交付时间。';
+  if(![...roles,'handModel'].some(role=>t[role]))return '请分配验收记录对应的参与人员。';
+  for(const record of t.acceptanceBatches){
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(record.date)||!Number.isFinite(Date.parse(record.date+'T00:00:00Z'))||new Date(record.date+'T00:00:00Z').toISOString().slice(0,10)!==record.date||record.date<t.delivery.slice(0,10))return '追加验收日期应为有效日期，且不早于首次交付日期。';
+   if(!validCount(record.times)||!Number.isSafeInteger(record.quantity)||record.quantity<0)return '请填写有效的追加验收次数和本批验收条数。';
+  }
+ }
+ if(t.due<t.assigned||(t.delivery&&t.delivery<t.assigned))return '交付时间需在运营下发时间之后。';
+ if(statuses.slice(3).includes(t.status)&&!t.delivery)return '请展开「工单与交付」，填写首次交付时间。';
+ if(done(t)&&(!t.acceptDate||t.accepted===''||t.acceptDate<t.delivery.slice(0,10)))return '请填写验收条数及验收日期，验收日期应为交付当天或之后。';
+ if(done(t)&&!roles.some(k=>t[k])&&!t.handModel?.trim())return '请分配参与人员。';
+ if(t.lead&&t.lead===t.assistant)return '主拍和摄助请选择不同人员。';
+ const availability=readRest();
+ const conflict=[...roles,'handModel'].flatMap(k=>members(t[k])).find(name=>name&&resting(availability,t.date,name));
+ if(conflict)return conflict+'当天休息，请更换人员后保存。';
+ return '';
+}
+function updateStaffOptions(picker,availability,date){
+ if(picker.type==='checkbox'){picker.disabled=resting(availability,date,picker.value)&&!picker.checked;return;}
+ for(const option of picker.options){
+  const off=resting(availability,date,option.value);
+  option.textContent=option.value+(off?'（休息）':'');
+  option.disabled=off&&!option.selected;
+ }
+}
+function restView(message=''){
+ const values=readRest();
+ const dates=Array.from({length:7},(_,i)=>plusDay(restWeek,i));
+ const conflicts=tasks.filter(t=>dates.includes(t.date)&&[...roles,'handModel'].some(k=>members(t[k]).some(n=>resting(values,t.date,n))));
+ main.innerHTML='<div class="eyebrow">ROSTER / 出勤与调休</div><h1>'+esc(settings.restTitle)+'</h1><p>按周安排人员出勤。设为「休」后，该日期的任务排班会标记并限制选择。</p>'+
+ '<div class="bar"><button id="prevRest">上一周</button><label>查看日期<input id="pickRest" type="date" value="'+restWeek+'"></label><button id="nextRest">下一周</button><span class="spacer"></span><label>导入排班文件<input id="restFile" type="file" accept=".xlsx,.csv,.tsv"></label></div>'+
+ '<div class="panel"><table class="rest-grid"><thead><tr><th>姓名</th><th>岗位</th>'+dates.map((d,i)=>'<th>'+d.slice(5)+' 周'+'一二三四五六日'[i]+'</th>').join('')+'</tr></thead><tbody>'+
+ restStaff.map(p=>'<tr><td>'+esc(p.name)+'</td><td>'+esc(p.role)+'</td>'+dates.map(d=>{
+  const shift=values[d]?.[p.name]||'未安排';
+  return '<td data-shift="'+esc(shift)+'"><select aria-label="'+esc(p.name+' '+d)+'" data-rest-date="'+d+'" data-rest-name="'+esc(p.name)+'">'+['未安排','上班','休'].map(value=>'<option value="'+value+'" '+(value===shift?'selected':'')+'>'+(value==='休'?'休息':value)+'</option>').join('')+'</select></td>';
+ }).join('')+'</tr>').join('')+'</tbody></table></div>'+
+ '<p role="status">'+esc(message)+'</p>'+(conflicts.length?'<p>本周已有 '+conflicts.length+' 条任务安排了休息人员，请到工作安排调整。'+conflicts.slice(0,5).map(t=>esc(t.date+' '+t.title)).join('、')+'</p>':'')+
+ '<details class="panel ops-flow"><summary>从 WPS 或 Excel 复制粘贴</summary><p>复制包含「姓名」和日期表头的范围，粘贴后导入。「休」和「休息」记为休息，行政班次记为上班，空白跳过。</p><form id="restPaste"><textarea name="rows" required aria-label="粘贴排班表"></textarea><button class="primary">导入排班</button></form></details>'+restMonthlySummary(values);
+ const showWeek=date=>{restWeek=weekOf(date);restMonth=date.slice(0,7);restView()};
+ document.querySelector('#prevRest').onclick=()=>showWeek(plusDay(restWeek,-7));
+ document.querySelector('#nextRest').onclick=()=>showWeek(plusDay(restWeek,7));
+ document.querySelector('#pickRest').onchange=e=>{if(e.target.value)showWeek(e.target.value)};
+ document.querySelector('#restMonth').onchange=e=>{
+  if(e.target.value)restMonth=e.target.value;
+  restView();
+  document.querySelector('#restMonthly')?.scrollIntoView?.({block:'start'});
+ };
+ document.querySelectorAll('[data-rest-date]').forEach(field=>field.onchange=()=>{
+  const people=values[field.dataset.restDate]??={};
+  if(field.value==='未安排')delete people[field.dataset.restName];else people[field.dataset.restName]=field.value;
+  try{localStorage.setItem(restKey,JSON.stringify(values));restView('已保存 '+field.dataset.restName+' 的安排。')}catch{restView('保存失败，请检查浏览器存储。')}
+ });
+ document.querySelector('#restPaste').onsubmit=e=>{
+  e.preventDefault();
+  try{applyRestImport(parseDelimited(e.currentTarget.elements.rows.value))}catch(error){alert(error.message)}
+ };
+ document.querySelector('#restFile').onchange=async e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+  try{applyRestImport(file.name.toLowerCase().endsWith('.xlsx')?await readRestXlsx(await file.arrayBuffer()):parseDelimited(await file.text()))}catch(error){alert(error.message);e.target.value=''}
+ };
+}
+function restMonthlySummary(values){
+ const [year,month]=restMonth.split('-').map(Number);
+ const dayCount=new Date(Date.UTC(year,month,0)).getUTCDate();
+ const dates=Array.from({length:dayCount},(_,i)=>restMonth+'-'+String(i+1).padStart(2,'0'));
+ const quota=dates.filter(date=>new Date(date+'T00:00:00Z').getUTCDay()===0).length;
+ const rows=restStaff.map(person=>{
+  const shifts=dates.map(date=>values[date]?.[person.name]);
+  const work=shifts.filter(shift=>shift==='上班').length;
+  const rest=shifts.filter(shift=>shift==='休').length;
+  const balance=quota-rest;
+  const remaining=balance<0?'超排 '+Math.abs(balance)+' 天':balance+' 天';
+  return '<tr><td>'+esc(person.name)+'</td><td>'+esc(person.role)+'</td><td>'+work+'</td><td>'+rest+'</td><td>'+quota+'</td><td><strong>'+remaining+'</strong></td><td>'+(dayCount-work-rest)+'</td></tr>';
+ }).join('');
+ return '<section class="panel month-actuals" id="restMonthly"><div class="report-meta"><h2>月度班休汇总</h2><div class="bar"><label>统计月份<input type="month" id="restMonth" value="'+esc(restMonth)+'"></label><strong>当月 '+quota+' 个周日 · 每人应休 '+quota+' 天</strong></div><p>按排班表已填写的班次统计。休息可排在任意日期，剩余可排休＝当月应休天数减去已排休天数。</p></div><table class="report"><thead><tr><th>姓名</th><th>岗位</th><th>已排上班（天）</th><th>已排休息（天）</th><th>应休（天）</th><th>剩余可排休</th><th>未安排（天）</th></tr></thead><tbody>'+rows+'</tbody></table></section>';
+}
+function parseDelimited(text){
+ const separator=text.includes('\t')?'\t':',';
+ const rows=[[]];
+ let cell='',quoted=false;
+ const source=text.replace(/^\uFEFF/,'').replace(/\r\n?/g,'\n')+'\n';
+ for(let i=0;i<source.length;i++){
+  const char=source[i];
+  if(char==='"'){
+   if(quoted&&source[i+1]==='"'){cell+='"';i++}else quoted=!quoted;
+  }else if(!quoted&&(char===separator||char==='\n')){
+   rows.at(-1).push(cell);cell='';
+   if(char==='\n')rows.push([]);
+  }else cell+=char;
+ }
+ return rows;
+}
+function restDate(value){
+ const str=String(value??'').trim();
+ if(/^\d{5}(?:\.0+)?$/.test(str))return new Date((Number(str)-25569)*86400000).toISOString().slice(0,10);
+ const match=str.match(/^(\d{4})[\/年.-](\d{1,2})[\/月.-](\d{1,2})(?:\D|$)/);
+ if(!match)return '';
+ const date=match[1]+'-'+match[2].padStart(2,'0')+'-'+match[3].padStart(2,'0');
+ const stamp=Date.parse(date+'T00:00:00Z');
+ return Number.isFinite(stamp)&&new Date(stamp).toISOString().slice(0,10)===date?date:'';
+}
+function applyRestImport(rows){
+ const header=rows.findIndex(row=>row.some(v=>String(v).trim()==='姓名')&&row.some(restDate));
+ if(header<0)throw Error('没有找到「姓名」和日期表头，请检查导入范围。');
+ const nameCol=rows[header].findIndex(v=>String(v).trim()==='姓名');
+ const dates=rows[header].map(restDate);
+ const values=readRest(), known=new Set(restStaff.map(p=>p.name)), skipped=new Set(), importedDates=[];
+ let changes=0;
+ for(const row of rows.slice(header+1)){
+  const name=String(row[nameCol]||'').trim();
+  if(!name)continue;
+  if(!known.has(name)){skipped.add(name);continue}
+  dates.forEach((date,col)=>{
+   const value=String(row[col]||'').trim();
+   if(!date||!value) return;
+   const day=values[date]??={};
+   if(value==='清空'||value==='未安排')delete day[name];else day[name]=/^(休|休息|调休)$/.test(value)?'休':'上班';
+   importedDates.push(date);changes++;
+  });
+ }
+ if(!changes)throw Error('没有可导入的中台人员班次。'+(skipped.size?'未匹配：'+[...skipped].join('、'):''));
+ localStorage.setItem(restKey,JSON.stringify(values));
+ const firstDate=importedDates.sort()[0];
+ restWeek=weekOf(firstDate);
+ restMonth=firstDate.slice(0,7);
+ restView('已导入 '+changes+' 个班次。'+(skipped.size?'未匹配姓名：'+[...skipped].join('、'):''));
+}
+async function readRestXlsx(buffer){
+ const bytes=new Uint8Array(buffer), view=new DataView(buffer), decoder=new TextDecoder();
+ let end=bytes.length-22;
+ for(;end>=Math.max(0,bytes.length-65557);end--)if(view.getUint32(end,true)===0x06054b50)break;
+ if(end<Math.max(0,bytes.length-65557))throw Error('无法读取此 XLSX 文件。');
+ let offset=view.getUint32(end+16,true);
+ const entries=new Map();
+ for(let i=0;i<view.getUint16(end+10,true);i++){
+  const length=view.getUint16(offset+28,true);
+  const name=decoder.decode(bytes.subarray(offset+46,offset+46+length));
+  entries.set(name,{size:view.getUint32(offset+20,true),method:view.getUint16(offset+10,true),start:view.getUint32(offset+42,true)});
+  offset+=46+length+view.getUint16(offset+30,true)+view.getUint16(offset+32,true);
+ }
+ async function xml(name){
+  const entry=entries.get(name);
+  if(!entry)return null;
+  const start=entry.start+30+view.getUint16(entry.start+26,true)+view.getUint16(entry.start+28,true);
+  const data=bytes.subarray(start,start+entry.size);
+  const text=entry.method===0?decoder.decode(data):await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+  return new DOMParser().parseFromString(text,'application/xml');
+ }
+ const shared=(await xml('xl/sharedStrings.xml'));
+ const strings=shared?[...shared.getElementsByTagName('si')].map(si=>[...si.getElementsByTagName('t')].map(t=>t.textContent).join('')):[];
+ for(const path of entries.keys()){
+  if(!/^xl\/worksheets\/sheet\d+\.xml$/.test(path))continue;
+  const sheet=await xml(path);
+  const rows=[...sheet.getElementsByTagName('row')].map(row=>{
+   const values=[];
+   for(const cell of row.getElementsByTagName('c')){
+    const letters=cell.getAttribute('r')?.match(/^[A-Z]+/)?.[0];
+    if(!letters)continue;
+    const col=[...letters].reduce((n,c)=>n*26+c.charCodeAt(0)-64,0)-1;
+    const value=cell.getElementsByTagName('v')[0]?.textContent||'';
+    const kind=cell.getAttribute('t');
+    values[col]=kind==='s'?strings[Number(value)]:kind==='inlineStr'?[...cell.getElementsByTagName('t')].map(t=>t.textContent).join(''):value;
+   }
+   return values;
+  });
+  if(rows.some(row=>row.some(v=>String(v).trim()==='姓名')&&row.some(restDate)))return rows;
+ }
+ throw Error('工作簿中没有找到含「姓名」和日期的排班表。');
+}
+function people(){
+ const recordsInMonth=t=>acceptanceRecords(t).filter(record=>!month||record.date.startsWith(month));
+ const rows=tasks.filter(t=>recordsInMonth(t).length);
+ const scheduled=tasks.filter(t=>!month||t.date.startsWith(month));
+ const deliveries=tasks.filter(t=>t.delivery&&t.due&&(!month||t.delivery.startsWith(month)));
+ const groups=staff.filter(p=>!person||p.name===person);
+ const columns=['姓名','岗位','接单次数','实际拍摄条数','验收次数','验收条数','已交付任务数','准时交付率'];
+ const monthlyKey='studio-ops-monthly-output-v1';
+ let monthly={};
+ try{monthly=JSON.parse(localStorage.getItem(monthlyKey)||'{}')||{}}catch{}
+ const daily=readDaily();
+ const production=(name,from,to)=>{
+  const dayTotals=Object.entries(daily).filter(([date,totals])=>date>=from&&date<=to&&totals[name]!=null);
+  const filledDays=new Set(dayTotals.map(([date])=>date));
+  const recorded=tasks.filter(t=>t.date>=from&&t.date<=to&&participates(t,name)&&!filledDays.has(t.date)&&t.actual!=null&&t.actual!=='');
+  return recorded.length||dayTotals.length?sum(recorded,'actual')+dayTotals.reduce((total,[,values])=>total+Number(values[name]),0):'—';
+ };
+ const weekStart=plusDay(outputDay,-((new Date(outputDay+'T00:00:00Z').getUTCDay()+6)%7));
+ const weekEnd=plusDay(weekStart,6);
+ const outputMonth=outputDay.slice(0,7);
+ const outputRows=staff.map(p=>[p.name,p.role,production(p.name,outputDay,outputDay),production(p.name,weekStart,weekEnd),monthly[outputMonth]?.[p.name]??production(p.name,outputMonth+'-01',outputMonth+'-31')]);
+ const outputCell=x=>esc(typeof x==='number'?count(x):x);
+ const pct=(n,d)=>d?(100*n/d).toFixed(1)+'%':'—';
+ const report=groups.map(p=>{
+  const assigned=scheduled.filter(t=>participates(t,p.name));
+  const work=rows.filter(t=>participates(t,p.name));
+  const timed=deliveries.filter(t=>participates(t,p.name));
+  const onTime=timed.filter(t=>t.delivery<=t.due).length;
+  const receipts=work.flatMap(recordsInMonth);
+  const accepted=sum(receipts,'quantity');
+  const actual=monthly[month]?.[p.name]??production(p.name,month+'-01',month+'-31');
+  return [p.name,p.role,assignmentTotal(assigned),actual,sum(receipts,'times'),accepted,timed.length,pct(onTime,timed.length)];
+ });
+ main.innerHTML='<section class="dashboard-title"><div class="eyebrow">STUDIO INTELLIGENCE / 人效分析</div><time>'+esc(outputMonth.replace('-',' 年 '))+' 月</time><h1>'+esc(settings.peopleTitle)+'</h1></section>'+managementView(outputMonth,outputRows)+
+ '<section class="panel month-actuals" id="personalOutput"><div class="report-meta"><h2>个人产出总览</h2><div class="bar"><label>查看与填报日期<input id="outputDay" type="date" value="'+outputDay+'"></label><a href="#dailyOutput">填写当天产出</a></div><p>'+esc(outputDay)+' 当日 · '+weekStart+' 至 '+weekEnd+' 本周 · '+outputMonth+' 本月</p></div><div id="outputChart" class="output-chart"></div><table class="report"><thead><tr><th>姓名</th><th>岗位</th><th>日产出（条）</th><th>周产出（条）</th><th>月产出（条）</th></tr></thead><tbody>'+
+ outputRows.map(row=>'<tr>'+row.map(x=>'<td>'+outputCell(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table><div class="report-meta"><small>周一至周日为一周。月度补录只覆盖月产出。</small></div></section>'+
+ '<section class="panel month-actuals"><div class="report-meta"><h2>团队实际拍摄量</h2><p>团队月度汇总 · 依据已提供的 9 月、10 月拍摄记录</p></div><table><thead><tr><th>月份</th><th>实际拍摄（条）</th><th>环比增量（条）</th><th>环比增幅</th></tr></thead><tbody><tr><td>9 月</td><td>16,771</td><td>—</td><td>—</td></tr><tr><td>10 月</td><td>17,266</td><td>+495</td><td>+2.95%</td></tr></tbody></table><div class="report-meta"><small>原记录另列基础组 16,771 条、创新组 19 个视频，月份及是否计入总量待核对。团队工时和历史个人明细待补录。</small></div></section>'+
+ dailyOutput(daily)+groupOutput()+'<h2 class="home-title">个人人效月报</h2><p>工作安排保存后自动累计接单次数。验收按各批日期归月，每日拍摄条数汇入对应月份。</p>'+
+ '<div class="bar"><label>统计月份<input id="month" type="month" value="'+month+'"></label><label>人员<select id="person">'+options(['全部人员',...staff.map(p=>p.name)],person||'全部人员')+'</select></label><span class="spacer"></span><button id="exportReport" class="primary">导出月报 CSV</button></div>'+
+ '<div class="panel"><div class="report-meta"><strong>'+esc(month||'全部月份')+' · '+esc(person||'全员')+'</strong></div><table class="report"><thead><tr>'+columns.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+
+ report.map(row=>'<tr>'+row.map(x=>'<td>'+esc(typeof x==='number'?count(x):x)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>'+
+ (month?'<details class="panel ops-flow"><summary>按月补录个人实际拍摄条数</summary><form id="monthlyOutput" class="bar"><label>人员<select name="name">'+options(staff.map(p=>p.name),person)+'</select></label><label>本月总条数<input name="total" type="number" min="0" step="1" placeholder="留空恢复每日汇总"></label><button class="primary">保存月度总数</button></form><p>填写月度总数后，月报采用该人员的月度总数。留空保存可恢复每日任务汇总。</p></details>':'')+
+ '<h2 class="home-title">人效计算公式</h2><div class="panel formulas"><table><thead><tr><th>指标</th><th>计算公式</th><th>统计口径</th></tr></thead><tbody>'+
+ [
+  ['接单次数','本人参与任务的接单次数相加','按排班日期归月；同一人、同一任务可累计多次，以填写的实际接单次数为准。'],
+  ['实际拍摄条数','每日实际拍摄条数相加','同一天优先使用个人填报总数，其余日期用任务条数汇总。有手工月度总数时采用月度总数。'],
+  ['验收次数','本人参与的各批次验收次数相加','同一人、同一任务可多次验收；每一批按自己的验收日期归月，跨月分别累计。'],
+  ['验收条数','本人参与的各批次验收条数之和','按每批验收日期归月；同一任务可多次追加。每批条数是该批实际条数，不再乘以验收次数。'],
+  ['已交付任务数','统计本人参与且已记录首次交付和承诺时间的任务数','按首次交付日期归月。'],
+  ['准时交付率','首次交付不晚于承诺时间的任务数 ÷ 已交付任务数 × 100%','按首次交付日期归月，没有已交付任务时显示「—」。']
+ ].map(row=>'<tr>'+row.map(x=>'<td>'+esc(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+ document.querySelector('#exportReport').onclick=()=>{
+  const csv=[['统计月份',...columns],...report.map(row=>[month||'全部月份',...row])].map(row=>row.map(value=>'"'+String(value).replaceAll('"','""')+'"').join(',')).join('\r\n');
+  const url=URL.createObjectURL(new Blob(['\ufeff',csv],{type:'text/csv;charset=utf-8'}));
+  const a=document.createElement('a');a.href=url;a.download='中台个人人效月报-'+(month||'全部月份')+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ };
+ document.querySelector('#month').onchange=e=>{month=e.target.value||today().slice(0,7);render()};
+ document.querySelector('#outputDay').onchange=e=>{outputDay=e.target.value||today();month=outputDay.slice(0,7);render()};
+ renderOutputChart(outputRows);
+ bindManagement(outputMonth);
+ const dailyForm=document.querySelector('#dailyForm');
+ if(dailyForm)dailyForm.onsubmit=e=>{
+  e.preventDefault();
+  const totals=daily[outputDay]??={};
+  for(const [name,value] of new FormData(dailyForm)){
+   if(value==='')delete totals[name];else totals[name]=Number(value);
+  }
+  try{localStorage.setItem(dailyKey,JSON.stringify(daily));month=outputDay.slice(0,7);render();document.querySelector('#dailyStatus').textContent='已保存 '+outputDay+' 的拍摄条数。'}catch{alert('无法保存每日条数，请检查浏览器存储。')}
+ };
+ const monthlyForm=document.querySelector('#monthlyOutput');
+ if(monthlyForm){
+  const updateTotal=()=>{monthlyForm.elements.total.value=monthly[month]?.[monthlyForm.elements.name.value]??''};
+  monthlyForm.elements.name.onchange=updateTotal;
+  updateTotal();
+  monthlyForm.onsubmit=e=>{
+   e.preventDefault();
+   const {name,total}=Object.fromEntries(new FormData(monthlyForm));
+   const totals=monthly[month]??={};
+   if(total==='')delete totals[name];else totals[name]=Number(total);
+   try{localStorage.setItem(monthlyKey,JSON.stringify(monthly));render()}catch{alert('无法保存月度总数，请检查浏览器存储。')}
+  };
+ }
+ document.querySelector('#person').onchange=e=>{person=e.target.value==='全部人员'?'':e.target.value;render()};
+}
+function managementView(period,outputRows){
+ let history={};
+ try{history=JSON.parse(localStorage.getItem(managementKey)||'{}')||{}}catch{}
+ const config=history[period]||{};
+ const monthTasks=tasks.filter(t=>t.date.startsWith(period));
+ const recorded=t=>t.actual!=null&&t.actual!=='';
+ const teamRows=[['基础拍摄组',monthTasks.filter(t=>roleNames.lead.includes(members(t.lead)[0])&&!roster['创新组'].includes(members(t.lead)[0]))],['创新组',monthTasks.filter(t=>roster['创新组'].includes(members(t.lead)[0]))]];
+ const groupActuals=teamRows.map(([name,entries])=>{
+  const available=entries.filter(recorded);
+  return config.actuals?.[name]??(available.length?sum(available,'actual'):null);
+ });
+ const groupTargets=teamRows.map(([name])=>config.targets?.[name]??null);
+ const knownTotal=groupActuals.some(value=>value!==null)?groupActuals.reduce((total,value)=>total+(value??0),0):null;
+ const targetTotal=groupTargets.every(value=>value>0)?groupTargets.reduce((total,value)=>total+value,0):null;
+ const completion=targetTotal!==null&&groupActuals.every(value=>value!==null)?100*knownTotal/targetTotal:null;
+ const baseShare=knownTotal>0?100*(groupActuals[0]??0)/knownTotal:0;
+ const neutral='#263f63', green='#45d8c5', gold='#5c98f4';
+ const ring=(fill,value,title,detail)=>'<article class="team-ring-card"><div class="team-ring" style="--ring-fill:'+fill+'" role="img" aria-label="'+esc(title+' '+value)+'"><strong>'+value+'</strong></div><div class="ring-details"><h3>'+title+'</h3>'+detail+'</div></article>';
+ const rings='<div class="team-rings">'+ring(knownTotal>0?green+' 0 '+baseShare+'%, '+gold+' '+baseShare+'% 100%':neutral+' 0 100%',knownTotal===null?'—':count(knownTotal),'已记录产出（条）',
+ teamRows.map(([name],i)=>'<p><span class="ring-key" style="--key:'+(i===0?green:gold)+'"></span>'+name+' <strong>'+(groupActuals[i]===null?'待填':count(groupActuals[i])+' 条')+'</strong></p>').join(''))+
+ ring(completion===null?neutral+' 0 100%':green+' 0 '+Math.min(completion,100)+'%, '+neutral+' '+Math.min(completion,100)+'% 100%',completion===null?'—':count(completion)+'%','团队目标完成率',
+ '<p>团队目标 <strong>'+(targetTotal===null?'待设齐':count(targetTotal)+' 条')+'</strong></p><p>'+(completion===null?'两组的目标和实际均齐全后计算。':'已完成 '+count(knownTotal)+' 条，距目标还差 '+count(Math.max(0,targetTotal-knownTotal))+' 条。')+'</p>')+'</div>';
+ const goals=(name,kind,actual,group=false,toggle='')=>{
+  const goal=config.targets?.[name];
+  const ratio=Number(goal)>0&&typeof actual==='number'?actual/goal:null;
+  const progress=ratio==null?'—':'<div class="target-progress"><progress aria-label="'+esc(name)+'目标完成率" max="1" value="'+Math.min(1,ratio)+'"></progress>'+count(ratio*100)+'%</div>';
+  return '<tr'+(group?' class="goal-group"':'')+'><td>'+(toggle||esc(name))+'</td><td>'+esc(kind)+'</td><td><input class="target-input" type="number" min="1" step="1" name="target:'+esc(name)+'" aria-label="'+esc(name)+'月度目标" value="'+esc(goal)+'" placeholder="设定目标"></td><td>'+
+   (group?'<input class="target-input" type="number" min="0" step="1" name="actual:'+esc(name)+'" aria-label="'+esc(name)+'实际产出补录" value="'+esc(config.actuals?.[name])+'" placeholder="'+esc(actual==='—'?'待填':actual)+'">':esc(typeof actual==='number'?count(actual):actual))+'</td><td>'+progress+'</td><td>'+(ratio==null?'—':count(Math.max(0,goal-actual))+' 条')+'</td></tr>';
+ };
+ const groupMembership=[
+  ['基础拍摄组',roster['基础摄影']],
+  ['创新组',roster['创新组']],
+  ['摄影助理',roster['摄影助理']],
+  ['模特组',roster['模特']]
+ ];
+ const goalGroups=groupMembership.map(([name,names],index)=>{
+  const open=expandedGoalGroups.has(index);
+  const toggle='<button type="button" data-goal-group="'+index+'" aria-controls="goal-members-'+index+'" aria-expanded="'+open+'">'+esc(name)+' · '+names.length+' 人</button>';
+  const summary=index<teamRows.length?goals(name,'组别',groupActuals[index]??'—',true,toggle):'<tr class="goal-group"><td>'+toggle+'</td><td colspan="5">个人目标</td></tr>';
+  const members=outputRows.filter(([person])=>names.includes(person)).map(([person,role,,,actual])=>goals(person,role,actual)).join('');
+  return '<tbody>'+summary+'</tbody><tbody class="goal-members" id="goal-members-'+index+'"'+(open?'':' hidden')+'>'+members+'</tbody>';
+ }).join('');
+ const allPhotographers=roleNames.lead;
+ const selected=allPhotographers.includes(mixPhotographer)?mixPhotographer:(monthTasks.find(t=>allPhotographers.includes(t.lead))?.lead||allPhotographers[0]);
+ const own=monthTasks.filter(t=>members(t.lead).includes(selected));
+ const baseCategory=type=>type.startsWith('口播')?'口播':type.startsWith('产品使用')?'产品使用展示':type;
+ const categories=[...new Set(['产品展示','内料展示','口播','意识流','产品使用展示',...types.map(baseCategory),'其他／待确认'])];
+ const category=t=>{
+  const type=(t.type||'').trim();
+  const label=baseCategory(type);
+  return categories.includes(label)?label:'其他／待确认';
+ };
+ const basisRows=mixBasis==='volume'?own.filter(recorded):own;
+ const total=mixBasis==='volume'?sum(basisRows,'actual'):basisRows.length;
+ const mix=categories.map(label=>{
+  const items=basisRows.filter(t=>category(t)===label);
+  const amount=mixBasis==='volume'?sum(items,'actual'):items.length;
+  const ratio=total?100*amount/total:0;
+  return '<div class="mix-row"><span>'+label+'</span><div class="chart-track" aria-hidden="true"><div class="chart-bar" style="width:'+ratio+'%"></div></div><strong>'+count(amount)+(mixBasis==='volume'?' 条':' 项')+' · '+(total?count(ratio)+'%':'—')+'</strong></div>';
+ }).join('');
+ const overdue=monthTasks.filter(t=>t.due&&!t.delivery&&t.due<dateTime());
+ const missing=monthTasks.filter(t=>!recorded(t));
+ const unknown=monthTasks.filter(t=>category(t)==='其他／待确认');
+ return '<section class="panel management"><div class="report-meta"><h2>团队月度总览</h2><div class="bar"><label>统计月份<input id="managementMonth" type="month" value="'+esc(period)+'"></label><a href="#personalOutput">查看个人产出明细</a></div></div>'+
+ '<div class="cards">'+card('本月排班任务',monthTasks.length)+card('逾期待交付',overdue.length)+card('待补任务实际条数',missing.length)+card('其他／待确认类型',unknown.length)+'</div>'+
+ rings+'<div class="team-rings-note"><small>按基础组与创新组的组别产出汇总，每条任务按主拍归组。组别补录总数优先。</small></div>'+
+ '<div class="dashboard-focus"><article><strong>交付跟进</strong><p>'+(overdue.length?'优先处理 '+overdue.length+' 条逾期任务。':'当月暂无逾期待交付任务。')+'</p></article><article><strong>数据补齐</strong><p>'+(missing.length||unknown.length?'待补产出 '+missing.length+' 项，类型待确认 '+unknown.length+' 项。':'当月排班没有待补条数或类型。')+'</p></article><article><strong>目标复盘</strong><p>'+(completion===null?'补齐两组目标和实际产出后，查看团队进度。':completion>=100?'团队已完成本月目标。':'距团队目标还差 '+count(targetTotal-knownTotal)+' 条。')+'</p></article></div>'+
+ '<details><summary>月度目标与完成进度</summary><form id="manageGoals"><div class="chart-table-scroll"><table><thead><tr><th>组别／成员</th><th>口径</th><th>目标（条）</th><th>实际（条）</th><th>完成率</th><th>还差</th></tr></thead>'+
+ goalGroups+'</table></div><p><small>组别默认按任务的摄影师归组，每个任务计一次。摄助担任主拍时，任务产出计入基础组。可补录组别实际总数，清空后恢复任务汇总。个人实际取个人月产出，协作任务可能归属多人。</small></p>'+
+ '<label class="management-notes">月度复盘与改进事项<textarea name="notes" placeholder="例如：口播集中排景，明确运营确认节点">'+esc(config.notes)+'</textarea></label><div class="bar"><button class="primary">保存目标与复盘</button><span id="managementStatus" role="status"></span></div></form></details>'+
+ '<details id="mixDetails"><summary>摄影师拍摄类型占比</summary><div class="bar"><label>摄影师<select id="mixPhotographer">'+options(allPhotographers,selected)+'</select></label><label>统计方式<select id="mixBasis"><option value="tasks" '+(mixBasis==='tasks'?'selected':'')+'>按任务数</option><option value="volume" '+(mixBasis==='volume'?'selected':'')+'>按实际条数</option></select></label></div>'+
+ mix+'<p><small>按主拍和排班月份统计。按条数查看时，已填任务 '+own.filter(recorded).length+'／'+own.length+' 项。个人每日或月度总数缺少拍摄类型，统计占比使用任务明细。</small></p></details>'+
+ '<details><summary>本月跟进事项</summary><p>逾期：'+(overdue.length?overdue.slice(0,8).map(t=>esc(t.title)).join('、'):'暂无')+'</p><p>补齐实际条数后可核对组别目标进度。类型待确认的任务可在工作安排里补分类，便于复盘拍摄结构。</p></details></section>';
+}
+function bindManagement(period){
+ document.querySelector('#managementMonth').onchange=e=>{
+  if(e.target.value){month=e.target.value;outputDay=month===today().slice(0,7)?today():month+'-01'}
+  render();
+ };
+ const form=document.querySelector('#manageGoals');
+ document.querySelectorAll('[data-goal-group]').forEach(button=>button.onclick=()=>{
+  const index=Number(button.dataset.goalGroup);
+  const open=!expandedGoalGroups.has(index);
+  if(open)expandedGoalGroups.add(index);else expandedGoalGroups.delete(index);
+  button.setAttribute('aria-expanded',String(open));
+  document.querySelector('#goal-members-'+index).hidden=!open;
+ });
+ form.onsubmit=e=>{
+  e.preventDefault();
+  let history={};
+  try{history=JSON.parse(localStorage.getItem(managementKey)||'{}')||{}}catch{}
+  const targets={},actuals={};
+  const fields=new FormData(form);
+  for(const [key,value] of fields){
+   if(value==='')continue;
+   if(key.startsWith('target:'))targets[key.slice(7)]=Number(value);
+   if(key.startsWith('actual:'))actuals[key.slice(7)]=Number(value);
+  }
+  history[period]={targets,actuals,notes:fields.get('notes')||''};
+  try{localStorage.setItem(managementKey,JSON.stringify(history));render();const status=document.querySelector('#managementStatus');status.closest('details').open=true;status.textContent='已保存 '+period+' 目标与复盘。'}catch{alert('无法保存目标，请检查浏览器存储。')}
+ };
+ document.querySelector('#mixPhotographer').onchange=e=>{mixPhotographer=e.target.value;render();document.querySelector('#mixDetails').open=true};
+ document.querySelector('#mixBasis').onchange=e=>{mixBasis=e.target.value;render();document.querySelector('#mixDetails').open=true};
+}
+function renderOutputChart(rows){
+ const chart=document.querySelector('#outputChart');
+ const periods=['日产出','周产出','月产出'];
+ const values=rows.map(row=>[row[0],row[chartPeriod+2]]).filter(([,value])=>typeof value==='number').sort((a,b)=>b[1]-a[1]);
+ const max=Math.max(1,...values.map(([,value])=>value));
+ chart.innerHTML='<div class="chart-switch" role="group" aria-label="图表统计周期">'+periods.map((label,index)=>'<button type="button" data-chart-period="'+index+'" aria-pressed="'+(index===chartPeriod)+'">'+label+'</button>').join('')+'</div>'+
+ (values.length?'<ul class="chart-list" aria-label="'+periods[chartPeriod]+'">'+values.map(([name,value])=>'<li class="chart-row"><strong>'+esc(name)+'</strong><div class="chart-track" aria-hidden="true"><div class="chart-bar" style="width:'+100*value/max+'%"></div></div><span class="chart-value">'+count(value)+' 条</span></li>').join('')+'</ul><div class="chart-caption">按已记录产出从高到低排列。完整名册见下表。</div>':'<p class="empty">所选周期暂无产出记录。填写当天条数后，图表会自动更新。</p>');
+ chart.querySelectorAll?.('[data-chart-period]').forEach(button=>button.onclick=()=>{
+  chartPeriod=Number(button.dataset.chartPeriod);
+  renderOutputChart(rows);
+  chart.querySelector('[aria-pressed="true"]')?.focus();
+ });
+}
+function dailyOutput(daily){
+ const assignments=tasks.filter(t=>t.date===outputDay);
+ const totals=daily[outputDay]||{};
+ const people=staff.map(p=>({...p,assignments:assignments.filter(t=>participates(t,p.name))})).filter(p=>p.assignments.length||totals[p.name]!=null);
+ return '<section class="panel daily-output" id="dailyOutput"><div class="report-meta"><div><h2>每日拍摄条数 · '+outputDay+'</h2><p>自动列出当天排班人员。按群里的汇报填写个人当天总数。</p></div></div>'+
+ (people.length?'<form id="dailyForm"><table><thead><tr><th>人员</th><th>岗位</th><th>当天安排</th><th>实际拍摄条数</th></tr></thead><tbody>'+
+ people.map(p=>'<tr><td>'+esc(p.name)+'</td><td>'+esc(p.role)+'</td><td>'+assignmentTotal(p.assignments)+' 次</td><td><input aria-label="'+esc(p.name)+'当天实际拍摄条数" type="number" min="0" step="1" name="'+esc(p.name)+'" value="'+esc(totals[p.name])+'" placeholder="待填"></td></tr>').join('')+
+ '</tbody></table><div class="report-meta"><button class="primary">保存当天条数</button><span id="dailyStatus" role="status"></span></div></form>':'<div class="empty">当天还没有已分配人员的排班。请先在「工作安排」选择并保存人员，或切换填报日期。</div>')+'</section>';
+}
+function groupOutput(){
+ const groups=[['基础拍摄组',16771,defaultRoster['基础摄影']],['创新组',19,defaultRoster['创新组']]];
+ return '<section class="panel month-actuals"><div class="report-meta"><h2>原始组别人均产出</h2><p>按最初提供的分组产量和人员配置计算。</p></div><table><thead><tr><th>组别</th><th>视频产量</th><th>组内人数</th><th>人均产出</th></tr></thead><tbody>'+
+ groups.map(([label,output,names])=>'<tr><td>'+label+'</td><td>'+count(output)+' 条</td><td>'+names.length+' 人</td><td>'+count(output/names.length)+' 条／人</td></tr>').join('')+
+ '</tbody></table><div class="report-meta"><small>人均产出＝组内视频产量 ÷ 组内名册人数。基础组按 3 名基础摄影计算，创新组按 3 名成员计算。模特与摄助为协作岗位，单人实绩仍需对应任务明细。</small></div></section>';
+}
+function plan(){
+ main.innerHTML='<h1>'+esc(settings.planTitle)+'</h1><p>'+esc(settings.planIntro)+'</p>'+
+ (settings.planNotes?'<div class="panel plan"><h3>补充安排</h3><p style="white-space:pre-wrap">'+esc(settings.planNotes)+'</p></div>':'')+
+ '<div class="cards">'+card('9 月拍摄量','16,771')+card('10 月拍摄量','17,266')+card('环比增加','495 条')+card('环比增幅','2.95%')+'</div>'+
+ '<p>原记录另列基础组 16,771 条、创新组 19 个视频。分组月份及是否计入总量待核对。</p>'+
+ '<div class="panel plan"><h3>第 1 周 · 建立工时基线</h3><p>主拍和模特成组排班，摄助按实际任务支援，修片按交付截止排队。创新组借用模特前核对当日排班。运营下发时补齐脚本、数量、参考和验收要求。按任务记录换景、清洗、布光、重拍用时。</p></div>'+
+ '<div class="panel plan"><h3>第 2 周 · 分类型试行</h3><p><strong>口播</strong>　按人设和营销活动优先排，先确认台词和场景，再按场景合拍，留出模特过词时间。看每任务换景次数及拍摄工时。</p><p><strong>内料</strong>　摄助预分装内料，备好替换容器、擦拭工具和回收区。先小量试倒确认机位、流速与落点，再正式拍摄。看重拍次数与清洁用时。</p><p><strong>意识流</strong>　创新组先确认分镜、动作和灯位，保留灯位照片与布光参数，正式拍前试拍关键动作。看布光用时和首轮验收情况。</p></div>'+
+ '<div class="panel plan"><h3>第 3–4 周 · 按基线排产</h3><p>用同类型任务的实际工时中位数估算下周负荷，同时核对主拍、模特、摄助和修片的可用时段。每天留一段可调整时间给加急需求。周末对比同类型任务的单位工时产出和准时率，再确定下一周期目标。</p></div>';
+}
+function adminView(message=''){
+ const field=(key,label,kind='text',value=settings[key])=>'<label'+(kind==='area'?' class="wide"':'')+'>'+label+
+  (kind==='area'?'<textarea name="'+key+'">'+esc(value)+'</textarea>':'<input name="'+key+'" value="'+esc(value)+'" required>')+'</label>';
+ const copyFields=items=>items.map(([key,label])=>field(key,label)).join('');
+ const panel=(title,body,open=false)=>'<details class="panel admin-section"'+(open?' open':'')+'><summary>'+title+'</summary><div class="grid">'+body+'</div></details>';
+ main.innerHTML='<h1>管理后台</h1><p>在这里编辑网站内容和业务选项。设置保存在当前浏览器，保存后会应用到对应页面。</p><form id="adminForm">'+
+ panel('网站与首页',field('title','网站名称')+field('homeTitle','首页标题')+field('intro','部门介绍','area')+
+ '<label>更换首页主视觉<input type="file" name="photoUpload" accept="image/jpeg,image/png,image/webp"></label><label><span>恢复无限进步主视觉</span><input type="checkbox" name="resetPhoto" style="width:auto;justify-self:start"></label><img class="admin-preview wide" src="'+esc(settings.photo||'./infinite-progress-original.jpg')+'" alt="当前首页主视觉">',true)+
+ panel('导航与页面文案',copyFields([
+  ['navHome','首页导航'],['navSchedule','工作安排导航'],['navRest','休息表导航'],['navPeople','人效导航'],['navPlan','产能规划导航'],['navAdmin','后台导航'],
+  ['brandLine','首页英文署名'],['brandSubtitle','首页副标'],['scheduleButton','排班按钮'],['peopleButton','人效按钮'],
+  ['productsTitle','品类标题'],['shootingTitle','拍摄类型标题'],['deliveryTitle','交付标题'],['orgTitle','组织架构标题'],
+  ['scheduleTitle','排班标题'],['restTitle','休息表标题'],['peopleTitle','人效看板标题'],['footerBrand','页脚署名'],['footerText','页脚说明']
+ ])+field('scheduleIntro','排班页介绍','area'))+
+ panel('拍摄配图与团队相册',field('artCaption','拍摄配图说明')+
+ field('artwork','拍摄配图地址（按类型介绍顺序，每行一张）','area',settings.artwork||artworkDefaults.join('\n'))+
+ field('galleryTitle','相册标题')+field('galleryIntro','相册介绍','area')+
+ field('gallery','相册（每行填写 图片地址 | 说明，可删除或调整顺序）','area',getTeamPhotos().map(p=>p.src+' | '+p.caption).join('\n'))+
+ '<p class="wide">图片可用 HTTPS 地址，或站内相对路径。清空相册内容可隐藏相册。</p>')+
+ panel('业务数据','<div class="bar wide"><button type="button" data-admin-route="schedule">编辑任务与交付</button><button type="button" data-admin-route="rest">编辑出勤与调休</button><button type="button" data-admin-route="people">编辑产出与目标</button></div>')+
+ panel('组织架构与人员',field('leader','部门负责人')+field('specialty','专项分工','area')+
+ Object.keys(defaultRoster).map(role=>field('roster:'+role,role+'名单（每行一人）','area',roster[role].join('\n'))).join('')+
+ field('mentors','带教关系（每行一组，例如 杨建勋：游苗、陈丽娜）','area')+'<p class="wide">姓名用于关联排班与人效。改名或移除人员后，已有记录仍保留原姓名，当前名册报表按更新后的名单展示。</p>')+
+ panel('品类与拍摄类型',field('products','品类选项（每行一项）','area',products.join('\n'))+field('types','拍摄类型选项（每行一项）','area',types.join('\n'))+field('shooting','首页拍摄类型介绍（每行填写 类型：说明）','area'))+
+ panel('交付时效与运营对接',field('shiftIntro','调休与交付说明','area')+field('normalTitle','常规时效标题')+field('urgentTitle','加急时效标题')+field('normalText','常规交付说明','area')+field('urgentText','加急交付说明','area')+
+ field('opsLead','运营对接负责人')+field('opsSummary','对接职责')+field('orderFlow','下单与确认','area')+field('deliveryFlow','拍摄与交付','area')+field('feedbackFlow','反馈与复核','area'))+
+ panel('产能规划',field('planTitle','页面标题')+field('planIntro','规划说明','area')+field('planNotes','补充安排','area'))+
+ '<div class="bar admin-actions"><button class="primary">保存网站设置</button><span id="adminStatus" role="status">'+esc(message)+'</span><span class="spacer"></span><button type="button" id="adminHome">查看首页</button></div></form>';
+ document.querySelectorAll('[data-admin-route]').forEach(button=>button.onclick=()=>navigateTab(button.dataset.adminRoute));
+ document.querySelector('#adminHome').onclick=()=>{tab='home';render()};
+ document.querySelector('#adminForm').onsubmit=async e=>{
+  e.preventDefault();
+  const form=e.currentTarget;
+  const fields=new FormData(form);
+  const status=document.querySelector('#adminStatus');
+  const lines=value=>[...new Set(String(value||'').split(/\r?\n/).map(item=>item.trim()).filter(Boolean))];
+  const next={...settings};
+  for(const [key,value] of fields)if(typeof value==='string'&&Object.hasOwn(defaults,key)&&!['photo','products','types','gallery'].includes(key))next[key]=value.trim();
+  const safeImage=src=>/^https:\/\/[^\s]+$/i.test(src)||/^\.\/[\w./%-]+$/i.test(src);
+  next.gallery=String(fields.get('gallery')||'').split(/\r?\n/).filter(line=>line.trim()).map(line=>{
+   const [src,...caption]=line.split('|');
+   return {src:src.trim(),caption:caption.join('|').trim()};
+  });
+  if(next.gallery.some(p=>!safeImage(p.src))||next.artwork.split(/\r?\n/).some(src=>src.trim()&&!safeImage(src.trim()))){
+   status.textContent='配图和相册地址请填写 HTTPS 地址或以 ./ 开头的站内路径。';return;
+  }
+  next.products=lines(fields.get('products'));
+  next.types=lines(fields.get('types'));
+  next.roster=Object.fromEntries(Object.keys(defaultRoster).map(role=>[role,lines(fields.get('roster:'+role))]));
+  const names=Object.values(next.roster).flat();
+  if(!next.title||!next.homeTitle||!next.leader||!next.opsLead||!next.products.length||!next.types.length){status.textContent='请填写网站名称、首页标题、负责人，并保留至少一个品类和拍摄类型。';return}
+  if(new Set(names).size!==names.length){status.textContent='同一姓名请只填写在一个岗位名单中。';return}
+  const photo=fields.get('photoUpload');
+  if(fields.has('resetPhoto'))next.photo='';
+  if(photo?.size){
+   if(photo.size>2*1024*1024||!/^image\/(jpeg|png|webp)$/.test(photo.type)){status.textContent='请上传 2 MB 以内的 JPG、PNG 或 WebP 图片。';return}
+   try{next.photo=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(photo)})}
+   catch{status.textContent='图片读取失败，请重新选择。';return}
+  }
+  try{localStorage.setItem(settingsKey,JSON.stringify(next))}catch{status.textContent='保存失败，请检查浏览器存储空间。';return}
+  settings=next;
+  applySettings();
+  if(person&&!staff.some(p=>p.name===person))person='';
+  document.querySelector('#siteTitle').textContent=settings.title;
+  document.title=settings.title;
+  adminView('已保存，页面已应用新设置。');
+ };
+}
+function navigateTab(next){
+ tab=next;
+ render();
+ if(typeof window!=='undefined'){
+  window.history.pushState(null,'','#/'+next);
+  window.scrollTo({top:0,behavior:'instant'});
+ }
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>navigateTab(b.dataset.tab));
+if(typeof window!=='undefined'){
+ const route=()=>{const next=window.location.hash.slice(2);if(['home','schedule','rest','people','plan','admin'].includes(next)){tab=next;render();window.scrollTo({top:0,behavior:'instant'})}};
+ window.addEventListener('popstate',route);
+ const initial=window.location.hash.slice(2);
+ if(['home','schedule','rest','people','plan','admin'].includes(initial))tab=initial;
+ main.addEventListener('invalid',event=>{event.target.closest('details')?.setAttribute('open','')},true);
+}
+render();
+</script><script src="doubao-chat.js" defer></script></html>

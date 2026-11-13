@@ -1,0 +1,186 @@
+:root {
+  color-scheme: dark;
+  --canvas: #0e1015;
+  --surface: #161922;
+  --raised: #1b202c;
+  --line: #303647;
+  --text: #f2f1ed;
+  --muted: #a9b0c1;
+  --accent: #e9c28c;
+  --ink: #21170c;
+  --serif: "Noto Serif SC", "Songti SC", SimSun, serif;
+}
+
+body,
+body:has(.schedule-page),
+body:has(.people-page) {
+  background: radial-gradient(ellipse at 84% -15%, #262a43 0%, transparent 48%), var(--canvas);
+  color: var(--text);
+}
+
+body header,
+body:has(.schedule-page) header,
+body:has(.people-page) header {
+  background: #11141cf5;
+  border-bottom: 1px solid var(--line);
+  padding: 15px max(4%, calc((100% - 1380px) / 2));
+}
+
+header strong { font-size: 17px; letter-spacing: .06em; }
+header nav { gap: 3px; }
+header nav button,
+body:has(.schedule-page) nav button {
+  background: transparent;
+  color: #bbc1d0;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+body header nav .active,
+body:has(.schedule-page) nav .active,
+body:has(.people-page) nav .active {
+  background: #2c2930;
+  color: #f4d2a0;
+  box-shadow: inset 0 -2px #d3a66f;
+}
+
+main { max-width: 1480px; padding: clamp(22px, 4vw, 48px) 4%; }
+main h1 { font-family: var(--serif); font-weight: 700; line-height: 1.13; letter-spacing: .035em; }
+main h2, main h3 { color: var(--text); }
+main p, main label, main small { color: var(--muted); }
+main a { color: #f0c895; text-underline-offset: 3px; }
+main :is(button,input,textarea,select,a,summary):focus-visible {
+  outline: 2px solid #e9c28c;
+  outline-offset: 3px;
+}
+
+main button {
+  background: #242b39;
+  color: #f0edf0;
+  border: 1px solid #3a4254;
+  border-radius: 7px;
+}
+
+main button:hover { background: #323a4b; }
+main .primary,
+.schedule-page .primary,
+.people-page .primary,
+.studio-cover .primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+main input, main select, main textarea {
+  background: #121722;
+  border-color: #40495e;
+  color: var(--text);
+}
+
+main input::placeholder, main textarea::placeholder { color: #8f98af; }
+main .panel, main .card { background: var(--surface); border-color: var(--line); border-radius: 11px; }
+main th { background: #222838; color: #e0e6f2; }
+main td, main th, main .report-meta { border-color: var(--line); }
+main .report tbody tr:nth-child(even) { background: #1a1f2a; }
+main .card { padding: 15px 17px; color: var(--muted); }
+main .card b { color: var(--text); font-variant-numeric: tabular-nums; }
+main .tag { background: #252c3d; border: 1px solid #3a4359; color: #e0e5f2; }
+main .home-title { border-color: var(--line); margin-top: 32px; padding-top: 16px; }
+main .ops-flow { background: #181d29; }
+main .empty { color: var(--muted); }
+
+/* The original team photo anchors the home page. */
+.studio-cover {
+  position: relative;
+  grid-template-columns: minmax(265px, .85fr) minmax(0, 1.45fr);
+  min-height: 420px;
+  border: 1px solid #3b3d4d;
+  border-radius: 17px;
+  background: #181c27;
+  isolation: isolate;
+}
+
+.studio-cover::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: radial-gradient(ellipse at 0 0, #3a3147, transparent 60%),
+              repeating-linear-gradient(125deg, transparent 0 52px, #ffffff08 53px 54px);
+}
+
+.studio-cover .cover-text { padding: clamp(28px, 4.5vw, 70px); }
+.studio-cover h1 { font-size: clamp(38px, 5vw, 73px); color: #fff2df; }
+.studio-cover p { color: #d4cad1; }
+.studio-cover img { object-position: 50% 44%; border-left: 1px solid #ffffff22; }
+.home-grid .panel { padding: 19px; background: linear-gradient(135deg, #1e2331, #151922); }
+.home-grid .panel h3 { color: #efce9e; }
+.org-map { background: radial-gradient(ellipse at 10% 40%, #272939, transparent 45%), #191c26; border-color: var(--line); }
+.org-detail { color: #c3c9d9; }
+.mentor-box { background: #302632; border-color: #a67d96; }
+.mentor-box h3 { color: #f3dae8; }
+
+/* Keep the day-to-day scheduling view compact and easy to scan. */
+.schedule-page { color: var(--text); --ink: var(--text); --muted: #b0b8c9; --line: #363e51; --paper: #191d28; padding-top: 22px; }
+.schedule-page .ops-contact { background: #25232e; border-color: #51445a; color: #f1d0a2; }
+.schedule-page .schedule-hero {
+  padding: clamp(20px, 3vw, 42px);
+  border: 1px solid #3b4864;
+  background: radial-gradient(ellipse at 93% 8%, #423449, transparent 60%), linear-gradient(120deg, #1b2940, #171c2a);
+}
+.schedule-hero h1 { color: #fff1dd; font-size: clamp(31px, 4vw, 49px); }
+.schedule-hero time { color: #edc697; }
+.schedule-page :is(input,select,textarea) { background: #131926; border-color: #424c63; color: var(--text); }
+.schedule-page button { background: #262e40; color: var(--text); border-color: #3f4a61; }
+.schedule-page .primary { background: var(--accent); color: var(--ink); }
+.schedule-page .worksheet { background: #181d29; border-color: #424c64; }
+.schedule-page .worksheet th { background: #332d3b; color: #f4d6ab; border-color: #55495d; }
+.schedule-page .worksheet td { border-color: #343e53; }
+.schedule-page .worksheet td:first-child { background: #222538; }
+.schedule-page .worksheet tbody tr:hover, .schedule-page .worksheet .row-edit td { background: #202638; }
+.schedule-page .worksheet :is(input,select,textarea), .schedule-page .worksheet .row-edit :is(input,select) { background: #141a28; border-color: #414b63; color: #f1edf2; }
+.schedule-page .worksheet .new-task td { background: #2b2b3c; }
+.schedule-page .mobile-task { background: #1b2130; color: var(--text); border-color: #414b62; }
+.mobile-task dt { color: #c5ad94; }
+.mobile-task .reference-jump, .schedule-page .worksheet .reference-jump { background: #352c35; border-color: #876b61; color: #f6d6a7; }
+
+/* Keep dashboard density, with distinct chart and data surfaces. */
+.people-page { --dash-border: #343f5a; --dash-panel: #171f31; --dash-muted: #b1bbd3; }
+.people-page .dashboard-title {
+  border-color: #4a4962;
+  background: linear-gradient(100deg, #202238 18%, #222940ed 57%, #232a3d80), url("./team.jpg") center 39%/cover;
+}
+.people-page .dashboard-title time { color: #edc391; }
+.people-page .card, .people-page .dashboard-focus article { background: #202a40; }
+.people-page .card b, .people-page .team-ring strong { color: #e9f5ff; }
+.people-page .dashboard-focus strong { color: #edcaa1; }
+.people-page th { background: #24304a; }
+.people-page .output-chart { background: #1b253a; }
+.people-page .chart-bar { background: linear-gradient(90deg, #788fee, #78d5ce); }
+.people-page .chart-track { background: #2b3551; }
+.people-page .goal-group td { background: #27324b; }
+.people-page a, .people-page .goal-group button { color: #d8c5fb; }
+.people-page .goal-group button { background: transparent; border: 0; }
+.people-page .chart-switch button[aria-pressed=true] { background: #dac8f5; color: #211932; }
+.people-page .report tbody tr:nth-child(even) { background: #1d273d; }
+
+.rest-grid td[data-shift="休"] { background: #a1324b; }
+.rest-grid td[data-shift="上班"] { background: #233c38; }
+.rest-grid td[data-shift="未安排"] { background: #252a37; }
+.rest-grid td[data-shift] select { color: #e0e3ed; }
+.rest-grid td[data-shift="休"] select { color: #fff; }
+.rest-grid td[data-shift="上班"] select { color: #c3f2dd; }
+.rest-grid td[data-shift] select option { background: var(--surface); color: var(--text); }
+.admin-page .admin-actions { background: #1a2030; border-color: var(--line); }
+.admin-page [role=status] { color: #a1dfc5; }
+main .plan { border-left-color: #ac8b66; }
+
+@media (max-width: 760px) {
+  body header, body:has(.schedule-page) header, body:has(.people-page) header { padding: 11px 4%; }
+  main { padding-top: 19px; }
+  .studio-cover { grid-template-columns: 1fr; min-height: 0; }
+  .studio-cover .cover-text { padding: 27px 22px; }
+  .studio-cover img { border-left: 0; border-top: 1px solid var(--line); }
+  .schedule-page .schedule-hero { padding: 17px; }
+}
