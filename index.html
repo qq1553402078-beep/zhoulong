@@ -21,7 +21,7 @@ body:has(.people-page){background:#071326;color:#edf4ff}body:has(.people-page) h
 .reference-links .reference-jump{display:inline-flex;align-items:center;gap:5px;width:fit-content;padding:5px 9px;border:1px solid #918058;border-radius:7px;background:#354638;color:#fff1cc;font-weight:650;text-decoration:none}.reference-jump:hover,.reference-jump:focus-visible{outline:2px solid #d7b86c;outline-offset:2px}.reference-links .reference-address{font-size:11px;overflow-wrap:anywhere}.capture .reference-links{margin-top:4px}
 .mobile-schedule,.mobile-edit-toggle{display:none}.worksheet .reference-editor{min-height:64px!important;margin-top:5px}.mobile-task{padding:15px;margin:10px 0;background:#fffdf6;border:1px solid #ded7c9;border-radius:13px}.mobile-task h3{margin:8px 0 10px;font-size:17px}.mobile-task .mobile-task-meta{display:flex;align-items:center;justify-content:space-between;gap:10px}.mobile-task dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}.mobile-task dt{color:#586656;font-size:12px}.mobile-task dd{margin:3px 0 0;overflow-wrap:anywhere}.mobile-task .mobile-notes{white-space:pre-wrap;overflow-wrap:anywhere;margin:10px 0}.mobile-task .reference-links{display:flex;flex-wrap:wrap;gap:8px}.mobile-task .reference-jump{min-height:40px;padding:9px 12px}.mobile-task .reference-jump:hover,.mobile-task .reference-jump:focus-visible{outline-color:#31573d}
 @media(max-width:760px){header,body:has(.schedule-page) header{padding:12px 4%;gap:8px}header nav{width:100%;overflow-x:auto;padding-bottom:4px}header nav button{flex:none;white-space:nowrap}.schedule-page{padding:14px 4%}.schedule-hero{padding:17px;border-radius:14px}.schedule-hero h1{font-size:30px}.schedule-hero time{font-size:17px}.schedule-page .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0}.schedule-page .card{padding:9px 10px}.schedule-page .card b{font-size:21px;margin-top:3px}.schedule-tools{gap:7px;margin:10px 0}.schedule-tools .search{min-width:100%;order:2}.mobile-schedule,.mobile-edit-toggle{display:block}.schedule-page .worksheet.edit-grid{display:none}.schedule-page.mobile-editing .worksheet.edit-grid{display:block}.schedule-page.mobile-editing .mobile-schedule{display:none}.mobile-editing .edit-grid table{min-width:900px}.schedule-page .capture{overflow:auto}.schedule-page .capture table{min-width:640px}}
-</style>
+</style><style>.schedule-dates,.date-options{display:flex;align-items:flex-start;flex-wrap:wrap;gap:8px}.schedule-dates{margin:0 0 18px}.date-options{margin-top:8px}.schedule-dates button,.schedule-dates summary{padding:9px 12px;border:1px solid #554362;border-radius:8px;background:#211c29;color:#efe7fa}.schedule-dates summary{cursor:pointer}.schedule-dates button[aria-pressed="true"]{outline:2px solid #d4b3ff;outline-offset:1px}.schedule-dates .date-today button{background:#d8c0ff;color:#21152e;border-color:#d8c0ff}</style>
 <link rel="stylesheet" href="./studio-theme.css">
 <link rel="stylesheet" href="./studio-editorial.css">
 <header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
@@ -215,11 +215,12 @@ function shootingArt(index){
  return '<div class="service-visual editorial-photo"><img src="'+esc(settings.artwork.split(/\r?\n/)[index]?.trim()||artworkDefaults[index%5])+'" alt="'+labels[index%5]+' · AI 创意示意" loading="lazy" width="1024" height="1536"></div>';
 }
 function weekRail(date){
- const start=weekOf(date||today());
- return '<div class="week-rail" aria-label="本周排班日期">'+Array.from({length:7},(_,i)=>{
-  const d=plusDay(start,i),n=tasks.filter(t=>t.date===d).length;
-  return '<button type="button" data-schedule-day="'+d+'" aria-pressed="'+(d===date)+'"><span>周'+'一二三四五六日'[i]+'</span><strong>'+d.slice(8)+'</strong><small>'+n+' 项安排</small></button>';
- }).join('')+'</div>';
+ const current=today(), tomorrow=plusDay(current,1);
+ const selected=date&&![current,tomorrow].includes(date)?date:'';
+ const start=weekOf(date||current);
+ const button=(d,name)=>'<button type="button" data-schedule-day="'+d+'" aria-pressed="'+(d===date)+'">'+name+' <strong>'+d.slice(5).replace('-','月')+'日</strong></button>';
+ const more=Array.from({length:7},(_,i)=>plusDay(start,i)).filter(d=>![current,tomorrow,selected].includes(d));
+ return '<div class="schedule-dates" aria-label="排班日期"><div class="date-today">'+button(current,'今天')+'</div>'+button(tomorrow,'明天')+(selected?button(selected,'当前查看'):'')+'<details><summary>更多日期</summary><div class="date-options">'+more.map(d=>button(d,'周'+'日一二三四五六'[new Date(d+'T00:00:00Z').getUTCDay()])).join('')+'</div></details></div>';
 }
 function labelledLines(text){
  return text.split(/\r?\n/).map(line=>{
