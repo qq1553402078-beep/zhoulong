@@ -170,7 +170,7 @@ function render(){
  if(tab==='rest') restView();
  if(tab==='people') people();
  if(tab==='plan') plan();
- if(tab==='admin') adminView();
+ if(tab==='admin') adminUnlocked ? adminView() : adminLoginView();
 }
 function home(){
  const shooting=labelledLines(settings.shooting);
@@ -827,6 +827,22 @@ function plan(){
  '<div class="panel plan"><h3>第 2 周 · 分类型试行</h3><p><strong>口播</strong>　按人设和营销活动优先排，先确认台词和场景，再按场景合拍，留出模特过词时间。看每任务换景次数及拍摄工时。</p><p><strong>内料</strong>　摄助预分装内料，备好替换容器、擦拭工具和回收区。先小量试倒确认机位、流速与落点，再正式拍摄。看重拍次数与清洁用时。</p><p><strong>意识流</strong>　创新组先确认分镜、动作和灯位，保留灯位照片与布光参数，正式拍前试拍关键动作。看布光用时和首轮验收情况。</p></div>'+
  '<div class="panel plan"><h3>第 3–4 周 · 按基线排产</h3><p>用同类型任务的实际工时中位数估算下周负荷，同时核对主拍、模特、摄助和修片的可用时段。每天留一段可调整时间给加急需求。周末对比同类型任务的单位工时产出和准时率，再确定下一周期目标。</p></div>';
 }
+const adminService = 'https://studio-ops-1112.abuzzfancy1.chatgpt.site';
+let adminUnlocked = false;
+let adminPopup;
+function adminLoginView(){
+ main.innerHTML='<h1>管理后台</h1><p>请验证管理员密码后继续。</p><button class="primary" id="adminUnlock">打开验证窗口</button><p id="adminLoginStatus" role="status"></p>';
+ document.querySelector('#adminUnlock').onclick=()=>{
+  adminPopup=window.open(adminService+'/admin-unlock','studioAdminVerify','popup,width=520,height=630');
+  document.querySelector('#adminLoginStatus').textContent=adminPopup?'请在新窗口中完成验证。':'浏览器拦截了验证窗口，请允许弹窗后重试。';
+ };
+}
+window.addEventListener('message',event=>{
+ if(event.origin!==adminService || !adminPopup || event.source!==adminPopup || event.data?.type!=='studio-admin-verified')return;
+ adminUnlocked=true;
+ adminPopup=null;
+ if(tab==='admin')render();
+});
 function adminView(message=''){
  const field=(key,label,kind='text',value=settings[key])=>'<label'+(kind==='area'?' class="wide"':'')+'>'+label+
   (kind==='area'?'<textarea name="'+key+'">'+esc(value)+'</textarea>':'<input name="'+key+'" value="'+esc(value)+'" required>')+'</label>';
