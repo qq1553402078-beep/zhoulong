@@ -1,5 +1,5 @@
 (() => {
-  const endpoint = 'https://zhoulong-team-sync.qq1553402078.workers.dev/sync';
+  const endpoint = 'https://zhoulong-studio-sync.pages.dev/sync';
   const scopes = {
     tasks: 'studio-ops-v1',
     rest: 'studio-ops-rest-v1',
