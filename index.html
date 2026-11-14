@@ -84,11 +84,11 @@ main:not(.home-page) h1 {
 .rest-group--shooting { --rest-group-color:#92bbf3; --rest-group-bg:#202d43; }
 .rest-group--creative { --rest-group-color:#d1aeff; --rest-group-bg:#352849; }
 .rest-group--model { --rest-group-color:#91ddc6; --rest-group-bg:#203a36; }
-.rest-grid tr[class^="rest-group--"] > td,
+.rest-grid tr[class^="rest-group--"] > td:nth-child(-n+2),
 #restMonthly tr[class^="rest-group--"] > td { background-color:var(--rest-group-bg); }
 .rest-grid tr[class^="rest-group--"] > td:nth-child(-n+2),
 #restMonthly tr[class^="rest-group--"] > td:nth-child(-n+2) { color:var(--rest-group-color); }
-.rest-grid tr[class^="rest-group--"] > td[data-shift="休"] select { border-color:var(--rest-group-color); color:var(--rest-group-color); }
+
 .rest-group-legend button[class^="rest-group--"] { color:var(--rest-group-color); background:var(--rest-group-bg); padding:.25em .65em; border-radius:4px; }
 .schedule-field { --field-accent:#d5bbff; }
 .schedule-field--lead { --field-accent:#a7ceff; }
@@ -99,13 +99,23 @@ main:not(.home-page) h1 {
 .schedule-field-value { color:#f5effc; font-size:14px; font-weight:650; overflow-wrap:anywhere; }
 .mobile-task .schedule-field dt { color:var(--field-accent); font-weight:750; }
 .rest-group-legend button[aria-pressed="true"] { outline:2px solid var(--rest-group-color,#eee); outline-offset:2px; font-weight:750; }
-.rest-grid td[data-shift="公休"] select { color:#c9b5ff; font-weight:700; }
-.rest-grid td[data-shift="加班"] select { color:#ffd298; font-weight:700; }
+.rest-group--retouch { --rest-group-color:#f2c695; --rest-group-bg:#392c26; }
+.rest-page .rest-grid td[data-shift] { background:#221e29; }
+.rest-page .rest-grid td[data-shift="上班"] { --shift-bg:#92e1ae; --shift-ink:#10281b; }
+.rest-page .rest-grid td[data-shift="加班"] { --shift-bg:#ffc66e; --shift-ink:#30200b; }
+.rest-page .rest-grid td[data-shift="休"] { --shift-bg:#ff9da9; --shift-ink:#390e18; }
+.rest-page .rest-grid td[data-shift="公休"] { --shift-bg:#ccb5ff; --shift-ink:#281749; }
+.rest-page .rest-grid td[data-shift] > select {
+ background:var(--shift-bg,#2a2432); color:var(--shift-ink,#c4b9ce);
+ border:1px solid var(--shift-bg,#51465b); border-radius:6px;
+ font-size:14px; font-weight:750; min-height:36px;
+}
+.rest-page .rest-grid td[data-shift] > select option { background:#251f2b; color:#f6effb; }
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
 const defaultRoster={
- '基础摄影':['曹傲宇','陈丽娜','游苗'],'创新组':['杨建勋','勾应颖'],'拍剪助理':['刘意'],'摄影助理':['白炳锦','张亚涛'],'模特':['夏艺方','何雨馨','穆灿','张智','钱小蝶'],'修片':['何梓瑜']
+ '基础摄影':['曹傲宇','陈丽娜','游苗'],'创新组':['杨建勋','勾应颖','刘意'],'拍剪助理':[],'摄影助理':['白炳锦','张亚涛'],'模特':['夏艺方','何雨馨','穆灿','张智','钱小蝶'],'修片':['何梓瑜']
 };
 const settingsKey='studio-ops-settings-v1';
 const defaults={
@@ -136,9 +146,15 @@ let settings={...defaults};
 try{settings={...defaults,...JSON.parse(localStorage.getItem(settingsKey)||'{}')}}catch{}
 let roster,products,types,staff,roleNames,restStaff;
 function applySettings(){
- if(!settings.roster['拍剪助理']){
-  const oldRoster=settings.roster;
-  settings.roster={...defaultRoster,...oldRoster,'创新组':(oldRoster['创新组']||[]).filter(name=>name!=='刘意'),'拍剪助理':['刘意']};
+ settings.roster={...defaultRoster,...settings.roster};
+ if(!settings.rosterRevision){
+  const creative=settings.roster['创新组'];
+  settings.roster={
+   ...settings.roster,
+   '创新组':[...new Set([...creative,'刘意'])],
+   '拍剪助理':settings.roster['拍剪助理'].filter(name=>name!=='刘意')
+  };
+  settings.rosterRevision=1;
  }
  ({roster,products,types}=settings);
  staff=Object.entries(roster).flatMap(([role,names])=>names.map(name=>({role,name})));
@@ -574,7 +590,7 @@ function updateStaffOptions(picker,availability,date){
  }
 }
 const restRoleLabel = role => role === '基础摄影' ? '拍摄组' : role;
-const restGroup = role => ({'基础摄影':'shooting','创新组':'creative','模特':'model'})[role] || '';
+const restGroup = role => ({'基础摄影':'shooting','创新组':'creative','模特':'model','修片':'retouch'})[role] || '';
 const restRowClass = role => restGroup(role) ? ' class="rest-group--'+restGroup(role)+'"' : '';
 function confirmRestConflicts(previous, next, dates) {
  const conflicts = [];
@@ -593,7 +609,7 @@ function confirmRestConflicts(previous, next, dates) {
  return !conflicts.length || window.confirm('同岗多人休息，请确认是否作为特殊安排继续保存。\n\n'+conflicts.join('\n'));
 }
 let restRoleFilter='';
-const restGroups=[['','全部'],['shooting','拍摄组'],['creative','创新组'],['model','模特']];
+const restGroups=[['','全部'],['shooting','拍摄组'],['creative','创新组'],['model','模特'],['retouch','修片']];
 const visibleRestStaff=()=>restStaff.filter(person=>!restRoleFilter||restGroup(person.role)===restRoleFilter);
 function restFilterBar(){
  return '<div class="bar rest-group-legend" role="group" aria-label="按岗位筛选">'+restGroups.map(([role,label])=>
