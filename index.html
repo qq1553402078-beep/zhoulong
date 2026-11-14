@@ -218,6 +218,8 @@ main:not(.home-page) h1 {
 .daily-name-options label { display:flex; align-items:center; gap:5px; }
 .daily-name-options input { width:auto; }
 .daily-task-report[hidden],#dailyForm tr[hidden],#dailyStaffNames[hidden] { display:none; }
+.note-field { min-height:90px; max-height:220px; overflow:auto; background:#191722; }
+.note-field:empty::before { content:attr(data-placeholder); color:#b5a9bd; pointer-events:none; }
 .note-actions { display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin:5px 0; }
 .note-actions button { padding:4px 8px; }
 .note-preview { white-space:pre-wrap; overflow-wrap:anywhere; padding:8px; border:1px solid #ffffff24; border-radius:6px; }
@@ -334,12 +336,12 @@ function markedNotes(notes,marks){
 }
 function notesEditor(task,formId){
  const marks=typeof task.noteMarks==='string'?readNoteMarks(task.noteMarks):task.noteMarks||{};
- return '<div class="notes-editor"><textarea aria-label="运营要求" form="'+formId+'" name="notes" placeholder="填写数量、脚本、道具、参考和核心拍摄要求">'+esc(task.notes)+'</textarea>'+
+ return '<div class="notes-editor"><div class="note-preview note-field" contenteditable="plaintext-only" role="textbox" aria-multiline="true" aria-label="运营要求" data-placeholder="填写数量、脚本、道具、参考和核心拍摄要求">'+markedNotes(task.notes,marks)+'</div>'+
+ '<input type="hidden" form="'+formId+'" name="notes" value="'+esc(task.notes)+'">'+
  '<input type="hidden" name="noteMarks" form="'+formId+'" value="'+esc(JSON.stringify(marks))+'">'+
  '<div class="note-actions" aria-label="运营要求重点标注"><button type="button" data-note-style="bold">加粗</button>'+
  Object.entries(noteColors).map(([id,label])=>'<button type="button" class="note-color-'+id+'" data-note-style="'+id+'">'+label+'</button>').join('')+
- '<button type="button" data-note-style="clear">清除标注</button><small role="status"></small></div>'+
- '<div class="note-preview" aria-label="标注预览"'+(Object.keys(marks).length?'':' hidden')+'>'+markedNotes(task.notes,marks)+'</div></div>';
+  '<button type="button" data-note-style="clear">清除标注</button><small role="status"></small></div></div>';
 }
 function readReferenceNames(task,fields){
  const urls=fields.getAll('referenceUrl').map(value=>value.trim());
@@ -662,17 +664,23 @@ function schedule(){
  }});
  document.querySelectorAll('[data-schedule-day]').forEach(button=>button.onclick=()=>{day=button.dataset.scheduleDay;render()});
  main.querySelectorAll('.notes-editor').forEach(editor=>{
-  const field=editor.querySelector('textarea'), stored=editor.querySelector('[name="noteMarks"]'), preview=editor.querySelector('.note-preview');
-  const update=()=>{
-   const marks=readNoteMarks(stored.value);
-   preview.hidden=!Object.keys(marks).some(phrase=>field.value.includes(phrase));
-   preview.innerHTML=markedNotes(field.value,marks);
-  };
-  field.addEventListener('input',update);
+  const field=editor.querySelector('.note-field');
+  const notes=editor.querySelector('[name="notes"]'), stored=editor.querySelector('[name="noteMarks"]');
+  const refresh=()=>{field.innerHTML=markedNotes(notes.value,readNoteMarks(stored.value))};
+  notes.addEventListener('input',refresh);
+  field.addEventListener('input',()=>{notes.value=field.innerText;phrase=''});
+  field.addEventListener('blur',refresh);
+  let phrase='';
+  field.addEventListener('pointerdown',()=>{phrase=''});
+  field.addEventListener('keydown',event=>{if(event.key==='Tab')phrase=selectedPhrase()});
+  function selectedPhrase(){
+   const selection=window.getSelection();
+   return selection?.rangeCount&&field.contains(selection.getRangeAt(0).commonAncestorContainer)?selection.toString():'';
+  }
   editor.querySelectorAll('[data-note-style]').forEach(button=>{
    button.onmousedown=event=>event.preventDefault();
    button.onclick=()=>{
-    const phrase=field.value.slice(field.selectionStart,field.selectionEnd);
+    phrase=selectedPhrase()||phrase;
     const status=editor.querySelector('[role="status"]');
     if(!phrase.trim()){status.textContent='请先选中要标注的文字。';return}
     const marks=Object.assign(Object.create(null),readNoteMarks(stored.value));
@@ -684,7 +692,7 @@ function schedule(){
     }
     stored.value=JSON.stringify(marks);
     status.textContent='保存任务后同步标注。';
-    update();
+    refresh();
    };
   });
  });
