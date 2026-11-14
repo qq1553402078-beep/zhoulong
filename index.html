@@ -214,6 +214,25 @@ main:not(.home-page) h1 {
  .model-portfolio-photos figure:nth-child(2) { margin-top:16px; }
  .model-portfolio-photos figure:nth-child(3) { margin-top:0; }
 }
+
+main.home-page .model-portfolio {
+ background:radial-gradient(ellipse at 65% 29%,#695457 0%,#493d4e 37%,#241f2d 85%);
+}
+main.home-page .model-portfolio .model-portfolio-photos {
+ display:grid;
+ grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);
+ gap:clamp(16px,3vw,48px);
+ align-items:start;
+}
+main.home-page .model-portfolio-photos figure { margin:0; }
+main.home-page .model-portfolio-photos figure:first-child { grid-row:span 2; }
+main.home-page .model-portfolio-photos figure:nth-child(2) { width:82%; justify-self:end; margin-top:8%; }
+main.home-page .model-portfolio-photos figure:nth-child(3) { width:68%; justify-self:start; }
+@media(max-width:620px){
+ main.home-page .model-portfolio .model-portfolio-photos { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ main.home-page .model-portfolio-photos figure:first-child { grid-row:auto; grid-column:1/-1; }
+ main.home-page .model-portfolio-photos figure:nth-child(n+2) { width:100%; }
+}
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
