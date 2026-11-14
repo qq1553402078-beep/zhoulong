@@ -143,6 +143,13 @@ main:not(.home-page) h1 {
 .reference-fold { margin-block:8px; }
 .reference-fold > summary { cursor:pointer; color:#d9caf2; font-size:13px; padding-block:4px; }
 .reference-fold:not([open]) .reference-collapse,.reference-fold[open] .reference-expand { display:none; }
+@media(min-width:621px){
+ .model-profile[data-profile="钱小蝶"] .model-portfolio-photos {
+  grid-template-columns:minmax(0,1.65fr) repeat(2,minmax(0,1fr));
+  align-items:end;
+  gap:clamp(12px,2.6vw,36px);
+ }
+}
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
@@ -412,7 +419,7 @@ function modelPortfolio(){
  const profiles=[
   {name:'夏艺方', signature:'Yifang', slug:'xia-yifang', photos:[['湖畔肖像',1280,1535],['画廊肖像',1279,1706],['室内肖像',810,1216]]},
   {name:'张智', signature:'Zhi', slug:'zhang-zhi', photos:[['棚拍肖像', 1267, 1900], ['树影肖像', 1425, 1900], ['夜景肖像', 1426, 1900]]},
-  {name:'何雨馨',signature:'Yuxin',slug:'he-yuxin',photos:[['棚拍肖像', 1133, 1700], ['窗边肖像', 1133, 1700], ['蓝光肖像', 1275, 1700]]}, {name:'慕灿',signature:'Mucan',slug:'mu-can',photos:[['室内肖像', 1280, 1707], ['海边肖像', 1280, 1707], ['绿裙肖像', 960, 1280]]}, {name:'钱小蝶',signature:'Xiaodie',slug:'qian-xiaodie',photos:[['室内肖像', 957, 1700], ['草帽肖像', 956, 1700], ['山村肖像', 955, 1700]]}
+  {name:'何雨馨',signature:'Yuxin',slug:'he-yuxin',photos:[['棚拍肖像', 1133, 1700], ['蓝光肖像', 1275, 1700, 3], ['窗边肖像', 1133, 1700, 2]]}, {name:'慕灿',signature:'Mucan',slug:'mu-can',photos:[['室内肖像', 1280, 1707], ['绿裙肖像', 960, 1280, 4], ['海边肖像', 1280, 1707, 2]]}, {name:'钱小蝶',signature:'Xiaodie',slug:'qian-xiaodie',photos:[['黑裙雕塑肖像', 1920, 2560, 4], ['室内肖像', 957, 1700, 1], ['草帽肖像', 956, 1700, 2]]}
  ];
  return '<section class="model-portfolio" aria-labelledby="model-portfolio-title">'+
   '<div class="model-portfolio-heading"><h2 id="model-portfolio-title">模特档案</h2></div>'+
@@ -422,8 +429,8 @@ function modelPortfolio(){
    const heading='<div class="model-profile-heading"><div><h3>'+esc(name)+'</h3>'+'</div>'+
     (signature?'<span class="model-signature" aria-hidden="true">'+esc(signature)+'</span>':'')+'</div>';
    return '<article class="model-profile" data-profile="'+esc(name)+'">'+heading+
-    (photos?'<div class="model-portfolio-photos">'+photos.map(([label,w,h],i)=>{
-     const src='./model-portfolio/'+slug+'-0'+(slug==='mu-can'&&i===2?4:i+1)+'.jpg';
+    (photos?'<div class="model-portfolio-photos">'+photos.map(([label,w,h,number],i)=>{
+     const src='./model-portfolio/'+slug+'-0'+(number??i+1)+'.jpg';
      return '<figure><a href="'+src+'" target="_blank" rel="noopener" aria-label="查看'+esc(name+label)+'大图"><img src="'+src+'" alt="'+esc(name+' · '+label)+'" width="'+w+'" height="'+h+'" loading="lazy" decoding="async"></a></figure>';
     }).join('')+'</div>':'<p class="model-pending">照片待补</p>')+'</article>';
   }).join('')+'</section>';
