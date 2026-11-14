@@ -389,11 +389,12 @@ const members=value=>Array.isArray(value)?value:String(value||'').split('、').m
 const participates=(t,name)=>[...roles,'handModel'].some(k=>members(t[k]).includes(name));
 function filterStaffOptions(input){
  const picker=input.closest('.multi-picker');
- const query=input.value.trim().toLowerCase();
+ const query=picker.querySelector('.staff-search').value.trim().toLowerCase();
+ const role=picker.querySelector('.staff-role-filter').value;
  let matches=0;
  for(const option of picker.querySelectorAll('.multi-options label')){
   const name=option.querySelector('input').value.toLowerCase();
-  option.hidden=!name.includes(query);
+  option.hidden=!name.includes(query)||(role!==''&&option.dataset.staffRole!==role);
   if(!option.hidden)matches++;
  }
  picker.querySelector('.staff-no-results').hidden=matches>0;
@@ -757,10 +758,16 @@ function taskRow(t,index){
  const availability=readRest();
  const staffSelect=(k,label,names=activeNames)=>{
  const chosen=members(t[k]),isStaff=[...roles,'handModel'].includes(k);
+ const roleByName=isStaff?new Map(staff.map(p=>[p.name,p.role])):null;
+ const preferred=k==='lead'?new Set([...roster['基础摄影'],...roster['创新组']]):new Set(roleNames[k==='handModel'?'model':k]||[]);
+ const ordered=[...new Set([...names,...chosen])].filter(Boolean);
+ if(isStaff)ordered.sort((a,b)=>Number(preferred.has(b))-Number(preferred.has(a)));
+ const filter=isStaff?'<select class="staff-role-filter" aria-label="筛选'+label+'候选岗位" onchange="filterStaffOptions(this)"><option value="">全部岗位</option>'+
+ options([...new Set(staff.map(p=>p.role))],'')+'</select>':'';
  const placeholder=isStaff?'未选择':'选择'+label;
- return '<details class="multi-picker" data-placeholder="'+esc(placeholder)+'"><summary aria-label="'+esc(label+'，可多选')+'"><span class="schedule-field-value" data-empty="'+!chosen.length+'">'+esc(chosen.join('、')||placeholder)+'</span></summary>'+(isStaff?'<input type="search" class="staff-search" aria-label="搜索'+label+'姓名" placeholder="搜索姓名" oninput="filterStaffOptions(this)">':'')+'<div class="multi-options">'+[...new Set([...names,...chosen])].filter(Boolean).map(name=>{
+ return '<details class="multi-picker" data-placeholder="'+esc(placeholder)+'"><summary aria-label="'+esc(label+'，可多选')+'"><span class="schedule-field-value" data-empty="'+!chosen.length+'">'+esc(chosen.join('、')||placeholder)+'</span></summary>'+filter+(isStaff?'<input type="search" class="staff-search" aria-label="搜索'+label+'姓名" placeholder="搜索姓名" oninput="filterStaffOptions(this)">':'')+'<div class="multi-options">'+ordered.map(name=>{
  const off=isStaff&&resting(availability,t.date,name),retired=isStaff&&!activeNames.includes(name),hint=isStaff?assignmentHint(name,t.date,t.id):'';
- return '<label><input type="checkbox" '+(isStaff?'data-staff-picker ':'')+'form="'+formId+'" name="'+k+'" value="'+esc(name)+'" '+(chosen.includes(name)?'checked ':'')+(off&&!chosen.includes(name)?'disabled ':'')+' onchange="updateMultiSummary(this)"><span>'+esc(name)+(retired?' · 离职':off?' · 休息':'')+(hint?'<small class="busy-hint">'+esc(hint)+'</small>':'')+'</span></label>';
+ return '<label'+(isStaff?' data-staff-role="'+esc(roleByName.get(name))+'"':'')+'><input type="checkbox" '+(isStaff?'data-staff-picker ':'')+'form="'+formId+'" name="'+k+'" value="'+esc(name)+'" '+(chosen.includes(name)?'checked ':'')+(off&&!chosen.includes(name)?'disabled ':'')+' onchange="updateMultiSummary(this)"><span>'+esc(name)+(retired?' · 离职':off?' · 休息':'')+(hint?'<small class="busy-hint">'+esc(hint)+'</small>':'')+'</span></label>';
  }).join('')+'</div>'+(isStaff?'<small class="staff-no-results" hidden>没有匹配的姓名</small>':'')+'</details>';
  };
  const quantity='min="0" step="1" placeholder="—"';
@@ -852,6 +859,35 @@ function restFilterBar(){
   '<button type="button"'+restFilterAttributes(role)+'>'+esc(role?restRoleLabel(role):'全部')+'</button>'
  ).join('')+'</div>';
 }
+let lastRestChange=[];
+function saveRestChange(previous,next,dates){
+ const changes=[];
+ for(const date of new Set(dates)){
+  const before=previous[date]||{}, after=next[date]||{};
+  for(const name of new Set([...Object.keys(before),...Object.keys(after)])){
+   if(before[name]!==after[name])changes.push({date,name,before:before[name],after:after[name]});
+  }
+ }
+ localStorage.setItem(restKey,JSON.stringify(next));
+ if(changes.length)lastRestChange=changes;
+}
+function undoRestChange(){
+ if(!lastRestChange.length)return;
+ const values=readRest();
+ if(lastRestChange.some(({date,name,after})=>values[date]?.[name]!==after)){
+  restView('涉及的班次已有更新，无法安全撤销。');return;
+ }
+ if(!confirm('撤销上一次休息表修改（'+lastRestChange.length+' 个班次）？'))return;
+ for(const {date,name,before} of lastRestChange){
+  const day=values[date]??={};
+  if(before===undefined)delete day[name];else day[name]=before;
+ }
+ try{
+  localStorage.setItem(restKey,JSON.stringify(values));
+  lastRestChange=[];
+  restView('已撤销上一步。');
+ }catch{restView('撤销失败，请检查浏览器存储。')}
+}
 function restView(message=''){
  const values=readRest();
  const previousScroll=main.querySelector('.rest-scroll');
@@ -868,7 +904,7 @@ function restView(message=''){
  for(let date=start;date<end;date=plusDay(date,1))dates.push(date);
  const conflicts=tasks.filter(t=>t.date>=start&&t.date<end&&t.date>=plusDay(restDateFocus,-1)&&t.date<=plusDay(restDateFocus,7)&&[...roles,'handModel'].some(k=>members(t[k]).some(n=>resting(values,t.date,n))));
  main.innerHTML='<div class="eyebrow">ROSTER / 出勤与调休</div><h1>'+esc(settings.restTitle)+'</h1><p>按日期查看和安排人员出勤。休息和公休均会限制当天任务排班。同岗同日两人或以上休息时需要确认。</p>'+restFilterBar()+
- '<div class="bar"><button id="prevRest">上个月</button><label>查看月份<input id="restViewMonth" type="month" value="'+period+'"></label><label>查看日期<input id="pickRest" type="date" value="'+restDateFocus+'"></label><button id="nextRest">下个月</button><span class="spacer"></span><label>导入排班文件<input id="restFile" type="file" accept=".xls,.xlsx,.csv,.tsv"></label></div>'+
+ '<div class="bar"><button id="prevRest">上个月</button><label>查看月份<input id="restViewMonth" type="month" value="'+period+'"></label><label>查看日期<input id="pickRest" type="date" value="'+restDateFocus+'"></label><button id="nextRest">下个月</button><button id="undoRest"'+(lastRestChange.length?'':' disabled')+'>撤销上一步</button><span class="spacer"></span><label>导入排班文件<input id="restFile" type="file" accept=".xls,.xlsx,.csv,.tsv"></label></div>'+
  '<p class="rest-scroll-hint">左右滑动查看本月日期，姓名和岗位固定在左侧。</p>'+
  '<div class="panel rest-scroll" tabindex="0" role="region" aria-label="可横向滑动的休息表" data-focus="'+restDateFocus+'"><table class="rest-grid"><thead><tr><th>姓名</th><th>岗位</th>'+dates.map(d=>{
   const selected=d===restDateFocus;
@@ -903,17 +939,21 @@ function restView(message=''){
   restView();
   document.querySelector('#restMonthly')?.scrollIntoView?.({block:'start'});
  };
+ document.querySelector('#undoRest').onclick=undoRestChange;
  document.querySelectorAll('[data-rest-date]').forEach(field=>field.onchange=()=>{
   const {restDate:date, restName:name}=field.dataset;
   const previous=readRest();
   const next=structuredClone(previous);
   const people=next[date]??={};
   if(field.value==='未安排')delete people[name];else people[name]=field.value;
-  if(!confirmRestConflicts(previous,next,[date])){
+  const oldShift=previous[date]?.[name]||'未安排';
+  const shiftLabel=shift=>shift==='休'?'休息':shift;
+  if(!confirm(date+' '+name+'：'+shiftLabel(oldShift)+' → '+shiftLabel(field.value)+'。确认保存？')||
+    !confirmRestConflicts(previous,next,[date])){
    field.value=previous[date]?.[name]||'未安排';
    return;
   }
-  try{localStorage.setItem(restKey,JSON.stringify(next));restView('已保存 '+name+' 的安排。')}catch{restView('保存失败，请检查浏览器存储。')}
+  try{saveRestChange(previous,next,[date]);restView('已保存 '+name+' 的安排。')}catch{restView('保存失败，请检查浏览器存储。')}
  });
  document.querySelector('#restPaste').onsubmit=e=>{
   e.preventDefault();
@@ -994,7 +1034,8 @@ function applyRestImport(rows){
  }
  if(!changes)throw Error('没有可导入的中台人员班次。'+(skipped.size?'未匹配：'+[...skipped].join('、'):''));
  if(!confirmRestConflicts(previous,values,importedDates))return;
- localStorage.setItem(restKey,JSON.stringify(values));
+ if(!confirm('确认导入 '+changes+' 个班次？'))return;
+ saveRestChange(previous,values,importedDates);
  const firstDate=importedDates.sort()[0];
  restDateFocus=firstDate;
  restMonth=firstDate.slice(0,7);
