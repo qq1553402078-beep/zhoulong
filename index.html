@@ -144,13 +144,6 @@ main:not(.home-page) h1 {
 .reference-label-row .reference-remove { padding:4px 7px; font-size:12px; white-space:nowrap; }
 .reference-fold > summary { cursor:pointer; color:#d9caf2; font-size:13px; padding-block:4px; }
 .reference-fold:not([open]) .reference-collapse,.reference-fold[open] .reference-expand { display:none; }
-@media(min-width:621px){
- .model-profile[data-profile="钱小蝶"] .model-portfolio-photos {
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  align-items:end;
-  gap:clamp(12px,2.6vw,36px);
- }
-}
 .growth-roadmaps details { border-block:1px solid #ffffff2e; padding:10px 0; }
 .growth-roadmaps summary { cursor:pointer; padding:8px; }
 .growth-roadmaps details:not([open]) summary span:nth-child(2),
@@ -159,7 +152,7 @@ main:not(.home-page) h1 {
 .roadmap-grid figure { margin:0; }
 .roadmap-grid img { display:block; width:100%; height:auto; margin-bottom:8px; }
 @media(max-width:650px){.roadmap-grid { grid-template-columns:1fr; gap:16px; }}
-.model-profile[data-profile="钱小蝶"] .model-portfolio-photos figure:first-child img { width:100%; height:auto; aspect-ratio:9/14; object-fit:cover; object-position:44% 69%; }
+.model-profile[data-profile="钱小蝶"] .model-portfolio-photos figure:first-child img { aspect-ratio:3/4; object-fit:cover; object-position:center 28%; }
  .home-page > section,.home-page > .workspace-shortcuts { scroll-margin-top:110px; }
 .home-directory { position:fixed; z-index:8; left:12px; top:25vh; width:140px; max-height:65vh; overflow:auto; border:1px solid #ffffff24; border-radius:10px; background:#171419; color:#eee3f4; }
 .home-directory summary { padding:11px; font-size:13px; font-weight:700; cursor:pointer; }
@@ -461,7 +454,7 @@ function modelPortfolio(){
  const profiles=[
   {name:'夏艺方', signature:'Yifang', slug:'xia-yifang', photos:[['湖畔肖像',1280,1535],['画廊肖像',1279,1706],['室内肖像',810,1216]]},
   {name:'张智', signature:'Zhi', slug:'zhang-zhi', photos:[['棚拍肖像', 1267, 1900], ['树影肖像', 1425, 1900], ['夜景肖像', 1426, 1900]]},
-  {name:'何雨馨',signature:'Yuxin',slug:'he-yuxin',photos:[['棚拍肖像', 1133, 1700], ['蓝光肖像', 1275, 1700, 3], ['窗边肖像', 1133, 1700, 2]]}, {name:'慕灿',signature:'Mucan',slug:'mu-can',photos:[['室内肖像', 1280, 1707], ['绿裙肖像', 960, 1280, 4], ['海边肖像', 1280, 1707, 2]]}, {name:'钱小蝶',signature:'Xiaodie',slug:'qian-xiaodie',photos:[['黑裙雕塑肖像', 1159, 2000, 5], ['室内肖像', 957, 1700, 1], ['草帽肖像', 956, 1700, 2]]}
+  {name:'何雨馨',signature:'Yuxin',slug:'he-yuxin',photos:[['棚拍肖像', 1133, 1700], ['蓝光肖像', 1275, 1700, 3], ['窗边肖像', 1133, 1700, 2]]}, {name:'慕灿',signature:'Mucan',slug:'mu-can',photos:[['室内肖像', 1280, 1707], ['绿裙肖像', 960, 1280, 4], ['海边肖像', 1280, 1707, 2]]}, {name:'钱小蝶',signature:'Xiaodie',slug:'qian-xiaodie',photos:[['灰色毛衣肖像', 957, 1700, 1], ['草帽肖像', 956, 1700, 2], ['黑裙全身照', 1159, 2000, 5]]}
  ];
  return '<section class="model-portfolio" aria-labelledby="model-portfolio-title">'+
   '<div class="model-portfolio-heading"><h2 id="model-portfolio-title">模特档案</h2></div>'+
