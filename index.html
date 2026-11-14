@@ -177,10 +177,43 @@ main:not(.home-page) h1 {
 }
 @keyframes portfolio-breathe { from { opacity:.053; } to { opacity:.083; } }
 @media(prefers-reduced-motion:reduce) { .model-portfolio::before { animation:none; } }
-.model-profile:nth-of-type(2) .model-portfolio-photos { grid-template-columns:1fr 1.45fr 1fr; }
-.model-profile:nth-of-type(3) .model-portfolio-photos { grid-template-columns:1.35fr 1fr 1fr; }
-.model-profile:nth-of-type(3) .model-portfolio-photos figure:nth-child(2) { padding-block-start:9%; }
-@media(max-width:620px){ .model-portfolio .model-profile .model-portfolio-photos { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.model-portfolio {
+ background:radial-gradient(ellipse at 68% 43%,#4a3d42 0%,#342e3d 47%,#211e29 100%);
+}
+.model-portfolio::after {
+ background:
+ radial-gradient(ellipse at 18% 22%,#a4816824,transparent 51%),
+ radial-gradient(ellipse at 50% 48%,transparent 30%,#17131c80 100%),
+ url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)' opacity='.075'/%3E%3C/svg%3E");
+}
+.model-portfolio .model-profile-heading { margin-bottom:clamp(24px,4vw,55px); }
+.model-portfolio .model-portfolio-photos {
+ grid-template-columns:minmax(0,1.55fr) minmax(0,1fr) minmax(0,.83fr);
+ gap:clamp(14px,3.2vw,44px);
+ align-items:start;
+}
+.model-portfolio-photos figure:nth-child(2) { margin-top:clamp(20px,6vw,85px); }
+.model-portfolio-photos figure:nth-child(3) { margin-top:clamp(9px,2vw,30px); }
+.model-portfolio-photos a { display:block; }
+.model-portfolio-photos img {
+ outline:1px solid #eadfcd26;
+ outline-offset:-1px;
+ box-shadow:0 14px 28px #100d1780;
+ transition:filter .45s ease,box-shadow .45s ease;
+}
+@media(hover:hover){
+ .model-portfolio-photos a:hover img { filter:contrast(1.035) brightness(1.025); box-shadow:0 14px 28px #100d1780,0 0 12px #eadfcd22; }
+}
+@keyframes portfolio-print-in { from { opacity:.48; filter:brightness(.73) contrast(.9); } to { opacity:1; filter:none; } }
+@media(prefers-reduced-motion:no-preference){
+ .model-portfolio-photos .photo-exposed img { animation:portfolio-print-in 1.35s ease-out both; }
+}
+@media(max-width:620px){
+ .model-portfolio .model-portfolio-photos { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .model-portfolio-photos figure:first-child { grid-column:1/-1; }
+ .model-portfolio-photos figure:nth-child(2) { margin-top:16px; }
+ .model-portfolio-photos figure:nth-child(3) { margin-top:0; }
+}
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
@@ -428,7 +461,7 @@ function home(){
   profile?.scrollIntoView({block:'start'});
  });
  if(window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window){
-  const photos=main.querySelectorAll('.team-photo,.service-visual');
+  const photos=main.querySelectorAll('.team-photo,.service-visual,.model-portfolio-photos figure');
   const observer=new IntersectionObserver(entries=>{
    for(const entry of entries){
     if(!entry.isIntersecting)continue;
