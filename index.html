@@ -349,6 +349,7 @@ let mobileEditing=false;
 let scheduleToolsOpen=false;
 let outputDay=day;
 let chartPeriod=2;
+let dailyAssignedOnly=false;
 let mixPhotographer='',mixBasis='tasks';
 const expandedGoalGroups=new Set();
 const dailyKey='studio-ops-daily-output-v1';
@@ -1151,6 +1152,14 @@ function people(){
  document.querySelector('#outputDay').onchange=e=>{if(e.target.validity.valid&&e.target.value)outputDay=e.target.value;render()};
  renderOutputChart(outputRows,outputRanges,estimateOctober,outputNote);
  bindManagement(outputMonth);
+ const dailyFilter=document.querySelector('#dailyStaffFilter');
+ dailyFilter.onchange=()=>{
+  dailyAssignedOnly=dailyFilter.value==='assigned';
+  const rows=main.querySelectorAll('#dailyForm tbody tr');
+  for(const row of rows)row.hidden=dailyAssignedOnly&&row.dataset.assigned==='false';
+  document.querySelector('#dailyNoAssigned').hidden=!dailyAssignedOnly||[...rows].some(row=>!row.hidden);
+ };
+ dailyFilter.onchange();
  const dailyForm=document.querySelector('#dailyForm');
  if(dailyForm)dailyForm.onsubmit=e=>{
   e.preventDefault();
@@ -1355,9 +1364,9 @@ function dailyOutput(daily,monthStart,monthEnd){
  const totals=daily[outputDay]||{};
  const people=staff.map(p=>({...p,assignments:assignments.filter(t=>participates(t,p.name))}))
   .filter(p=>activeNames.includes(p.name)||p.assignments.length||totals[p.name]!=null);
- return '<div class="report-meta"><label class="daily-date">填报日期<input id="outputDay" type="date" required min="'+monthStart+'" max="'+monthEnd+'" value="'+outputDay+'"></label><p>全员均可填报。按群里的汇报填写个人当天总数。</p></div>'+
+ return '<div class="report-meta"><label class="daily-date">填报日期<input id="outputDay" type="date" required min="'+monthStart+'" max="'+monthEnd+'" value="'+outputDay+'"></label> <label class="daily-date">显示人员<select id="dailyStaffFilter"><option value="all">全部人员</option><option value="assigned"'+(dailyAssignedOnly?' selected':'')+'>当天有任务</option></select></label><p>按群里的汇报填写个人当天总数。</p><p id="dailyNoAssigned" hidden>当天暂无已安排任务的人员，可切换到全部人员填报。</p></div>'+
  (people.length?'<form id="dailyForm"><table><thead><tr><th>人员</th><th>岗位</th><th>当天安排</th><th>实际拍摄条数</th></tr></thead><tbody>'+
- people.map(p=>'<tr><td>'+esc(p.name)+'</td><td>'+esc(p.role)+'</td><td>'+assignmentTotal(p.assignments)+' 次</td><td><input aria-label="'+esc(p.name)+'当天实际拍摄条数" type="number" min="0" step="1" name="'+esc(p.name)+'" value="'+esc(totals[p.name])+'" placeholder="待填"></td></tr>').join('')+
+ people.map(p=>'<tr data-assigned="'+Boolean(p.assignments.length)+'"><td>'+esc(p.name)+'</td><td>'+esc(p.role)+'</td><td>'+assignmentTotal(p.assignments)+' 次</td><td><input aria-label="'+esc(p.name)+'当天实际拍摄条数" type="number" min="0" step="1" name="'+esc(p.name)+'" value="'+esc(totals[p.name])+'" placeholder="待填"></td></tr>').join('')+
  '</tbody></table><div class="report-meta"><button class="primary">保存当天条数</button><span id="dailyStatus" role="status"></span></div></form>':'<div class="empty">名册暂无人员。</div>');
 }
 function groupOutput(){
