@@ -81,6 +81,15 @@ main:not(.home-page) h1 {
 }
 @keyframes work-title-exposure {from{opacity:.74}to{opacity:1}}
 @keyframes gallery-paper-exposure {from{opacity:.77}to{opacity:1}}
+.rest-group--shooting { --rest-group-color:#92bbf3; --rest-group-bg:#202d43; }
+.rest-group--creative { --rest-group-color:#d1aeff; --rest-group-bg:#352849; }
+.rest-group--model { --rest-group-color:#91ddc6; --rest-group-bg:#203a36; }
+.rest-grid tr[class^="rest-group--"] > td,
+#restMonthly tr[class^="rest-group--"] > td { background-color:var(--rest-group-bg); }
+.rest-grid tr[class^="rest-group--"] > td:nth-child(-n+2),
+#restMonthly tr[class^="rest-group--"] > td:nth-child(-n+2) { color:var(--rest-group-color); }
+.rest-grid tr[class^="rest-group--"] > td[data-shift="休"] select { border-color:var(--rest-group-color); color:var(--rest-group-color); }
+.rest-group-legend span { color:var(--rest-group-color); background:var(--rest-group-bg); padding:.25em .65em; border-radius:4px; }
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
@@ -318,7 +327,7 @@ function orgMap(){
  const branches=[
   ['部门负责人',[settings.leader],'#b39ae0','#eee6ff',''],
   ['创新组',roster['创新组'],'#88b6e3','#e9f4ff',''],
-  ['基础拍摄组',roster['基础摄影'],'#e2a0a9','#fce8ed',settings.specialty],
+  ['拍摄组',roster['基础摄影'],'#e2a0a9','#fce8ed',settings.specialty],
   ['摄影助理',roster['摄影助理'],'#dbb77c','#fff2d9',''],
   ['拍剪助理',roster['拍剪助理'],'#b39ae0','#eee6ff',''],
   ['模特组',roster['模特'],'#9dc2a2','#e7f4e6',''],
@@ -547,14 +556,33 @@ function updateStaffOptions(picker,availability,date){
   option.disabled=off&&!option.selected;
  }
 }
+const restRoleLabel = role => role === '基础摄影' ? '拍摄组' : role;
+const restGroup = role => ({'基础摄影':'shooting','创新组':'creative','模特':'model'})[role] || '';
+const restRowClass = role => restGroup(role) ? ' class="rest-group--'+restGroup(role)+'"' : '';
+function confirmRestConflicts(previous, next, dates) {
+ const conflicts = [];
+ for (const date of new Set(dates)) {
+  const byRole = new Map();
+  for (const {name, role} of restStaff) {
+   if (next[date]?.[name] !== '休') continue;
+   if (!byRole.has(role)) byRole.set(role, new Set());
+   byRole.get(role).add(name);
+  }
+  for (const [role, names] of byRole) {
+   if (names.size < 2 || [...names].every(name => previous[date]?.[name] === '休')) continue;
+   conflicts.push(date+' · '+restRoleLabel(role)+' · '+[...names].join('、')+' 休息');
+  }
+ }
+ return !conflicts.length || window.confirm('同岗多人休息，请确认是否作为特殊安排继续保存。\n\n'+conflicts.join('\n'));
+}
 function restView(message=''){
  const values=readRest();
  const dates=Array.from({length:7},(_,i)=>plusDay(restWeek,i));
  const conflicts=tasks.filter(t=>dates.includes(t.date)&&[...roles,'handModel'].some(k=>members(t[k]).some(n=>resting(values,t.date,n))));
- main.innerHTML='<div class="eyebrow">ROSTER / 出勤与调休</div><h1>'+esc(settings.restTitle)+'</h1><p>按周安排人员出勤。设为「休」后，该日期的任务排班会标记并限制选择。</p>'+
+ main.innerHTML='<div class="eyebrow">ROSTER / 出勤与调休</div><h1>'+esc(settings.restTitle)+'</h1><p>按周安排人员出勤。设为「休」后，该日期的任务排班会标记并限制选择。同岗同日两人或以上休息时需要确认。</p><p class="bar rest-group-legend"><span class="rest-group--shooting">拍摄组</span><span class="rest-group--creative">创新组</span><span class="rest-group--model">模特</span></p>'+
  '<div class="bar"><button id="prevRest">上一周</button><label>查看日期<input id="pickRest" type="date" value="'+restWeek+'"></label><button id="nextRest">下一周</button><span class="spacer"></span><label>导入排班文件<input id="restFile" type="file" accept=".xlsx,.csv,.tsv"></label></div>'+
  '<div class="panel"><table class="rest-grid"><thead><tr><th>姓名</th><th>岗位</th>'+dates.map((d,i)=>'<th>'+d.slice(5)+' 周'+'一二三四五六日'[i]+'</th>').join('')+'</tr></thead><tbody>'+
- restStaff.map(p=>'<tr><td>'+esc(p.name)+'</td><td>'+esc(p.role)+'</td>'+dates.map(d=>{
+ restStaff.map(p=>'<tr'+restRowClass(p.role)+'><td>'+esc(p.name)+'</td><td>'+esc(restRoleLabel(p.role))+'</td>'+dates.map(d=>{
   const shift=values[d]?.[p.name]||'未安排';
   return '<td data-shift="'+esc(shift)+'"><select aria-label="'+esc(p.name+' '+d)+'" data-rest-date="'+d+'" data-rest-name="'+esc(p.name)+'">'+['未安排','上班','休'].map(value=>'<option value="'+value+'" '+(value===shift?'selected':'')+'>'+(value==='休'?'休息':value)+'</option>').join('')+'</select></td>';
  }).join('')+'</tr>').join('')+'</tbody></table></div>'+
@@ -570,9 +598,16 @@ function restView(message=''){
   document.querySelector('#restMonthly')?.scrollIntoView?.({block:'start'});
  };
  document.querySelectorAll('[data-rest-date]').forEach(field=>field.onchange=()=>{
-  const people=values[field.dataset.restDate]??={};
-  if(field.value==='未安排')delete people[field.dataset.restName];else people[field.dataset.restName]=field.value;
-  try{localStorage.setItem(restKey,JSON.stringify(values));restView('已保存 '+field.dataset.restName+' 的安排。')}catch{restView('保存失败，请检查浏览器存储。')}
+  const {restDate:date, restName:name}=field.dataset;
+  const previous=readRest();
+  const next=structuredClone(previous);
+  const people=next[date]??={};
+  if(field.value==='未安排')delete people[name];else people[name]=field.value;
+  if(!confirmRestConflicts(previous,next,[date])){
+   field.value=previous[date]?.[name]||'未安排';
+   return;
+  }
+  try{localStorage.setItem(restKey,JSON.stringify(next));restView('已保存 '+name+' 的安排。')}catch{restView('保存失败，请检查浏览器存储。')}
  });
  document.querySelector('#restPaste').onsubmit=e=>{
   e.preventDefault();
@@ -595,7 +630,7 @@ function restMonthlySummary(values){
   const rest=shifts.filter(shift=>shift==='休').length;
   const balance=quota-rest;
   const remaining=balance<0?'超排 '+Math.abs(balance)+' 天':balance+' 天';
-  return '<tr><td>'+esc(person.name)+'</td><td>'+esc(person.role)+'</td><td>'+work+'</td><td>'+rest+'</td><td>'+quota+'</td><td><strong>'+remaining+'</strong></td><td>'+(dayCount-work-rest)+'</td></tr>';
+  return '<tr'+restRowClass(person.role)+'><td>'+esc(person.name)+'</td><td>'+esc(restRoleLabel(person.role))+'</td><td>'+work+'</td><td>'+rest+'</td><td>'+quota+'</td><td><strong>'+remaining+'</strong></td><td>'+(dayCount-work-rest)+'</td></tr>';
  }).join('');
  return '<section class="panel month-actuals" id="restMonthly"><div class="report-meta"><h2>月度班休汇总</h2><div class="bar"><label>统计月份<input type="month" id="restMonth" value="'+esc(restMonth)+'"></label><strong>当月 '+quota+' 个周日 · 每人应休 '+quota+' 天</strong></div><p>按排班表已填写的班次统计。休息可排在任意日期，剩余可排休＝当月应休天数减去已排休天数。</p></div><table class="report"><thead><tr><th>姓名</th><th>岗位</th><th>已排上班（天）</th><th>已排休息（天）</th><th>应休（天）</th><th>剩余可排休</th><th>未安排（天）</th></tr></thead><tbody>'+rows+'</tbody></table></section>';
 }
@@ -629,7 +664,7 @@ function applyRestImport(rows){
  if(header<0)throw Error('没有找到「姓名」和日期表头，请检查导入范围。');
  const nameCol=rows[header].findIndex(v=>String(v).trim()==='姓名');
  const dates=rows[header].map(restDate);
- const values=readRest(), known=new Set(restStaff.map(p=>p.name)), skipped=new Set(), importedDates=[];
+ const previous=readRest(), values=structuredClone(previous), known=new Set(restStaff.map(p=>p.name)), skipped=new Set(), importedDates=[];
  let changes=0;
  for(const row of rows.slice(header+1)){
   const name=String(row[nameCol]||'').trim();
@@ -644,6 +679,7 @@ function applyRestImport(rows){
   });
  }
  if(!changes)throw Error('没有可导入的中台人员班次。'+(skipped.size?'未匹配：'+[...skipped].join('、'):''));
+ if(!confirmRestConflicts(previous,values,importedDates))return;
  localStorage.setItem(restKey,JSON.stringify(values));
  const firstDate=importedDates.sort()[0];
  restWeek=weekOf(firstDate);
@@ -782,7 +818,7 @@ function managementView(period,outputRows){
  const config=history[period]||{};
  const monthTasks=tasks.filter(t=>t.date.startsWith(period));
  const recorded=t=>t.actual!=null&&t.actual!=='';
- const teamRows=[['基础拍摄组',monthTasks.filter(t=>roleNames.lead.includes(members(t.lead)[0])&&!roster['创新组'].includes(members(t.lead)[0]))],['创新组',monthTasks.filter(t=>roster['创新组'].includes(members(t.lead)[0]))]];
+ const teamRows=[['拍摄组',monthTasks.filter(t=>roleNames.lead.includes(members(t.lead)[0])&&!roster['创新组'].includes(members(t.lead)[0]))],['创新组',monthTasks.filter(t=>roster['创新组'].includes(members(t.lead)[0]))]];
  const groupActuals=teamRows.map(([name,entries])=>{
   const available=entries.filter(recorded);
   return config.actuals?.[name]??(available.length?sum(available,'actual'):null);
@@ -806,7 +842,7 @@ function managementView(period,outputRows){
    (group?'<input class="target-input" type="number" min="0" step="1" name="actual:'+esc(name)+'" aria-label="'+esc(name)+'实际产出补录" value="'+esc(config.actuals?.[name])+'" placeholder="'+esc(actual==='—'?'待填':actual)+'">':esc(typeof actual==='number'?count(actual):actual))+'</td><td>'+progress+'</td><td>'+(ratio==null?'—':count(Math.max(0,goal-actual))+' 条')+'</td></tr>';
  };
  const groupMembership=[
-  ['基础拍摄组',roster['基础摄影']],
+  ['拍摄组',roster['基础摄影']],
   ['创新组',roster['创新组']],
   ['摄影助理',roster['摄影助理']],
   ['模特组',roster['模特']]
@@ -903,7 +939,7 @@ function dailyOutput(daily){
  '</tbody></table><div class="report-meta"><button class="primary">保存当天条数</button><span id="dailyStatus" role="status"></span></div></form>':'<div class="empty">当天还没有已分配人员的排班。请先在「工作安排」选择并保存人员，或切换填报日期。</div>')+'</section>';
 }
 function groupOutput(){
- const groups=[['基础拍摄组',16771,defaultRoster['基础摄影']],['创新组',19,defaultRoster['创新组']]];
+ const groups=[['拍摄组',16771,defaultRoster['基础摄影']],['创新组',19,defaultRoster['创新组']]];
  return '<section class="panel month-actuals"><div class="report-meta"><h2>原始组别人均产出</h2><p>按最初提供的分组产量和人员配置计算。</p></div><table><thead><tr><th>组别</th><th>视频产量</th><th>组内人数</th><th>人均产出</th></tr></thead><tbody>'+
  groups.map(([label,output,names])=>'<tr><td>'+label+'</td><td>'+count(output)+' 条</td><td>'+names.length+' 人</td><td>'+count(output/names.length)+' 条／人</td></tr>').join('')+
  '</tbody></table><div class="report-meta"><small>人均产出＝组内视频产量 ÷ 组内名册人数。基础组按 3 名基础摄影计算，创新组按 3 名成员计算。模特与摄助为协作岗位，单人实绩仍需对应任务明细。</small></div></section>';
