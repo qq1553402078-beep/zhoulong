@@ -219,7 +219,7 @@ main:not(.home-page) h1 {
 .daily-name-options { display:flex; flex-wrap:wrap; gap:8px 16px; margin:8px 0; }
 .daily-name-options label { display:flex; align-items:center; gap:5px; }
 .daily-name-options input { width:auto; }
-.daily-task-report[hidden],#dailyForm tr[hidden],#dailyStaffNames[hidden] { display:none; }
+.daily-task-card[hidden],#dailyStaffNames[hidden] { display:none; }
 .note-field { min-height:90px; max-height:220px; overflow:auto; background:#191722; }
 .note-field:empty::before { content:attr(data-placeholder); color:#b5a9bd; pointer-events:none; }
 .note-actions { display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin:5px 0; }
@@ -241,7 +241,7 @@ main:not(.home-page) h1 {
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
 const defaultRoster={
- '基础摄影':['曹傲宇','陈丽娜','游苗'],'创新组':['杨建勋','勾应颖','刘意'],'拍剪助理':[],'摄影助理':['白炳锦','张亚涛'],'模特':['夏艺方','何雨馨','穆灿','张智','钱小蝶'],'修片':['何梓瑜']
+ '基础摄影':['曹傲宇','陈丽娜','游苗'],'创新组':['杨建勋','勾应颖'],'拍剪助理':['刘意'],'摄影助理':['白炳锦','张亚涛'],'模特':['夏艺方','何雨馨','穆灿','张智','钱小蝶'],'修片':['何梓瑜']
 };
 const settingsKey='studio-ops-settings-v1';
 const defaults={
@@ -274,14 +274,12 @@ let roster,products,types,staff,roleNames,restStaff,activeNames;
 function applySettings(){
  if(settings.shootingTitle==='承接的拍摄类型')settings.shootingTitle='拍摄类型';
  settings.roster={...defaultRoster,...settings.roster};
- if(!settings.rosterRevision){
-  const creative=settings.roster['创新组'];
-  settings.roster={
-   ...settings.roster,
-   '创新组':[...new Set([...creative,'刘意'])],
-   '拍剪助理':settings.roster['拍剪助理'].filter(name=>name!=='刘意')
-  };
-  settings.rosterRevision=1;
+ if((settings.rosterRevision||0)<2){
+  for(const role of Object.keys(settings.roster)){
+   if(role!=='拍剪助理')settings.roster[role]=settings.roster[role].filter(name=>name!=='刘意');
+  }
+  settings.roster['拍剪助理']=[...new Set([...settings.roster['拍剪助理'],'刘意'])];
+  settings.rosterRevision=2;
  }
  ({roster,products,types}=settings);
  staff=Object.entries(roster).flatMap(([role,names])=>names.map(name=>({role,name})));
@@ -1231,8 +1229,10 @@ function people(){
  const production=(name,from,to)=>{
   const dayTotals=Object.entries(daily).filter(([date,totals])=>date>=from&&date<=to&&totals[name]!=null);
   const filledDays=new Set(dayTotals.map(([date])=>date));
-  const recorded=tasks.filter(t=>t.date>=from&&t.date<=to&&participates(t,name)&&!filledDays.has(t.date)&&t.actual!=null&&t.actual!=='');
-  return recorded.length||dayTotals.length?sum(recorded,'actual')+dayTotals.reduce((total,[,values])=>total+Number(values[name]),0):'—';
+  const recorded=tasks.filter(t=>t.date>=from&&t.date<=to&&participates(t,name)&&!filledDays.has(t.date))
+   .map(t=>t.dailyShotCount!=null&&t.dailyShotCount!==''?t.dailyShotCount:t.actual)
+   .filter(value=>value!=null&&value!=='');
+  return recorded.length||dayTotals.length?recorded.reduce((total,value)=>total+Number(value),0)+dayTotals.reduce((total,[,values])=>total+Number(values[name]),0):'—';
  };
  const monday=weekOf(outputDay);
  const sunday=plusDay(monday,6);
@@ -1262,7 +1262,7 @@ function people(){
  });
  main.innerHTML='<section class="dashboard-title"><div class="eyebrow">STUDIO INTELLIGENCE / 人效分析</div><label class="dashboard-month">统计月份<input id="managementMonth" type="month" required value="'+esc(month)+'"></label><h1>'+esc(settings.peopleTitle)+'</h1><nav class="people-nav" aria-label="人效页面目录"><a href="#teamOverview" data-report-jump>团队总览</a><a href="#dailyOutput" data-report-jump>任务与填报</a><a href="#personalOutput" data-report-jump>个人分析</a><a href="#peopleReference" data-report-jump>历史与口径</a></nav></section>'+panel('teamOverview','团队'+teamPeriodLabels[teamPeriod],managementView(outputMonth,outputRows,outputRanges[teamPeriod],daily))+
  '<section class="people-block" aria-label="任务与填报"><h2>任务与填报</h2>'+
- panel('dailyOutput','每日拍摄条数 · '+outputDay,dailyOutput(daily,monthStart,monthEnd))+
+ panel('dailyOutput','每日拍摄条数 · '+outputDay,dailyOutput(monthStart,monthEnd))+
  panel('monthlyBackfill','月度拍摄条数 · '+esc(month),'<div class="report-meta"><form id="monthlyOutput" class="bar"><label>人员<select name="name">'+monthlyOptions+'</select></label><label>本月总条数<input name="total" type="number" min="0" step="1" placeholder="留空恢复每日汇总"></label><button class="primary">保存月度总数</button></form><span id="monthlyStatus" role="status"></span><p>本月已填写 '+filled.length+' 人 · 未填写 '+unfilled.length+' 人</p><p>填写月度总数后，月报采用该人员的月度总数。留空保存可恢复每日任务汇总。</p></div>',false)+
  '</section><section class="people-block" aria-label="个人分析"><h2>个人分析</h2>'+
  panel('personalOutput','个人产出总览','<div class="report-meta"><div class="bar"><span>填报日期 '+esc(outputDay)+'</span><a href="#dailyOutput" data-report-jump>填写当天产出</a><a href="#monthlyBackfill" data-report-jump>填写月度条数</a></div><p>'+esc(outputDay)+' 当日 · '+weekStart+' 至 '+weekEnd+' 本周 · '+outputMonth+' 本月</p></div><div id="outputChart" class="output-chart"></div><table class="report"><thead><tr><th>姓名</th><th>岗位</th><th>日产出（条）</th><th>周产出（条）</th><th>月产出（条）</th></tr></thead><tbody>'+
@@ -1314,15 +1314,9 @@ function people(){
   dailyNames.hidden=!dailyAssignedOnly;
   const available=[...dailyNames.querySelectorAll('input')];
   const chosen=available.filter(input=>input.checked).map(input=>input.value);
-  const rows=main.querySelectorAll('#dailyForm tbody tr');
-  for(const row of rows){
-   const name=row.querySelector('input').name;
-   row.hidden=dailyAssignedOnly&&(row.dataset.assigned==='false'||(chosen.length&&!chosen.includes(name)));
-  }
   for(const form of main.querySelectorAll('[data-daily-task]')){
    form.closest('.daily-task-card').hidden=dailyAssignedOnly&&chosen.length>0&&!chosen.some(name=>participates(tasks.find(task=>task.id===form.dataset.dailyTask),name));
   }
-  document.querySelector('#dailyNoAssigned').hidden=!dailyAssignedOnly||[...rows].some(row=>!row.hidden);
  };
  dailyNames.onchange=event=>{
   if(event.target.checked)dailySelectedNames.add(event.target.value);
@@ -1352,15 +1346,6 @@ function people(){
    if(shotBatch!=='')saved.closest('details').querySelector('summary').focus({preventScroll:true});
   }
  });
- const dailyForm=document.querySelector('#dailyForm');
- if(dailyForm)dailyForm.onsubmit=e=>{
-  e.preventDefault();
-  const totals=daily[outputDay]??={};
-  for(const [name,value] of new FormData(dailyForm)){
-   if(value==='')delete totals[name];else totals[name]=Number(value);
-  }
-  try{localStorage.setItem(dailyKey,JSON.stringify(daily));render();document.querySelector('#dailyStatus').textContent='已保存 '+outputDay+' 的拍摄条数。'}catch{alert('无法保存每日条数，请检查浏览器存储。')}
- };
  const monthlyForm=document.querySelector('#monthlyOutput');
  if(monthlyForm){
   const updateTotal=()=>{monthlyForm.elements.total.value=monthly[month]?.[monthlyForm.elements.name.value]??''};
@@ -1602,7 +1587,7 @@ function shootingComplete(task){
 function dailyTaskReports(assignments){
  const crewRoles=[['lead','摄影师'],['model','模特'],['handModel','手模'],['assistant','摄助'],['retouch','修片']];
  return '<div class="report-meta daily-task-reports"><h3>当天任务填报</h3>'+
- '<p>每个任务由主拍填一次，同组成员查看同一份记录。任务条数会计入参与人员产出，已有个人当天总数优先。累计拍摄量已包含当日拍摄量，两个数字分别保存。</p>'+
+ '<p>每个任务由主拍填一次，同组成员查看同一份记录。当日拍摄量计入参与人员产出，已有个人当天总数优先。累计拍摄量已包含当日拍摄量，两个数字分别保存。</p>'+
  (assignments.length?assignments.map(task=>{
   const progress=Number(task.target)>0&&task.actual!=null&&task.actual!==''?count(100*Number(task.actual)/Number(task.target))+'%':'—';
   const crew=crewRoles.filter(([field])=>members(task[field]).length).map(([field,label])=>label+'：'+members(task[field]).join('、')).join(' · ');
@@ -1617,17 +1602,12 @@ function dailyTaskReports(assignments){
    '<label>首次交付时间<input type="datetime-local" name="delivery" value="'+esc(task.delivery)+'"></label></div>'+
    '<label>未完成原因<textarea name="reason" rows="2" maxlength="500" placeholder="填写影响进度的原因及下一步">'+esc(task.unfinishedReason)+'</textarea></label>'+
    '<div class="bar"><button class="primary">保存任务填报</button><span role="status"></span></div></form></details>';
- }).join(''):'<p>当天暂无安排任务，可在下方填写个人条数。</p>')+'</div>';
+ }).join(''):'<p>当天暂无安排任务。</p>')+'</div>';
 }
-function dailyOutput(daily,monthStart,monthEnd){
+function dailyOutput(monthStart,monthEnd){
  const assignments=tasks.filter(t=>t.date===outputDay);
- const totals=daily[outputDay]||{};
- const people=staff.map(p=>({...p,assignments:assignments.filter(t=>participates(t,p.name))}))
-  .filter(p=>activeNames.includes(p.name)||p.assignments.length||totals[p.name]!=null);
- return '<div class="report-meta"><label class="daily-date">填报日期<input id="outputDay" type="date" required min="'+monthStart+'" max="'+monthEnd+'" value="'+outputDay+'"></label> <label class="daily-date">显示人员<select id="dailyStaffFilter"><option value="all">全部人员</option><option value="assigned"'+(dailyAssignedOnly?' selected':'')+'>当天有任务</option></select></label><p>按群里的汇报填写个人当天总数。</p><p id="dailyNoAssigned" hidden>当天暂无已安排任务的人员，可切换到全部人员填报。</p><details id="dailyStaffNames" hidden><summary>选择当天有任务的人员</summary><div class="daily-name-options">'+people.filter(p=>p.assignments.length).map(p=>'<label><input type="checkbox" value="'+esc(p.name)+'"'+(dailySelectedNames.has(p.name)?' checked':'')+'>'+esc(p.name)+'</label>').join('')+'</div><small>可多选，未勾选时显示当天所有有任务的人员。</small></details></div>'+dailyTaskReports(assignments)+
- (people.length?'<form id="dailyForm"><table><thead><tr><th>人员</th><th>岗位</th><th>当天安排</th><th>实际拍摄条数</th></tr></thead><tbody>'+
- people.map(p=>'<tr data-assigned="'+Boolean(p.assignments.length)+'"><td>'+esc(p.name)+'</td><td>'+esc(p.role)+'</td><td>'+assignmentTotal(p.assignments)+' 次</td><td><input aria-label="'+esc(p.name)+'当天实际拍摄条数" type="number" min="0" step="1" name="'+esc(p.name)+'" value="'+esc(totals[p.name])+'" placeholder="待填"></td></tr>').join('')+
- '</tbody></table><div class="report-meta"><button class="primary">保存当天条数</button><span id="dailyStatus" role="status"></span></div></form>':'<div class="empty">名册暂无人员。</div>');
+ const people=staff.filter(p=>assignments.some(task=>participates(task,p.name)));
+ return '<div class="report-meta"><label class="daily-date">填报日期<input id="outputDay" type="date" required min="'+monthStart+'" max="'+monthEnd+'" value="'+outputDay+'"></label> <label class="daily-date">显示人员<select id="dailyStaffFilter"><option value="all">全部人员</option><option value="assigned"'+(dailyAssignedOnly?' selected':'')+'>当天有任务</option></select></label><details id="dailyStaffNames" hidden><summary>选择当天有任务的人员</summary><div class="daily-name-options">'+people.map(p=>'<label><input type="checkbox" value="'+esc(p.name)+'"'+(dailySelectedNames.has(p.name)?' checked':'')+'>'+esc(p.name)+'</label>').join('')+'</div><small>可多选，未勾选时显示当天所有有任务的人员。</small></details></div>'+dailyTaskReports(assignments);
 }
 function groupOutput(){
  const groups=[['拍摄组',16771,defaultRoster['基础摄影']],['创新组',19,defaultRoster['创新组']]];
