@@ -1044,6 +1044,7 @@ async function readRestXlsx(buffer){
  }
  throw Error('工作簿中没有找到含「姓名」和日期的排班表。');
 }
+let monthlyOutputPerson='';
 const reportSectionsKey='studio-ops-report-sections-v1';
 function people(){
  let collapsed={};
@@ -1064,6 +1065,15 @@ function people(){
  const monthlyKey='studio-ops-monthly-output-v1';
  let monthly={};
  try{monthly=JSON.parse(localStorage.getItem(monthlyKey)||'{}')||{}}catch{}
+ const savedTotals=monthly[month]||{};
+ const filled=[], unfilled=[];
+ for(const {name} of staff){
+  (Object.hasOwn(savedTotals,name)&&savedTotals[name]!=null&&savedTotals[name]!==''?filled:unfilled).push(name);
+ }
+ const selectedName=monthlyOutputPerson||person||unfilled[0]||filled[0];
+ const monthlyOptions=[['未填写',unfilled],['已填写',filled]].map(([label,names])=>
+  names.length?'<optgroup label="'+label+'（'+names.length+' 人）">'+options(names,selectedName)+'</optgroup>':''
+ ).join('');
  const daily=readDaily();
  const production=(name,from,to)=>{
   const dayTotals=Object.entries(daily).filter(([date,totals])=>date>=from&&date<=to&&totals[name]!=null);
@@ -1102,7 +1112,7 @@ function people(){
  outputRows.map(row=>'<tr>'+row.map(x=>'<td>'+outputCell(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table><div class="report-meta"><small>'+outputNote+'</small></div>')+
  panel('teamActuals','团队实际拍摄量',teamActuals(month),false)+
  panel('dailyOutput','每日拍摄条数 · '+outputDay,dailyOutput(daily,monthStart,monthEnd))+
- panel('monthlyBackfill','月度拍摄条数 · '+esc(month),'<div class="report-meta"><form id="monthlyOutput" class="bar"><label>人员<select name="name">'+options(staff.map(p=>p.name),person)+'</select></label><label>本月总条数<input name="total" type="number" min="0" step="1" placeholder="留空恢复每日汇总"></label><button class="primary">保存月度总数</button></form><span id="monthlyStatus" role="status"></span><p>填写月度总数后，月报采用该人员的月度总数。留空保存可恢复每日任务汇总。</p></div>',false)+
+ panel('monthlyBackfill','月度拍摄条数 · '+esc(month),'<div class="report-meta"><form id="monthlyOutput" class="bar"><label>人员<select name="name">'+monthlyOptions+'</select></label><label>本月总条数<input name="total" type="number" min="0" step="1" placeholder="留空恢复每日汇总"></label><button class="primary">保存月度总数</button></form><span id="monthlyStatus" role="status"></span><p>本月已填写 '+filled.length+' 人 · 未填写 '+unfilled.length+' 人</p><p>填写月度总数后，月报采用该人员的月度总数。留空保存可恢复每日任务汇总。</p></div>',false)+
  panel('originalGroups','原始组别人均产出',groupOutput(),false)+
  panel('personalReport','个人人效月报','<div class="report-meta"><p>工作安排保存后自动累计接单次数。验收按各批日期归月，每日拍摄条数汇入对应月份。</p>'+
  '<div class="bar"><label>人员<select id="person">'+options(['全部人员',...staff.map(p=>p.name)],person||'全部人员')+'</select></label><span class="spacer"></span><button id="exportReport" class="primary">导出月报 CSV</button></div></div>'+
@@ -1153,11 +1163,12 @@ function people(){
  const monthlyForm=document.querySelector('#monthlyOutput');
  if(monthlyForm){
   const updateTotal=()=>{monthlyForm.elements.total.value=monthly[month]?.[monthlyForm.elements.name.value]??''};
-  monthlyForm.elements.name.onchange=updateTotal;
+  monthlyForm.elements.name.onchange=()=>{monthlyOutputPerson=monthlyForm.elements.name.value;updateTotal()};
   updateTotal();
   monthlyForm.onsubmit=e=>{
    e.preventDefault();
    const {name,total}=Object.fromEntries(new FormData(monthlyForm));
+   monthlyOutputPerson=name;
    const totals=monthly[month]??={};
    if(total==='')delete totals[name];else totals[name]=Number(total);
    try{localStorage.setItem(monthlyKey,JSON.stringify(monthly));render();document.querySelector('#monthlyStatus').textContent=total===''?'已恢复 '+month+' 的每日汇总。':'已保存 '+month+' 的月度拍摄条数。'}catch{alert('无法保存月度总数，请检查浏览器存储。')}
