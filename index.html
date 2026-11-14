@@ -140,6 +140,14 @@ main:not(.home-page) h1 {
 .model-profile-heading { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:20px; }
 .model-profile-heading h3 { margin:0; font:500 clamp(32px,5vw,68px)/1.12 "Songti SC",SimSun,serif; }
 .model-signature { color:#e8c893; font:italic 500 clamp(26px,4vw,60px)/1.15 "Segoe Script","Brush Script MT",cursive; }
+.staff-search { margin-block:6px; }
+.multi-options label[hidden] { display:none !important; }
+.staff-no-results { display:block; padding:6px; }
+.staff-no-results[hidden] { display:none; }
+.admin-roster { grid-column:1/-1; overflow:auto; }
+.admin-roster table input,.admin-roster table select { min-width:105px; }
+.admin-roster .roster-role { display:flex; gap:8px; }
+.admin-roster .roster-role select { min-width:115px; }
 .reference-fold { margin-block:8px; }
 .reference-label-row .reference-remove { padding:4px 7px; font-size:12px; white-space:nowrap; }
 .reference-fold > summary { cursor:pointer; color:#d9caf2; font-size:13px; padding-block:4px; }
@@ -201,11 +209,11 @@ const defaults={
  scheduleTitle:'拍摄排班',scheduleIntro:'按运营工单排班，拍摄内容和运营要求可直接在表内修改。',
  restTitle:'中台休息表',peopleTitle:'中台人效与产出看板',
  navHome:'首页',navSchedule:'工作安排',navRest:'休息表',navPeople:'个人人效',navPlan:'产能规划',navAdmin:'管理后台',
- artwork:'',gallery:null,roster:defaultRoster
+ artwork:'',gallery:null,roster:defaultRoster,inactiveStaff:[]
 };
 let settings={...defaults};
 try{settings={...defaults,...JSON.parse(localStorage.getItem(settingsKey)||'{}')}}catch{}
-let roster,products,types,staff,roleNames,restStaff;
+let roster,products,types,staff,roleNames,restStaff,activeNames;
 function applySettings(){
  if(settings.shootingTitle==='承接的拍摄类型')settings.shootingTitle='拍摄类型';
  settings.roster={...defaultRoster,...settings.roster};
@@ -221,7 +229,10 @@ function applySettings(){
  ({roster,products,types}=settings);
  staff=Object.entries(roster).flatMap(([role,names])=>names.map(name=>({role,name})));
  roleNames={lead:[...roster['基础摄影'],...roster['创新组'],...roster['摄影助理']],assistant:[...roster['摄影助理'],...(roster['拍剪助理']||[])],model:roster['模特'],retouch:roster['修片']};
- restStaff=staff.some(p=>p.name===settings.leader)?staff:[...staff,{name:settings.leader,role:'部门负责人'}];
+ if(!staff.some(p=>p.name===settings.leader))staff.push({name:settings.leader,role:'部门负责人'});
+ const activeStaff=staff.filter(p=>!settings.inactiveStaff.includes(p.name));
+ restStaff=activeStaff;
+ activeNames=restStaff.map(p=>p.name);
 }
 applySettings();
 const key='studio-ops-v1';
@@ -334,6 +345,17 @@ function readDaily(){
 }
 const members=value=>Array.isArray(value)?value:String(value||'').split('、').map(x=>x.trim()).filter(Boolean);
 const participates=(t,name)=>[...roles,'handModel'].some(k=>members(t[k]).includes(name));
+function filterStaffOptions(input){
+ const picker=input.closest('.multi-picker');
+ const query=input.value.trim().toLowerCase();
+ let matches=0;
+ for(const option of picker.querySelectorAll('.multi-options label')){
+  const name=option.querySelector('input').value.toLowerCase();
+  option.hidden=!name.includes(query);
+  if(!option.hidden)matches++;
+ }
+ picker.querySelector('.staff-no-results').hidden=matches>0;
+}
 function updateMultiSummary(input){
  const picker=input.closest('details');
  const selected=Array.from(picker.querySelectorAll('input:checked'),field=>field.value);
@@ -344,9 +366,9 @@ function updateMultiSummary(input){
 function assignmentHint(name,date,id){return tasks.filter(t=>t.date===date&&t.id!==id&&participates(t,name)).map(t=>'已安排：'+(t.lead||'摄影师待定')+' · '+(t.product||t.title||'任务')).join('；')}
 function staffingSummary(date){
  if(!date)return '';
- const off=readRest(),available=staff.filter(p=>!resting(off,date,p.name));
+ const off=readRest(),available=restStaff.filter(p=>!resting(off,date,p.name));
  const missing=available.filter(p=>(roleNames.lead.includes(p.name)||roleNames.model.includes(p.name))&&!tasks.some(t=>t.date===date&&participates(t,p.name)));
- return '<section class="staffing-summary"><strong>当日人员核对</strong><p>未安排摄影师 / 模特：'+(missing.map(p=>esc(p.name)).join(' · ')||'已全部安排')+'</p><small>休息：'+(staff.filter(p=>resting(off,date,p.name)).map(p=>esc(p.name)).join(' · ')||'无')+'。已安排人员可再次选择，选项内显示现有搭档。</small></section>';
+ return '<section class="staffing-summary"><strong>当日人员核对</strong><p>未安排摄影师 / 模特：'+(missing.map(p=>esc(p.name)).join(' · ')||'已全部安排')+'</p><small>休息：'+(restStaff.filter(p=>resting(off,date,p.name)).map(p=>esc(p.name)).join(' · ')||'无')+'。已安排人员可再次选择，选项内显示现有搭档。</small></section>';
 }
 
 let lastScheduleChange;
@@ -506,13 +528,13 @@ function labelledLines(text){
 }
 function orgMap(){
  const branches=[
-  ['部门负责人',[settings.leader],'#b39ae0','#eee6ff',''],
-  ['创新组',roster['创新组'],'#88b6e3','#e9f4ff',''],
-  ['拍摄组',roster['基础摄影'],'#e2a0a9','#fce8ed',settings.specialty],
-  ['摄影助理',roster['摄影助理'],'#dbb77c','#fff2d9',''],
-  ['拍剪助理',roster['拍剪助理'],'#b39ae0','#eee6ff',''],
-  ['模特组',roster['模特'],'#9dc2a2','#e7f4e6',''],
-  ['修片',roster['修片'],'#87bfbb','#e2f5f2','']
+  ['部门负责人',activeNames.includes(settings.leader)?[settings.leader]:[],'#b39ae0','#eee6ff',''],
+  ['创新组',roster['创新组'].filter(name=>activeNames.includes(name)),'#88b6e3','#e9f4ff',''],
+  ['拍摄组',roster['基础摄影'].filter(name=>activeNames.includes(name)),'#e2a0a9','#fce8ed',settings.specialty],
+  ['摄影助理',roster['摄影助理'].filter(name=>activeNames.includes(name)),'#dbb77c','#fff2d9',''],
+  ['拍剪助理',roster['拍剪助理'].filter(name=>activeNames.includes(name)),'#b39ae0','#eee6ff',''],
+  ['模特组',roster['模特'].filter(name=>activeNames.includes(name)),'#9dc2a2','#e7f4e6',''],
+  ['修片',roster['修片'].filter(name=>activeNames.includes(name)),'#87bfbb','#e2f5f2','']
  ];
  const leaves=names=>'<div class="org-leaves">'+names.map(name=>'<span>'+esc(name)+'</span>').join('')+'</div>';
  const palette=(line,wash)=>' style="--branch:'+line+';--wash:'+wash+'"';
@@ -540,14 +562,14 @@ function schedule(){
  '<div id="scheduleSaved"><span role="status">'+(savedTask?'已保存「'+esc(savedTask.title)+'」，安排日期 '+esc(savedTask.date)+'。 ':'')+'</span>'+(savedTask?'<button id="showSavedPeople">查看该月个人人效</button>':'')+'</div><div class="mobile-schedule">'+(rows.length?rows.map(mobileTask).join(''):'<p>当前日期没有匹配的安排。</p>')+'</div><div class="panel worksheet edit-grid"><table><thead><tr>'+[['日期'],['摄影师','lead'],['手模','handModel'],['模特','model'],['拍摄内容'],['运营要求']].map(([label,role])=>'<th scope="col"'+(role?' class="schedule-field schedule-field--'+role+'"':'')+(role==='model'?' title="以摄影师调动为准"':'')+'>'+label+'</th>').join('')+'</tr></thead><tbody>'+
  [...draftRows].map(([index,draft])=>taskRow(draft,index)).join('')+(rows.length?rows.map(taskRow).join(''):draftRows.size?'':'<tr><td colspan="6" class="empty">当前没有任务。点「新增一行」直接填写。</td></tr>')+'</tbody></table></div><p><small>主表可直接编辑。展开「工单与交付」补录工单、拍摄条数和验收。</small></p><datalist id="productList">'+options(products)+'</datalist><datalist id="typeList">'+options(types)+'</datalist>';
  main.insertAdjacentHTML('beforeend','<dialog id="scheduleImageDialog" aria-labelledby="scheduleImageTitle" style="width:min(760px,92vw);max-height:85vh;overflow:auto"><form class="grid"><h2 id="scheduleImageTitle" class="wide">导入排班截图</h2><label class="wide">选择图片<input name="image" type="file" accept="image/png,image/jpeg,image/webp"></label><label class="wide">识别文字，可直接修正<textarea name="source" rows="5"></textarea></label><button type="button" name="preview">生成预览</button><p class="wide" role="status">截图在浏览器中识别。核对后再导入。</p><div id="imageDrafts" class="wide"></div><button type="submit" class="primary">导入勾选任务</button><button type="button" data-close>关闭</button></form></dialog>');
- bindScheduleImage({date:draftDate,roster:roleNames,products,types,saveRows(rows){
+ bindScheduleImage({date:draftDate,roster:{...roleNames,lead:activeNames,model:activeNames},products,types,saveRows(rows){
   const pending=[];
   const seen=new Set(tasks.map(t=>JSON.stringify([t.date,t.lead||'',t.model||'',t.handModel||'',t.product||'',t.type||'',t.notes||''])));
   for(const row of rows){
    if(!/^\d{4}-\d{2}-\d{2}$/.test(row.date)||!Number.isFinite(Date.parse(row.date))||new Date(row.date+'T00:00:00Z').toISOString().slice(0,10)!==row.date)return '请选择有效日期。';
    if(!row.product&&!row.type)return '每条任务至少填写一个品类或拍摄类型。';
    for(const role of ['lead','model','handModel']){
-    const unknown=members(row[role]).find(name=>!roleNames[role==='handModel'?'model':role].includes(name));
+    const unknown=members(row[role]).find(name=>!activeNames.includes(name));
     if(unknown)return '名单中找不到「'+unknown+'」，请核对姓名。';
     row[role]=members(row[role]).join('、');
    }
@@ -691,13 +713,13 @@ function taskRow(t,index){
  const input=(k,label,type='text',attrs='')=>'<input aria-label="'+label+'" form="'+formId+'" name="'+k+'" type="'+type+'" value="'+esc(t[k])+'" '+attrs+'>';
  const select=(k,label,values)=>'<select aria-label="'+label+'" form="'+formId+'" name="'+k+'">'+options(values,t[k]||'').replace('<option selected></option>','<option value="" selected>选择'+label+'</option>').replace('<option ></option>','<option value="">选择'+label+'</option>')+'</select>';
  const availability=readRest();
- const staffSelect=(k,label,names)=>{
+ const staffSelect=(k,label,names=activeNames)=>{
  const chosen=members(t[k]),isStaff=[...roles,'handModel'].includes(k);
  const placeholder=isStaff?'未选择':'选择'+label;
- return '<details class="multi-picker" data-placeholder="'+esc(placeholder)+'"><summary aria-label="'+esc(label+'，可多选')+'"><span class="schedule-field-value" data-empty="'+!chosen.length+'">'+esc(chosen.join('、')||placeholder)+'</span></summary><div class="multi-options">'+[...new Set([...names,...chosen])].filter(Boolean).map(name=>{
- const off=isStaff&&resting(availability,t.date,name),hint=isStaff?assignmentHint(name,t.date,t.id):'';
- return '<label><input type="checkbox" '+(isStaff?'data-staff-picker ':'')+'form="'+formId+'" name="'+k+'" value="'+esc(name)+'" '+(chosen.includes(name)?'checked ':'')+(off&&!chosen.includes(name)?'disabled ':'')+' onchange="updateMultiSummary(this)"><span>'+esc(name)+(off?' · 休息':'')+(hint?'<small class="busy-hint">'+esc(hint)+'</small>':'')+'</span></label>';
- }).join('')+'</div></details>';
+ return '<details class="multi-picker" data-placeholder="'+esc(placeholder)+'"><summary aria-label="'+esc(label+'，可多选')+'"><span class="schedule-field-value" data-empty="'+!chosen.length+'">'+esc(chosen.join('、')||placeholder)+'</span></summary>'+(isStaff?'<input type="search" class="staff-search" aria-label="搜索'+label+'姓名" placeholder="搜索姓名" oninput="filterStaffOptions(this)">':'')+'<div class="multi-options">'+[...new Set([...names,...chosen])].filter(Boolean).map(name=>{
+ const off=isStaff&&resting(availability,t.date,name),retired=isStaff&&!activeNames.includes(name),hint=isStaff?assignmentHint(name,t.date,t.id):'';
+ return '<label><input type="checkbox" '+(isStaff?'data-staff-picker ':'')+'form="'+formId+'" name="'+k+'" value="'+esc(name)+'" '+(chosen.includes(name)?'checked ':'')+(off&&!chosen.includes(name)?'disabled ':'')+' onchange="updateMultiSummary(this)"><span>'+esc(name)+(retired?' · 离职':off?' · 休息':'')+(hint?'<small class="busy-hint">'+esc(hint)+'</small>':'')+'</span></label>';
+ }).join('')+'</div>'+(isStaff?'<small class="staff-no-results" hidden>没有匹配的姓名</small>':'')+'</details>';
  };
  const quantity='min="0" step="1" placeholder="—"';
  const overtime=t.due&&!t.delivery&&t.due<dateTime()?'<span class="tag late">逾期待交付</span>':'';
@@ -707,8 +729,8 @@ function taskRow(t,index){
   ['运营联系人',input('opsContact','运营联系人')],
   ['运营确认',select('opsApproval','运营确认',['','待确认','已确认','待调整'])],
   ['反馈与整改记录',input('opsFeedback','反馈与整改记录')],
-  ['摄助',staffSelect('assistant','摄助',roleNames.assistant)],
-  ['修片',staffSelect('retouch','修片',roleNames.retouch)],
+  ['摄助',staffSelect('assistant','摄助')],
+  ['修片',staffSelect('retouch','修片')],
   ['承诺交付时间',input('due','承诺交付时间','datetime-local','required')],
   ['状态',select('status','状态',statuses)],
   ['优先级',select('priority','优先级',['常规','加急'])],
@@ -721,7 +743,7 @@ function taskRow(t,index){
   ['首批验收日期',input('acceptDate','首批验收日期','date')]
  ];
  return '<tr data-task-id="'+esc(t.id)+'"'+(!t.id?' class="new-task"':savedTask?.id===t.id?' data-saved-row style="outline:2px solid #e0bd70;outline-offset:-2px"':'')+'><td class="ops-date" data-label="日期">'+input('date','排班日期','date','required')+'</td>'+
- '<td data-label="摄影师">'+staffSelect('lead','摄影师',roleNames.lead)+'</td><td data-label="手模">'+staffSelect('handModel','手模',roleNames.model)+'</td><td data-label="模特">'+staffSelect('model','模特',roleNames.model)+'</td>'+
+ '<td data-label="摄影师">'+staffSelect('lead','摄影师')+'</td><td data-label="手模">'+staffSelect('handModel','手模')+'</td><td data-label="模特">'+staffSelect('model','模特')+'</td>'+
  '<td class="ops-content" data-label="品类 / 拍摄类型">'+staffSelect('product','品类',['',...new Set([...products,...(t.product?[t.product]:[])])])+staffSelect('type','拍摄类型',['',...new Set([...types,...(t.type?[t.type]:[])])])+'</td>'+
  '<td class="ops-requirement" data-label="运营要求与对标链接"><textarea aria-label="运营要求" form="'+formId+'" name="notes" placeholder="填写数量、脚本、道具、参考和核心拍摄要求">'+esc(t.notes)+'</textarea>'+referenceEditor(t,formId)+referenceLinks(t,true,true)+
  '<div class="ops-actions"><form id="'+formId+'" data-row-form="'+esc(t.id)+'"><button class="primary">'+(t.id?'保存':'保存新安排')+'</button></form>'+(t.id?'<button type="button" data-delete="'+esc(t.id)+'">删除</button>':'<button type="button" data-cancel-row="'+index+'">取消</button>')+(safeLink(t.workOrder)?'<a target="_blank" rel="noopener noreferrer" href="'+esc(t.workOrder)+'">打开工单</a>':'')+overtime+'</div></td></tr>'+
@@ -793,7 +815,7 @@ function restView(message=''){
  const dates=Array.from({length:7},(_,i)=>plusDay(restWeek,i));
  const conflicts=tasks.filter(t=>dates.includes(t.date)&&[...roles,'handModel'].some(k=>members(t[k]).some(n=>resting(values,t.date,n))));
  main.innerHTML='<div class="eyebrow">ROSTER / 出勤与调休</div><h1>'+esc(settings.restTitle)+'</h1><p>按周安排人员出勤。休息和公休均会限制当天任务排班。同岗同日两人或以上休息时需要确认。</p>'+restFilterBar()+
- '<div class="bar"><button id="prevRest">上一周</button><label>查看日期<input id="pickRest" type="date" value="'+restWeek+'"></label><button id="nextRest">下一周</button><span class="spacer"></span><label>导入排班文件<input id="restFile" type="file" accept=".xlsx,.csv,.tsv"></label></div>'+
+ '<div class="bar"><button id="prevRest">上一周</button><label>查看日期<input id="pickRest" type="date" value="'+restWeek+'"></label><button id="nextRest">下一周</button><span class="spacer"></span><label>导入排班文件<input id="restFile" type="file" accept=".xls,.xlsx,.csv,.tsv"></label></div>'+
  '<div class="panel"><table class="rest-grid"><thead><tr><th>姓名</th><th>岗位</th>'+dates.map((d,i)=>'<th>'+d.slice(5)+' 周'+'一二三四五六日'[i]+'</th>').join('')+'</tr></thead><tbody>'+
  visibleRestStaff().map(p=>'<tr'+restRowClass(p.role)+'><td>'+esc(p.name)+'</td><td>'+esc(restRoleLabel(p.role))+'</td>'+dates.map(d=>{
   const shift=values[d]?.[p.name]||'未安排';
@@ -835,7 +857,12 @@ function restView(message=''){
   const file=e.target.files[0];
   if(!file)return;
   e.target.value='';
-  try{applyRestImport(file.name.toLowerCase().endsWith('.xlsx')?await readRestXlsx(await file.arrayBuffer()):parseDelimited(await file.text()))}catch(error){alert(error.message);e.target.value=''}
+  try{
+   const extension=file.name.split('.').at(-1).toLowerCase();
+   const rows=extension==='xls'?await readRestXls(await file.arrayBuffer()):
+    extension==='xlsx'?await readRestXlsx(await file.arrayBuffer()):parseDelimited(await file.text());
+   applyRestImport(rows);
+  }catch(error){alert(error.message);e.target.value=''}
  };
 }
 function restMonthlySummary(values){
@@ -906,6 +933,29 @@ function applyRestImport(rows){
  restWeek=weekOf(firstDate);
  restMonth=firstDate.slice(0,7);
  restView('已导入 '+changes+' 个班次。'+(skipped.size?'未匹配姓名：'+[...skipped].join('、'):''));
+}
+let xlsReaderLoad;
+async function readRestXls(buffer){
+ if(!globalThis.XLSX){
+  xlsReaderLoad??=new Promise((resolve,reject)=>{
+   const script=document.createElement('script');
+   script.src='./xlsx-0.20.3.full.min.js';
+   script.onload=resolve;
+   script.onerror=()=>{
+    script.remove();
+    reject(Error('无法加载 XLS 导入组件，请刷新后重试。'));
+   };
+   document.head.append(script);
+  }).catch(error=>{xlsReaderLoad=null;throw error});
+  await xlsReaderLoad;
+ }
+ const reader=globalThis.XLSX;
+ const book=reader.read(buffer);
+ for(const name of book.SheetNames){
+  const rows=reader.utils.sheet_to_json(book.Sheets[name],{header:1});
+  if(rows.some(row=>row.some(cell=>String(cell).trim()==='姓名')&&row.some(restDate)))return rows;
+ }
+ throw Error('没有找到含「姓名」和日期的排班工作表。');
 }
 async function readRestXlsx(buffer){
  const bytes=new Uint8Array(buffer), view=new DataView(buffer), decoder=new TextDecoder();
@@ -1192,7 +1242,8 @@ function teamActuals(period){
 function dailyOutput(daily,monthStart,monthEnd){
  const assignments=tasks.filter(t=>t.date===outputDay);
  const totals=daily[outputDay]||{};
- const people=staff.map(p=>({...p,assignments:assignments.filter(t=>participates(t,p.name))}));
+ const people=staff.map(p=>({...p,assignments:assignments.filter(t=>participates(t,p.name))}))
+  .filter(p=>activeNames.includes(p.name)||p.assignments.length||totals[p.name]!=null);
  return '<div class="report-meta"><label class="daily-date">填报日期<input id="outputDay" type="date" required min="'+monthStart+'" max="'+monthEnd+'" value="'+outputDay+'"></label><p>全员均可填报。按群里的汇报填写个人当天总数。</p></div>'+
  (people.length?'<form id="dailyForm"><table><thead><tr><th>人员</th><th>岗位</th><th>当天安排</th><th>实际拍摄条数</th></tr></thead><tbody>'+
  people.map(p=>'<tr><td>'+esc(p.name)+'</td><td>'+esc(p.role)+'</td><td>'+assignmentTotal(p.assignments)+' 次</td><td><input aria-label="'+esc(p.name)+'当天实际拍摄条数" type="number" min="0" step="1" name="'+esc(p.name)+'" value="'+esc(totals[p.name])+'" placeholder="待填"></td></tr>').join('')+
@@ -1229,12 +1280,26 @@ window.addEventListener('message',event=>{
  adminPopup=null;
  if(tab==='admin')render();
 });
+function rosterEditorRow(name='',role='基础摄影'){
+ const inactive=settings.inactiveStaff.includes(name);
+ const nameField=name?'<input name="staffName" aria-label="姓名" value="'+esc(name)+'" readonly>':'<input name="staffName" aria-label="姓名" placeholder="填写姓名" required>';
+ return '<tr><td>'+nameField+'</td><td><div class="roster-role"><select name="staffRole" aria-label="岗位">'+
+ options([...new Set([...Object.keys(defaultRoster),...Object.keys(roster),'部门负责人'])],role)+
+ '<option value="">新增岗位…</option></select><input name="customStaffRole" aria-label="新岗位名称" placeholder="新岗位名称" hidden disabled></div></td>'+
+ '<td><select name="staffStatus" aria-label="在职状态">'+options(['在职','离职'],inactive?'离职':'在职')+'</select></td>'+
+ '<td>'+(name?'':'<button type="button" data-cancel-staff>取消新增</button>')+'</td></tr>';
+}
 function adminView(message=''){
  const field=(key,label,kind='text',value=settings[key])=>'<label'+(kind==='area'?' class="wide"':'')+'>'+label+
   (kind==='area'?'<textarea name="'+key+'">'+esc(value)+'</textarea>':'<input name="'+key+'" value="'+esc(value)+'" required>')+'</label>';
  const copyFields=items=>items.map(([key,label])=>field(key,label)).join('');
  const panel=(title,body,open=false)=>'<details class="panel admin-section"'+(open?' open':'')+'><summary>'+title+'</summary><div class="grid">'+body+'</div></details>';
  main.innerHTML='<h1>管理后台</h1><p>在这里编辑网站内容和业务选项。设置保存在当前浏览器，保存后会应用到对应页面。</p><form id="adminForm">'+
+ panel('中台人员表','<div class="admin-roster"><p>入职点「新增人员」。离职时将状态改为「离职」。修改后点「保存网站设置」，名册保存在当前浏览器。</p>'+
+ '<label>按姓名搜索<input type="search" id="rosterSearch" placeholder="输入姓名"></label>'+
+ '<table><thead><tr><th>姓名</th><th>所属岗位</th><th>状态</th><th>操作</th></tr></thead><tbody id="rosterRows">'+
+ staff.map(p=>rosterEditorRow(p.name,p.role)).join('')+'</tbody></table>'+
+ '<div class="bar"><button type="button" id="addStaff">＋ 新增人员</button><button class="primary">保存网站设置</button></div></div>',true)+
  panel('网站与首页',field('title','网站名称')+field('homeTitle','首页标题')+field('intro','部门介绍','area')+
  '<label>更换首页主视觉<input type="file" name="photoUpload" accept="image/jpeg,image/png,image/webp"></label><label><span>恢复无限进步主视觉</span><input type="checkbox" name="resetPhoto" style="width:auto;justify-self:start"></label><img class="admin-preview wide" src="'+esc(settings.photo||'./infinite-progress-original.jpg')+'" alt="当前首页主视觉">',true)+
  panel('导航与页面文案',copyFields([
@@ -1250,14 +1315,36 @@ function adminView(message=''){
  '<p class="wide">图片可用 HTTPS 地址，或站内相对路径。清空相册内容可隐藏相册。</p>')+
  panel('业务数据','<div class="bar wide"><button type="button" data-admin-route="schedule">编辑任务与交付</button><button type="button" data-admin-route="rest">编辑出勤与调休</button><button type="button" data-admin-route="people">编辑产出与目标</button></div>')+
  panel('组织架构与人员',field('leader','部门负责人')+field('specialty','专项分工','area')+
- Object.keys(defaultRoster).map(role=>field('roster:'+role,role+'名单（每行一人）','area',roster[role].join('\n'))).join('')+
- field('mentors','带教关系（每行一组，例如 杨建勋：游苗、陈丽娜）','area')+'<p class="wide">姓名用于关联排班与人效。改名或移除人员后，已有记录仍保留原姓名，当前名册报表按更新后的名单展示。</p>')+
+ field('mentors','带教关系（每行一组，例如 杨建勋：游苗、陈丽娜）','area'))+
  panel('品类与拍摄类型',field('products','品类选项（每行一项）','area',products.join('\n'))+field('types','拍摄类型选项（每行一项）','area',types.join('\n'))+field('shooting','首页拍摄类型介绍（每行填写 类型：说明）','area'))+
  panel('交付时效与运营对接',field('shiftIntro','调休与交付说明','area')+field('normalTitle','常规时效标题')+field('urgentTitle','加急时效标题')+field('normalText','常规交付说明','area')+field('urgentText','加急交付说明','area')+
  field('opsLead','运营对接负责人')+field('opsSummary','对接职责')+field('orderFlow','下单与确认','area')+field('deliveryFlow','拍摄与交付','area')+field('feedbackFlow','反馈与复核','area'))+
  panel('产能规划',field('planTitle','页面标题')+field('planIntro','规划说明','area')+field('planNotes','补充安排','area'))+
  '<div class="bar admin-actions"><button class="primary">保存网站设置</button><span id="adminStatus" role="status">'+esc(message)+'</span><span class="spacer"></span><button type="button" id="adminHome">查看首页</button></div></form>';
  document.querySelectorAll('[data-admin-route]').forEach(button=>button.onclick=()=>navigateTab(button.dataset.adminRoute));
+ const rosterRows=document.querySelector('#rosterRows');
+ const rosterSearch=document.querySelector('#rosterSearch');
+ rosterSearch.oninput=()=>{
+  const query=rosterSearch.value.trim().toLowerCase();
+  for(const row of rosterRows.rows){
+   const name=row.querySelector('[name="staffName"]').value;
+   row.hidden=!!name&&!name.toLowerCase().includes(query);
+  }
+ };
+ document.querySelector('#addStaff').onclick=()=>{
+  rosterSearch.value='';
+  rosterSearch.oninput();
+  rosterRows.insertAdjacentHTML('beforeend',rosterEditorRow());
+  rosterRows.lastElementChild.querySelector('input').focus();
+ };
+ rosterRows.onclick=event=>event.target.closest('[data-cancel-staff]')?.closest('tr').remove();
+ rosterRows.onchange=event=>{
+  if(event.target.name!=='staffRole')return;
+  const custom=event.target.nextElementSibling;
+  custom.hidden=custom.disabled=!!event.target.value;
+  custom.required=!custom.disabled;
+  if(!custom.disabled)custom.focus();
+ };
  document.querySelector('#adminHome').onclick=()=>{tab='home';render()};
  document.querySelector('#adminForm').onsubmit=async e=>{
   e.preventDefault();
@@ -1277,7 +1364,18 @@ function adminView(message=''){
   }
   next.products=lines(fields.get('products'));
   next.types=lines(fields.get('types'));
-  next.roster=Object.fromEntries(Object.keys(defaultRoster).map(role=>[role,lines(fields.get('roster:'+role))]));
+  next.roster=Object.create(null);
+  for(const role of Object.keys(defaultRoster))next.roster[role]=[];
+  next.inactiveStaff=[];
+  for(const row of rosterRows.rows){
+   const name=row.querySelector('[name="staffName"]').value.trim();
+   const role=row.querySelector('[name="staffRole"]').value||row.querySelector('[name="customStaffRole"]').value.trim();
+   if(!name||!role||Object.hasOwn(Object.prototype,role)){
+    status.textContent='请填写有效的姓名和岗位。';return;
+   }
+   (next.roster[role]??=[]).push(name);
+   if(row.querySelector('[name="staffStatus"]').value==='离职')next.inactiveStaff.push(name);
+  }
   const names=Object.values(next.roster).flat();
   if(!next.title||!next.homeTitle||!next.leader||!next.opsLead||!next.products.length||!next.types.length){status.textContent='请填写网站名称、首页标题、负责人，并保留至少一个品类和拍摄类型。';return}
   if(new Set(names).size!==names.length){status.textContent='同一姓名请只填写在一个岗位名单中。';return}
