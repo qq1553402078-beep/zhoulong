@@ -90,6 +90,14 @@ main:not(.home-page) h1 {
 #restMonthly tr[class^="rest-group--"] > td:nth-child(-n+2) { color:var(--rest-group-color); }
 .rest-grid tr[class^="rest-group--"] > td[data-shift="休"] select { border-color:var(--rest-group-color); color:var(--rest-group-color); }
 .rest-group-legend span { color:var(--rest-group-color); background:var(--rest-group-bg); padding:.25em .65em; border-radius:4px; }
+.schedule-field { --field-accent:#d5bbff; }
+.schedule-field--lead { --field-accent:#a7ceff; }
+.schedule-field--handModel { --field-accent:#ffd298; }
+.schedule-field--model { --field-accent:#a0e9d0; }
+.schedule-field > summary { border-inline-start:3px solid var(--field-accent); }
+.schedule-field-label { display:inline-block; margin-inline-end:.45em; color:var(--field-accent); font-size:12px; font-weight:750; }
+.schedule-field-value { color:#f5effc; font-size:14px; font-weight:650; overflow-wrap:anywhere; }
+.mobile-task .schedule-field dt { color:var(--field-accent); font-weight:750; }
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
@@ -222,7 +230,11 @@ function readDaily(){
 }
 const members=value=>Array.isArray(value)?value:String(value||'').split('、').map(x=>x.trim()).filter(Boolean);
 const participates=(t,name)=>[...roles,'handModel'].some(k=>members(t[k]).includes(name));
-function updateMultiSummary(input){const d=input.closest('details');d.querySelector('summary').textContent=Array.from(d.querySelectorAll('input:checked')).map(x=>x.value).join('、')||'请选择（多选）';}
+function updateMultiSummary(input){
+ const picker=input.closest('details');
+ const selected=Array.from(picker.querySelectorAll('input:checked'),field=>field.value);
+ picker.querySelector('.schedule-field-value').textContent=selected.join('、')||'请选择';
+}
 function assignmentHint(name,date,id){return tasks.filter(t=>t.date===date&&t.id!==id&&participates(t,name)).map(t=>'已安排：'+(t.lead||'摄影师待定')+' · '+(t.product||t.title||'任务')).join('；')}
 function staffingSummary(date){
  if(!date)return '';
@@ -467,9 +479,9 @@ function schedule(){
  };
 }
 function mobileTask(t){
- const people=[['摄影师',t.lead],['手模',t.handModel],['模特',t.model]];
+ const people=[['lead','摄影师',t.lead],['handModel','手模',t.handModel],['model','模特',t.model]];
  return '<article class="mobile-task"'+(savedTask?.id===t.id?' data-saved-card':'')+'><div class="mobile-task-meta"><time datetime="'+esc(t.date)+'">'+esc(t.date)+'</time><span class="tag">'+esc(t.priority==='加急'?'加急 · '+t.status:t.status)+'</span></div>'+
- '<h3>'+esc([t.product,t.type].filter(Boolean).join(' · ')||t.title)+'</h3><dl>'+people.map(([label,name])=>'<div><dt>'+label+'</dt><dd>'+esc(name||'待分配')+'</dd></div>').join('')+'</dl>'+
+ '<h3>'+esc([t.product,t.type].filter(Boolean).join(' · ')||t.title)+'</h3><dl>'+people.map(([role,label,name])=>'<div class="schedule-field schedule-field--'+role+'"><dt>'+label+'</dt><dd>'+esc(name||'待分配')+'</dd></div>').join('')+'</dl>'+
  (t.notes?'<div class="mobile-notes"><strong>运营要求</strong><br>'+esc(t.notes)+'</div>':'')+referenceLinks(t,true)+'<button type="button" class="edit-mobile-task" data-edit-task="'+esc(t.id)+'">编辑安排 ↗</button></article>';
 }
 function showSavedTask(task){
@@ -492,7 +504,7 @@ function taskRow(t,index){
  const availability=readRest();
  const staffSelect=(k,label,names)=>{
  const chosen=members(t[k]),isStaff=[...roles,'handModel'].includes(k);
- return '<details class="multi-picker"><summary>'+esc(chosen.join('、')||'选择'+label)+' <small>多选</small></summary><div class="multi-options">'+[...new Set([...names,...chosen])].filter(Boolean).map(name=>{
+ return '<details class="multi-picker schedule-field schedule-field--'+k+'"><summary><span class="schedule-field-label">'+esc(label)+'</span><span class="schedule-field-value">'+esc(chosen.join('、')||'请选择')+'</span></summary><div class="multi-options">'+[...new Set([...names,...chosen])].filter(Boolean).map(name=>{
  const off=isStaff&&resting(availability,t.date,name),hint=isStaff?assignmentHint(name,t.date,t.id):'';
  return '<label><input type="checkbox" '+(isStaff?'data-staff-picker ':'')+'form="'+formId+'" name="'+k+'" value="'+esc(name)+'" '+(chosen.includes(name)?'checked ':'')+(off&&!chosen.includes(name)?'disabled ':'')+' onchange="updateMultiSummary(this)"><span>'+esc(name)+(off?' · 休息':'')+(hint?'<small class="busy-hint">'+esc(hint)+'</small>':'')+'</span></label>';
  }).join('')+'</div></details>';
