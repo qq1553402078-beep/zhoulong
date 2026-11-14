@@ -201,6 +201,12 @@ main:not(.home-page) h1 {
 .chart-person > summary strong { text-decoration:underline; text-underline-offset:3px; }
 .chart-person-detail { margin:8px 0; padding:8px 12px; border:1px solid var(--dash-border); border-radius:8px; }
 .chart-person-detail p { margin:4px 0; }
+
+.people-page .overview-rings { grid-template-columns:repeat(auto-fit,minmax(min(100%,285px),1fr)); margin-top:10px; }
+.people-page .overview-rings .team-ring { width:76px; }
+.team-attention { margin:0 14px 8px; padding:9px 12px; border:1px solid var(--dash-border); border-radius:8px; }
+.team-attention ul { display:flex; flex-wrap:wrap; gap:6px 20px; padding:0; margin:6px 0; list-style:none; }
+.team-attention li small { color:#f3c58e; }
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
@@ -347,10 +353,10 @@ function rememberDraftRows(){
 }
 let mobileEditing=false;
 let scheduleToolsOpen=false;
-let outputDay=day;
+let outputDay=today();
 let chartPeriod=2;
 let dailyAssignedOnly=false;
-let teamPeriod=2;
+let teamPeriod=0;
 const teamPeriodLabels=['当日总览','当周总览','当月总览'];
 let mixPhotographer='',mixBasis='tasks';
 const expandedGoalGroups=new Set();
@@ -1110,7 +1116,7 @@ function people(){
   const actual=monthly[month]?.[p.name]??production(p.name,monthStart,monthEnd);
   return [p.name,p.role,assignmentTotal(assigned),actual,sum(receipts,'times'),accepted,timed.length,pct(onTime,timed.length)];
  });
- main.innerHTML='<section class="dashboard-title"><div class="eyebrow">STUDIO INTELLIGENCE / 人效分析</div><label class="dashboard-month">统计月份<input id="managementMonth" type="month" required value="'+esc(month)+'"></label><h1>'+esc(settings.peopleTitle)+'</h1></section>'+panel('teamOverview','团队'+teamPeriodLabels[teamPeriod],managementView(outputMonth,outputRows,outputRanges[teamPeriod]))+
+ main.innerHTML='<section class="dashboard-title"><div class="eyebrow">STUDIO INTELLIGENCE / 人效分析</div><label class="dashboard-month">统计月份<input id="managementMonth" type="month" required value="'+esc(month)+'"></label><h1>'+esc(settings.peopleTitle)+'</h1></section>'+panel('teamOverview','团队'+teamPeriodLabels[teamPeriod],managementView(outputMonth,outputRows,outputRanges[teamPeriod],daily))+
  panel('personalOutput','个人产出总览','<div class="report-meta"><div class="bar"><span>填报日期 '+esc(outputDay)+'</span><a href="#dailyOutput" data-report-jump>填写当天产出</a><a href="#monthlyBackfill" data-report-jump>填写月度条数</a></div><p>'+esc(outputDay)+' 当日 · '+weekStart+' 至 '+weekEnd+' 本周 · '+outputMonth+' 本月</p></div><div id="outputChart" class="output-chart"></div><table class="report"><thead><tr><th>姓名</th><th>岗位</th><th>日产出（条）</th><th>周产出（条）</th><th>月产出（条）</th></tr></thead><tbody>'+
  outputRows.map(row=>'<tr>'+row.map(x=>'<td>'+outputCell(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table><div class="report-meta"><small>'+outputNote+'</small></div>')+
  panel('teamActuals','团队实际拍摄量',teamActuals(month),false)+
@@ -1187,12 +1193,13 @@ function people(){
  }
  document.querySelector('#person').onchange=e=>{person=e.target.value==='全部人员'?'':e.target.value;render()};
 }
-function managementView(period,outputRows,[from,to]){
+function managementView(period,outputRows,[from,to],daily){
  const isMonth=teamPeriod===2;
  const label=['当日','当周','当月'][teamPeriod];
  let history={};
  try{history=JSON.parse(localStorage.getItem(managementKey)||'{}')||{}}catch{}
  const config=history[period]||{};
+ const inRange=date=>date&&date.slice(0,10)>=from&&date.slice(0,10)<=to;
  const monthTasks=tasks.filter(t=>t.date.startsWith(period));
  const periodTasks=monthTasks.filter(t=>t.date>=from&&t.date<=to);
  const recorded=t=>t.actual!=null&&t.actual!=='';
@@ -1213,10 +1220,24 @@ function managementView(period,outputRows,[from,to]){
  const baseShare=rangeTotal>0?100*(rangeActuals[0]??0)/rangeTotal:0;
  const neutral='#263f63', green='#45d8c5', gold='#5c98f4';
  const ring=(fill,value,title,detail)=>'<article class="team-ring-card"><div class="team-ring" style="--ring-fill:'+fill+'" role="img" aria-label="'+esc(title+' '+value)+'"><strong>'+value+'</strong></div><div class="ring-details"><h3>'+title+'</h3>'+detail+'</div></article>';
- const rings='<div class="team-rings">'+ring(rangeTotal>0?green+' 0 '+baseShare+'%, '+gold+' '+baseShare+'% 100%':neutral+' 0 100%',rangeTotal===null?'—':count(rangeTotal),'已记录产出（条）',
- teamRows.map(([name],i)=>'<p><span class="ring-key" style="--key:'+(i===0?green:gold)+'"></span>'+name+' <strong>'+(rangeActuals[i]===null?'待填':count(rangeActuals[i])+' 条')+'</strong></p>').join(''))+
- ring(completion===null?neutral+' 0 100%':green+' 0 '+Math.min(completion,100)+'%, '+neutral+' '+Math.min(completion,100)+'% 100%',completion===null?'—':count(completion)+'%','团队月度目标完成率',
- '<p>团队目标 <strong>'+(targetTotal===null?'待设齐':count(targetTotal)+' 条')+'</strong></p><p>'+(completion===null?'两组的目标和实际均齐全后计算。':'已完成 '+count(knownTotal)+' 条，距目标还差 '+count(Math.max(0,targetTotal-knownTotal))+' 条。')+'</p>')+'</div>';
+ const captured=periodTasks.filter(t=>t.delivery||statuses.slice(2).includes(t.status));
+ const dueTasks=tasks.filter(t=>inRange(t.due));
+ const delivered=dueTasks.filter(t=>t.delivery||statuses.slice(3).includes(t.status));
+ const late=dueTasks.filter(t=>!delivered.includes(t)&&t.due<dateTime());
+ const reportNames=new Set(Object.entries(daily).filter(([date])=>inRange(date))
+  .flatMap(([,people])=>Object.keys(people)));
+ const progressRing=(title,done,total,detail)=>{
+  const ratio=total?100*done/total:0;
+  return ring(green+' 0 '+ratio+'%, '+neutral+' '+ratio+'% 100%',total?count(ratio)+'%':'—',title,detail);
+ };
+ const focusRings=progressRing('拍摄完成度',captured.length,periodTasks.length,
+  '<p>已拍 <strong>'+captured.length+' / '+periodTasks.length+' 项</strong></p><p>拍摄中 '+periodTasks.filter(t=>t.status==='拍摄中'&&!captured.includes(t)).length+' 项 · 待拍 '+periodTasks.filter(t=>!captured.includes(t)&&t.status!=='拍摄中').length+' 项</p>')+
+ progressRing('到期交付完成度',delivered.length,dueTasks.length,
+  '<p>已交付 <strong>'+delivered.length+' / '+dueTasks.length+' 项</strong></p><p>待交付 '+(dueTasks.length-delivered.length)+' 项 · 逾期 '+late.length+' 项</p>');
+ const rings='<div class="team-rings overview-rings">'+focusRings+ring(rangeTotal>0?green+' 0 '+baseShare+'%, '+gold+' '+baseShare+'% 100%':neutral+' 0 100%',rangeTotal===null?'—':count(rangeTotal),'已录任务条数',
+ teamRows.map(([name],i)=>'<p><span class="ring-key" style="--key:'+(i===0?green:gold)+'"></span>'+name+' <strong>'+(rangeActuals[i]===null?'待填':count(rangeActuals[i])+' 条')+'</strong></p>').join('')+'<p>个人已填报 '+reportNames.size+' 人 · <a href="#dailyOutput" data-report-jump>查看每日条数</a></p>')+
+ (isMonth?ring(completion===null?neutral+' 0 100%':green+' 0 '+Math.min(completion,100)+'%, '+neutral+' '+Math.min(completion,100)+'% 100%',completion===null?'—':count(completion)+'%','团队月度目标完成率',
+ '<p>团队目标 <strong>'+(targetTotal===null?'待设齐':count(targetTotal)+' 条')+'</strong></p><p>'+(completion===null?'两组的目标和实际均齐全后计算。':'已完成 '+count(knownTotal)+' 条，距目标还差 '+count(Math.max(0,targetTotal-knownTotal))+' 条。')+'</p>'):'')+'</div>';
  const goals=(name,kind,actual,group=false,toggle='')=>{
   const goal=config.targets?.[name];
   const ratio=Number(goal)>0&&typeof actual==='number'?actual/goal:null;
@@ -1255,13 +1276,16 @@ function managementView(period,outputRows,[from,to]){
   const ratio=total?100*amount/total:0;
   return '<div class="mix-row"><span>'+label+'</span><div class="chart-track" aria-hidden="true"><div class="chart-bar" style="width:'+ratio+'%"></div></div><strong>'+count(amount)+(mixBasis==='volume'?' 条':' 项')+' · '+(total?count(ratio)+'%':'—')+'</strong></div>';
  }).join('');
- const overdue=periodTasks.filter(t=>t.due&&!t.delivery&&t.due<dateTime());
+ const overdue=late;
  const missing=periodTasks.filter(t=>!recorded(t));
  const unknown=periodTasks.filter(t=>category(t)==='其他／待确认');
+ const attention=[...new Set([...late,...dueTasks.filter(t=>!delivered.includes(t)),...periodTasks.filter(t=>!captured.includes(t))])];
+ const preview=!isMonth&&attention.length?'<div class="team-attention"><strong>待跟进任务</strong><ul>'+
+  attention.slice(0,3).map(t=>'<li><span>'+esc(t.title||t.product||'未命名任务')+'</span> <small>'+esc(late.includes(t)?'交付逾期':dueTasks.includes(t)?'待交付':t.status||'待拍摄')+'</small></li>').join('')+
+  '</ul>'+(attention.length>3?'<small>另有 '+(attention.length-3)+' 项</small> ':'')+'<button type="button" id="overviewSchedule">查看工作安排</button></div>':'';
+
  return '<section class="panel management"><div class="report-meta"><div class="bar chart-switch" role="group" aria-label="团队统计周期">'+teamPeriodLabels.map((text,i)=>'<button type="button" data-team-period="'+i+'" aria-pressed="'+(i===teamPeriod)+'">'+text+'</button>').join('')+'<span>'+esc(from===to?from:from+' 至 '+to)+'</span><label>查看日期<input id="teamOverviewDate" type="date" min="'+period+'-01" max="'+period+'-'+new Date(Date.UTC(Number(period.slice(0,4)),Number(period.slice(5)),0)).getUTCDate()+'" value="'+outputDay+'"></label><a href="#personalOutput" data-report-jump>查看个人产出明细</a></div></div>'+
- '<div class="cards">'+card(label+'排班任务',periodTasks.length)+card('逾期待交付',overdue.length)+card('待补任务实际条数',missing.length)+card('其他／待确认类型',unknown.length)+'</div>'+
- rings+'<div class="team-rings-note"><small>按基础组与创新组的组别产出汇总，每条任务按主拍归组。'+(isMonth?'组别补录总数优先。':'日、周仅汇总任务实际条数。')+'</small></div>'+
- '<div class="dashboard-focus"><article><strong>交付跟进</strong><p>'+(overdue.length?'优先处理 '+overdue.length+' 条逾期任务。':'所选周期暂无逾期待交付任务。')+'</p></article><article><strong>数据补齐</strong><p>'+(missing.length||unknown.length?'待补产出 '+missing.length+' 项，类型待确认 '+unknown.length+' 项。':'所选周期没有待补条数或类型。')+'</p></article><article><strong>目标复盘</strong><p>'+(completion===null?'补齐两组目标和实际产出后，查看团队进度。':completion>=100?'团队已完成本月目标。':'距团队目标还差 '+count(targetTotal-knownTotal)+' 条。')+'</p></article></div>'+
+ rings+preview+'<div class="team-rings-note"><small>'+label+'待补任务条数 '+missing.length+' 项 · 类型待确认 '+unknown.length+' 项。'+(isMonth?'组别月度补录优先。':'任务条数按主拍归组。拍摄进入后期或交付后计为已拍。')+'</small></div>'+
  '<details id="monthlyGoals"><summary>月度目标与完成进度</summary><form id="manageGoals"><div class="chart-table-scroll"><table><thead><tr><th>组别／成员</th><th>口径</th><th>目标（条）</th><th>实际（条）</th><th>完成率</th><th>还差</th></tr></thead>'+
  goalGroups+'</table></div><p><small>组别默认按任务的摄影师归组，每个任务计一次。摄助担任主拍时，任务产出计入基础组。可补录组别实际总数，清空后恢复任务汇总。个人实际取个人月产出，协作任务可能归属多人。</small></p>'+
  '<label class="management-notes">月度复盘与改进事项<textarea name="notes" placeholder="例如：口播集中排景，明确运营确认节点">'+esc(config.notes)+'</textarea></label><div class="bar"><button class="primary">保存目标与复盘</button><span id="managementStatus" role="status"></span></div></form></details>'+
@@ -1270,6 +1294,13 @@ function managementView(period,outputRows,[from,to]){
  '<details id="monthlyFollowup"><summary>'+label+'跟进事项</summary><p>逾期：'+(overdue.length?overdue.slice(0,8).map(t=>esc(t.title)).join('、'):'暂无')+'</p><p>补齐实际条数后可核对组别目标进度。类型待确认的任务可在工作安排里补分类，便于复盘拍摄结构。</p></details></section>';
 }
 function bindManagement(period){
+ const scheduleJump=main.querySelector('#overviewSchedule');
+ if(scheduleJump)scheduleJump.onclick=()=>{
+  day=teamPeriod===0?outputDay:'';
+  scheduleStatus='';
+  scheduleQuery='';
+  navigateTab('schedule');
+ };
  main.querySelectorAll('[data-team-period]').forEach(button=>button.onclick=()=>{
   teamPeriod=Number(button.dataset.teamPeriod);
   render();
