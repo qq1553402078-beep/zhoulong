@@ -829,11 +829,20 @@ function restView(message=''){
  const values=readRest();
  const previousScroll=main.querySelector('.rest-scroll');
  const scrollLeft=previousScroll?.dataset.focus===restDateFocus?previousScroll.scrollLeft:null;
- const dates=Array.from({length:43},(_,i)=>plusDay(restDateFocus,i-14));
- const conflicts=tasks.filter(t=>t.date>=plusDay(restDateFocus,-1)&&t.date<=plusDay(restDateFocus,7)&&[...roles,'handModel'].some(k=>members(t[k]).some(n=>resting(values,t.date,n))));
+ const period=restDateFocus.slice(0,7);
+ const start=period+'-01';
+ const monthOffset=offset=>{
+  const date=new Date(start+'T00:00:00Z');
+  date.setUTCMonth(date.getUTCMonth()+offset);
+  return date.toISOString().slice(0,10);
+ };
+ const end=monthOffset(1);
+ const dates=[];
+ for(let date=start;date<end;date=plusDay(date,1))dates.push(date);
+ const conflicts=tasks.filter(t=>t.date>=start&&t.date<end&&t.date>=plusDay(restDateFocus,-1)&&t.date<=plusDay(restDateFocus,7)&&[...roles,'handModel'].some(k=>members(t[k]).some(n=>resting(values,t.date,n))));
  main.innerHTML='<div class="eyebrow">ROSTER / 出勤与调休</div><h1>'+esc(settings.restTitle)+'</h1><p>按日期查看和安排人员出勤。休息和公休均会限制当天任务排班。同岗同日两人或以上休息时需要确认。</p>'+restFilterBar()+
- '<div class="bar"><button id="prevRest">上一周</button><label>查看日期<input id="pickRest" type="date" value="'+restDateFocus+'"></label><button id="nextRest">下一周</button><span class="spacer"></span><label>导入排班文件<input id="restFile" type="file" accept=".xls,.xlsx,.csv,.tsv"></label></div>'+
- '<p class="rest-scroll-hint">左右滑动查看其他日期，姓名和岗位固定在左侧。</p>'+
+ '<div class="bar"><button id="prevRest">上个月</button><label>查看月份<input id="restViewMonth" type="month" value="'+period+'"></label><label>查看日期<input id="pickRest" type="date" value="'+restDateFocus+'"></label><button id="nextRest">下个月</button><span class="spacer"></span><label>导入排班文件<input id="restFile" type="file" accept=".xls,.xlsx,.csv,.tsv"></label></div>'+
+ '<p class="rest-scroll-hint">左右滑动查看本月日期，姓名和岗位固定在左侧。</p>'+
  '<div class="panel rest-scroll" tabindex="0" role="region" aria-label="可横向滑动的休息表" data-focus="'+restDateFocus+'"><table class="rest-grid"><thead><tr><th>姓名</th><th>岗位</th>'+dates.map(d=>{
   const selected=d===restDateFocus;
   return '<th scope="col" data-date-heading="'+d+'"'+(selected?' class="rest-date-focus"':'')+'>'+d.slice(5)+' 周'+'日一二三四五六'[new Date(d+'T00:00:00Z').getUTCDay()]+(selected?' <small>'+(d===today()?'今天':'所选')+'</small>':'')+'</th>';
@@ -850,7 +859,7 @@ function restView(message=''){
   document.querySelector('[data-rest-filter][aria-pressed="true"]')?.focus();
  });
  const scroll=main.querySelector('.rest-scroll');
- const firstDate=scroll.querySelector('[data-date-heading="'+plusDay(restDateFocus,-1)+'"]');
+ const firstDate=scroll.querySelector('[data-date-heading="'+(restDateFocus===start?start:plusDay(restDateFocus,-1))+'"]');
  const roleHeading=scroll.querySelector('thead th:nth-child(2)');
  scroll.scrollLeft=scrollLeft??(firstDate.getBoundingClientRect().left-roleHeading.getBoundingClientRect().right);
  const showDate=date=>{
@@ -858,8 +867,9 @@ function restView(message=''){
   restMonth=date.slice(0,7);
   restView();
  };
- document.querySelector('#prevRest').onclick=()=>showDate(plusDay(restDateFocus,-7));
- document.querySelector('#nextRest').onclick=()=>showDate(plusDay(restDateFocus,7));
+ document.querySelector('#prevRest').onclick=()=>showDate(monthOffset(-1));
+ document.querySelector('#nextRest').onclick=()=>showDate(end);
+ document.querySelector('#restViewMonth').onchange=e=>{if(e.target.value)showDate(e.target.value+'-01')};
  document.querySelector('#pickRest').onchange=e=>{if(e.target.value)showDate(e.target.value)};
  document.querySelector('#restMonth').onchange=e=>{
   if(e.target.value)restMonth=e.target.value;
