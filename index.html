@@ -1018,4 +1018,9 @@ if(typeof window!=='undefined'){
  main.addEventListener('invalid',event=>{event.target.closest('details')?.setAttribute('open','')},true);
 }
 render();
-</script><script src="doubao-chat.js" defer></script></html>
+window.addEventListener('studio-team-refresh', () => {
+ if(tab==='schedule')rememberDraftRows();
+ try{tasks=JSON.parse(localStorage.getItem(key)||'[]')}catch{}
+ render();
+});
+</script><script src="team-sync.js" defer></script><script src="doubao-chat.js" defer></script></html>
