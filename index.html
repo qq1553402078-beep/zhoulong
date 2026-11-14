@@ -207,6 +207,9 @@ main:not(.home-page) h1 {
 .team-attention { margin:0 14px 8px; padding:9px 12px; border:1px solid var(--dash-border); border-radius:8px; }
 .team-attention ul { display:flex; flex-wrap:wrap; gap:6px 20px; padding:0; margin:6px 0; list-style:none; }
 .team-attention li small { color:#f3c58e; }
+.daily-task-report { padding:12px; margin-block:10px; border:1px solid var(--dash-border); border-radius:8px; }
+.daily-task-report h4,.daily-task-report p { margin:0 0 6px; }
+.daily-task-report .bar { margin:10px 0; }
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
@@ -1168,6 +1171,25 @@ function people(){
   document.querySelector('#dailyNoAssigned').hidden=!dailyAssignedOnly||[...rows].some(row=>!row.hidden);
  };
  dailyFilter.onchange();
+ main.querySelectorAll('[data-daily-task]').forEach(form=>form.onsubmit=event=>{
+  event.preventDefault();
+  const current=tasks.find(task=>task.id===form.dataset.dailyTask&&task.date===outputDay);
+  if(!current)return;
+  const {actual,status,delivery,reason}=Object.fromEntries(new FormData(form));
+  const next={...current,actual:actual===''?'':Number(actual),status,delivery,unfinishedReason:reason.trim()};
+  const message=form.querySelector('[role="status"]');
+  if(statuses.slice(3).includes(status)&&!delivery){message.textContent='请填写首次交付时间。';return}
+  if(delivery&&!statuses.slice(3).includes(status)){message.textContent='已填写交付时间，请选择已交付或已验收。';return}
+  if(delivery&&current.assigned&&delivery<current.assigned){message.textContent='交付时间需在运营下发时间之后。';return}
+  if((current.status==='已验收'||current.acceptanceBatches?.length)&&(next.status!==current.status||next.delivery!==current.delivery)){
+   message.textContent='已有验收记录，请到工作安排修改交付状态和时间。';return;
+  }
+  if(save(tasks.map(task=>task.id===current.id?next:task))){
+   render();
+   const saved=[...main.querySelectorAll('[data-daily-task]')].find(item=>item.dataset.dailyTask===current.id);
+   saved.querySelector('[role="status"]').textContent='已保存任务填报。';
+  }
+ });
  const dailyForm=document.querySelector('#dailyForm');
  if(dailyForm)dailyForm.onsubmit=e=>{
   e.preventDefault();
@@ -1281,7 +1303,7 @@ function managementView(period,outputRows,[from,to],daily){
  const unknown=periodTasks.filter(t=>category(t)==='其他／待确认');
  const attention=[...new Set([...late,...dueTasks.filter(t=>!delivered.includes(t)),...periodTasks.filter(t=>!captured.includes(t))])];
  const preview=!isMonth&&attention.length?'<div class="team-attention"><strong>待跟进任务</strong><ul>'+
-  attention.slice(0,3).map(t=>'<li><span>'+esc(t.title||t.product||'未命名任务')+'</span> <small>'+esc(late.includes(t)?'交付逾期':dueTasks.includes(t)?'待交付':t.status||'待拍摄')+'</small></li>').join('')+
+  attention.slice(0,3).map(t=>'<li><span>'+esc(t.title||t.product||'未命名任务')+'</span>'+(t.unfinishedReason?' <span>'+esc(t.unfinishedReason)+'</span>':'')+' <small>'+esc(late.includes(t)?'交付逾期':dueTasks.includes(t)?'待交付':t.status||'待拍摄')+'</small></li>').join('')+
   '</ul>'+(attention.length>3?'<small>另有 '+(attention.length-3)+' 项</small> ':'')+'<button type="button" id="overviewSchedule">查看工作安排</button></div>':'';
 
  return '<section class="panel management"><div class="report-meta"><div class="bar chart-switch" role="group" aria-label="团队统计周期">'+teamPeriodLabels.map((text,i)=>'<button type="button" data-team-period="'+i+'" aria-pressed="'+(i===teamPeriod)+'">'+text+'</button>').join('')+'<span>'+esc(from===to?from:from+' 至 '+to)+'</span><label>查看日期<input id="teamOverviewDate" type="date" min="'+period+'-01" max="'+period+'-'+new Date(Date.UTC(Number(period.slice(0,4)),Number(period.slice(5)),0)).getUTCDate()+'" value="'+outputDay+'"></label><a href="#personalOutput" data-report-jump>查看个人产出明细</a></div></div>'+
@@ -1409,12 +1431,28 @@ function teamActuals(period){
  return '<table><thead><tr><th>月份</th><th>实际拍摄（条）</th><th>环比增量（条）</th><th>环比增幅</th></tr></thead><tbody><tr><td>'+
   esc(period)+'</td>'+values.map(value=>'<td>'+value+'</td>').join('')+'</tr></tbody></table>';
 }
+function dailyTaskReports(assignments){
+ const crewRoles=[['lead','摄影师'],['model','模特'],['handModel','手模'],['assistant','摄助'],['retouch','修片']];
+ return '<div class="report-meta daily-task-reports"><h3>当天任务填报</h3>'+
+ '<p>每个任务由主拍填一次，同组成员查看同一份记录。任务条数会计入参与人员产出，已有个人当天总数优先。</p>'+
+ (assignments.length?assignments.map(task=>{
+  const progress=Number(task.target)>0&&task.actual!=null&&task.actual!==''?count(100*Number(task.actual)/Number(task.target))+'%':'—';
+  const crew=crewRoles.filter(([field])=>members(task[field]).length).map(([field,label])=>label+'：'+members(task[field]).join('、')).join(' · ');
+  return '<form class="daily-task-report" data-daily-task="'+esc(task.id)+'"><h4>'+esc(task.title||task.product||'拍摄任务')+'</h4>'+
+   '<p>'+esc(crew||'待安排人员')+'</p><p>计划 '+esc(task.target==null||task.target===''?'—':task.target)+' 条 · 条数完成度 '+progress+'</p>'+
+   '<div class="bar"><label>实际条数<input type="number" min="0" step="1" name="actual" value="'+esc(task.actual)+'"></label>'+
+   '<label>任务状态<select name="status">'+options(task.status==='已验收'?statuses:statuses.slice(0,4),task.status||statuses[0])+'</select></label>'+
+   '<label>首次交付时间<input type="datetime-local" name="delivery" value="'+esc(task.delivery)+'"></label></div>'+
+   '<label>未完成原因<textarea name="reason" rows="2" maxlength="500" placeholder="填写影响进度的原因及下一步">'+esc(task.unfinishedReason)+'</textarea></label>'+
+   '<div class="bar"><button class="primary">保存任务填报</button><span role="status"></span></div></form>';
+ }).join(''):'<p>当天暂无安排任务，可在下方填写个人条数。</p>')+'</div>';
+}
 function dailyOutput(daily,monthStart,monthEnd){
  const assignments=tasks.filter(t=>t.date===outputDay);
  const totals=daily[outputDay]||{};
  const people=staff.map(p=>({...p,assignments:assignments.filter(t=>participates(t,p.name))}))
   .filter(p=>activeNames.includes(p.name)||p.assignments.length||totals[p.name]!=null);
- return '<div class="report-meta"><label class="daily-date">填报日期<input id="outputDay" type="date" required min="'+monthStart+'" max="'+monthEnd+'" value="'+outputDay+'"></label> <label class="daily-date">显示人员<select id="dailyStaffFilter"><option value="all">全部人员</option><option value="assigned"'+(dailyAssignedOnly?' selected':'')+'>当天有任务</option></select></label><p>按群里的汇报填写个人当天总数。</p><p id="dailyNoAssigned" hidden>当天暂无已安排任务的人员，可切换到全部人员填报。</p></div>'+
+ return '<div class="report-meta"><label class="daily-date">填报日期<input id="outputDay" type="date" required min="'+monthStart+'" max="'+monthEnd+'" value="'+outputDay+'"></label> <label class="daily-date">显示人员<select id="dailyStaffFilter"><option value="all">全部人员</option><option value="assigned"'+(dailyAssignedOnly?' selected':'')+'>当天有任务</option></select></label><p>按群里的汇报填写个人当天总数。</p><p id="dailyNoAssigned" hidden>当天暂无已安排任务的人员，可切换到全部人员填报。</p></div>'+dailyTaskReports(assignments)+
  (people.length?'<form id="dailyForm"><table><thead><tr><th>人员</th><th>岗位</th><th>当天安排</th><th>实际拍摄条数</th></tr></thead><tbody>'+
  people.map(p=>'<tr data-assigned="'+Boolean(p.assignments.length)+'"><td>'+esc(p.name)+'</td><td>'+esc(p.role)+'</td><td>'+assignmentTotal(p.assignments)+' 次</td><td><input aria-label="'+esc(p.name)+'当天实际拍摄条数" type="number" min="0" step="1" name="'+esc(p.name)+'" value="'+esc(totals[p.name])+'" placeholder="待填"></td></tr>').join('')+
  '</tbody></table><div class="report-meta"><button class="primary">保存当天条数</button><span id="dailyStatus" role="status"></span></div></form>':'<div class="empty">名册暂无人员。</div>');
