@@ -125,6 +125,16 @@ main:not(.home-page) h1 {
 .reference-item { min-width:0; margin-block:4px; }
 .reference-label-row { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; }
 .reference-label-row .reference-name { flex:1 1 160px; max-width:260px; min-width:0; }
+.rest-group--photo-assistant { --rest-group-color:#9de0ed; --rest-group-bg:#213640; }
+.model-portfolio { margin-block:clamp(42px,8vw,110px) 28px; padding:clamp(22px,4vw,60px); background:#171613; color:#f3efe6; border-top:1px solid #706353; }
+.model-portfolio-heading { margin-bottom:clamp(20px,3vw,44px); }
+.model-portfolio-heading h2 { margin:0 0 8px; color:#d3c4ac; font-size:14px; font-weight:600; letter-spacing:.16em; }
+.model-portfolio-heading h3 { margin:0; font:500 clamp(38px,6vw,90px)/1.12 "Songti SC", "Noto Serif CJK SC", SimSun, serif; }
+.model-portfolio-photos { display:grid; grid-template-columns:1.45fr 1fr 1fr; gap:clamp(12px,2vw,30px); align-items:center; }
+.model-portfolio-photos figure { margin:0; min-width:0; }
+.model-portfolio-photos img { display:block; width:100%; height:auto; }
+.model-portfolio-photos figcaption { padding-block:8px; color:#ded0bc; font-size:13px; }
+@media(max-width:620px){ .model-portfolio-photos { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; } .model-portfolio-photos figure:first-child { grid-column:1/-1; } }
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
@@ -330,7 +340,7 @@ function home(){
  '<section class="home-products">'+title('01',esc(settings.productsTitle),'OUR PRODUCTS')+'<div class="chips">'+products.filter(p=>p!=='其他').map(p=>'<span class="tag">'+esc(p)+'</span>').join('')+'</div></section>'+
  '<section id="services" class="service-section">'+title('02',esc(settings.shootingTitle),'WHAT WE CREATE')+'<p class="art-caption">'+esc(settings.artCaption)+'</p><div class="service-list">'+shooting.map(([name,detail],i)=>'<article class="service-item">'+shootingArt(i)+'<span class="service-number">'+String(i+1).padStart(2,'0')+'</span><h3>'+esc(name)+'</h3><p>'+esc(detail)+'</p><button type="button" class="service-mark" data-service="'+esc(name)+'" aria-label="查看'+esc(name)+'安排">↗</button></article>').join('')+'</div></section>'+
  '<section class="delivery-section">'+title('03',esc(settings.deliveryTitle),'OUR COMMITMENT')+'<p>'+esc(settings.shiftIntro)+'</p><div class="delivery-grid">'+section(settings.normalTitle,settings.normalText)+section(settings.urgentTitle,settings.urgentText)+'</div></section>'+
- '<section class="org-section">'+title('04',esc(settings.orgTitle),'THE PEOPLE')+'<span id="org-title" class="sr-only">中台组织架构</span>'+orgMap()+'</section>'+teamGallery();
+ '<section class="org-section">'+title('04',esc(settings.orgTitle),'THE PEOPLE')+'<span id="org-title" class="sr-only">中台组织架构</span>'+orgMap()+'</section>'+teamGallery()+modelPortfolio();
  bindTeamGallery();
  if(window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window){
   const photos=main.querySelectorAll('.team-photo,.service-visual');
@@ -351,6 +361,15 @@ function home(){
  document.querySelectorAll('[data-service]').forEach(button=>button.onclick=()=>{scheduleQuery=button.dataset.service==='产品使用展示'?'产品使用':button.dataset.service;day='';scheduleStatus='';navigateTab('schedule')});
 }
 function getTeamPhotos(){return settings.gallery===null?defaultTeamPhotos():settings.gallery;}
+function modelPortfolio(){
+ return '<section class="model-portfolio" aria-labelledby="model-portfolio-title">'+
+  '<div class="model-portfolio-heading"><div><h2 id="model-portfolio-title">模特档案</h2><h3>夏艺方</h3></div></div>'+
+  '<div class="model-portfolio-photos">'+
+  [['01','湖畔肖像',1280,1535],['02','画廊肖像',1279,1706],['03','室内肖像',810,1216]].map(([id,label,w,h])=>{
+   const src='./model-portfolio/xia-yifang-'+id+'.jpg';
+   return '<figure><a href="'+src+'" target="_blank" rel="noopener" aria-label="查看夏艺方'+label+'原图"><img src="'+src+'" alt="夏艺方 · '+label+'" width="'+w+'" height="'+h+'" loading="lazy" decoding="async"></a><figcaption>'+label+'</figcaption></figure>';
+  }).join('')+'</div></section>';
+}
 function defaultTeamPhotos(){return [{"src": "./team-gallery/01.jpg", "caption": "一起，向自由出发"}, {"src": "./team-gallery/new-0.jpg", "caption": "暖光里的默契"}, {"src": "./team-gallery/new-1.jpg", "caption": "把日常拍成风景"}, {"src": "./team-gallery/new-5.jpg", "caption": "镜头背后的认真"}, {"src": "./team-gallery/new-2.jpg", "caption": "黑白之间 · 群像"}, {"src": "./team-gallery/new-3.jpg", "caption": "黑白之间 · 姿态"}, {"src": "./team-gallery/new-7.jpg", "caption": "一起奔赴新一年"}, {"src": "./team-gallery/new-4.jpg", "caption": "古巷里的伙伴"}, {"src": "./team-gallery/02.jpg", "caption": "日常里的默契"}, {"src": "./team-gallery/03.jpg", "caption": "古巷同行"}, {"src": "./team-gallery/04.jpg", "caption": "节日相聚"}, {"src": "./team-gallery/05.jpg", "caption": "在一起的日常"}, {"src": "./team-gallery/06.jpg", "caption": "围坐一桌"}, {"src": "./team-gallery/07.jpg", "caption": "分享甜蜜"}, {"src": "./team-gallery/08.jpg", "caption": "热闹的夜晚"}, {"src": "./team-gallery/09.jpg", "caption": "冬日同行"}, {"src": "./team-gallery/10.jpg", "caption": "镜头里的我们"}, {"src": "./team-gallery/11.jpg", "caption": "夜市小聚"}, {"src": "./team-gallery/12.jpg", "caption": "节日心意"}, {"src": "./team-gallery/new-6.jpg", "caption": "我们的默契"}, {"src": "./team-gallery/new-8.jpg", "caption": "创意封面实验"}];}
 function teamGallery(){
  const teamPhotos=getTeamPhotos();
@@ -621,7 +640,7 @@ function updateStaffOptions(picker,availability,date){
  }
 }
 const restRoleLabel = role => role === '基础摄影' ? '拍摄组' : role;
-const restGroup = role => ({'基础摄影':'shooting','创新组':'creative','模特':'model','修片':'retouch'})[role] || '';
+const restGroup = role => ({'基础摄影':'shooting','创新组':'creative','模特':'model','修片':'retouch','摄影助理':'photo-assistant'})[role] || '';
 const restRowClass = role => restGroup(role) ? ' class="rest-group--'+restGroup(role)+'"' : '';
 function confirmRestConflicts(previous, next, dates) {
  const conflicts = [];
@@ -640,11 +659,15 @@ function confirmRestConflicts(previous, next, dates) {
  return !conflicts.length || window.confirm('同岗多人休息，请确认是否作为特殊安排继续保存。\n\n'+conflicts.join('\n'));
 }
 let restRoleFilter='';
-const restGroups=[['','全部'],['shooting','拍摄组'],['creative','创新组'],['model','模特'],['retouch','修片']];
-const visibleRestStaff=()=>restStaff.filter(person=>!restRoleFilter||restGroup(person.role)===restRoleFilter);
+const visibleRestStaff=()=>restStaff.filter(person=>!restRoleFilter||person.role===restRoleFilter);
+function restFilterAttributes(role){
+ const group=restGroup(role);
+ return (group?' class="rest-group--'+group+'"':'')+' data-rest-filter="'+esc(role)+'" aria-pressed="'+(role===restRoleFilter)+'"';
+}
 function restFilterBar(){
- return '<div class="bar rest-group-legend" role="group" aria-label="按岗位筛选">'+restGroups.map(([role,label])=>
-  '<button type="button"'+(role?' class="rest-group--'+role+'"':'')+' data-rest-filter="'+role+'" aria-pressed="'+(role===restRoleFilter)+'">'+label+'</button>'
+ const roles=['',...new Set(restStaff.map(person=>person.role))];
+ return '<div class="bar rest-group-legend" role="group" aria-label="按岗位筛选">'+roles.map(role=>
+  '<button type="button"'+restFilterAttributes(role)+'>'+esc(role?restRoleLabel(role):'全部')+'</button>'
  ).join('')+'</div>';
 }
 function restView(message=''){
@@ -663,7 +686,7 @@ function restView(message=''){
  document.querySelectorAll('[data-rest-filter]').forEach(button=>button.onclick=()=>{
   restRoleFilter=button.dataset.restFilter;
   restView();
-  document.querySelector('[data-rest-filter="'+restRoleFilter+'"]').focus();
+  document.querySelector('[data-rest-filter][aria-pressed="true"]')?.focus();
  });
  const showWeek=date=>{restWeek=weekOf(date);restMonth=date.slice(0,7);restView()};
  document.querySelector('#prevRest').onclick=()=>showWeek(plusDay(restWeek,-7));
