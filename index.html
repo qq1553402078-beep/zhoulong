@@ -149,46 +149,29 @@ main:not(.home-page) h1 {
 .reference-fold { margin-block:8px; }
 .reference-fold > summary { cursor:pointer; color:#d9caf2; font-size:13px; padding-block:4px; }
 .reference-fold:not([open]) .reference-collapse,.reference-fold[open] .reference-expand { display:none; }
-.model-portfolio {
+.home-page .model-portfolio {
  position:relative;
- isolation:isolate;
- overflow:hidden;
- background:radial-gradient(ellipse at 50% 46%,#383244 0%,#2c2737 53%,#211d2b 100%);
- border-top-color:#8c7c99;
+ color:#242229;
+ background:radial-gradient(ellipse at 43% 20%,#edeae6,#d9d6da 58%,#c9c5ce 100%);
+ border-top:1px solid #e6e0e7;
 }
-.model-portfolio::before,.model-portfolio::after {
- content:"";
- position:absolute;
- inset:0;
- pointer-events:none;
- z-index:-1;
+.home-page .model-portfolio-heading h2 {
+ color:#211f24;
+ font:850 clamp(32px,5vw,68px)/1.08 "Microsoft YaHei",sans-serif;
+ letter-spacing:.035em;
 }
-.model-portfolio::before {
- background:url("./model-portfolio/he-yuxin-01.jpg") 62% 18% / max(85%,580px) auto no-repeat;
- filter:grayscale(1) blur(34px);
- opacity:.065;
- mask-image:radial-gradient(ellipse 54% 48% at 61% 31%,#000 4%,transparent 100%);
- animation:portfolio-breathe 25s ease-in-out infinite alternate;
+.home-page .model-index { border-color:#938c98; }
+.home-page .model-index button { color:#2b2630; }
+.home-page .model-profile { border-color:#a59da8; }
+.home-page .model-signature { color:#655268; }
+.home-page .model-pending { color:#5f5361; }
+.home-page .model-portfolio-photos figure {
+ padding:clamp(5px,1vw,14px);
+ background:#f8f6f3;
+ box-shadow:5px 9px 16px #291e3130,0 0 0 1px #352c3a14;
 }
-.model-portfolio::after {
- background:
- radial-gradient(ellipse at 50% 48%,transparent 26%,#100c19a6 100%),
- url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)' opacity='.085'/%3E%3C/svg%3E");
-}
-@keyframes portfolio-breathe { from { opacity:.053; } to { opacity:.083; } }
-@media(prefers-reduced-motion:reduce) { .model-portfolio::before { animation:none; } }
-.model-portfolio {
- background:radial-gradient(ellipse at 68% 43%,#4a3d42 0%,#342e3d 47%,#211e29 100%);
-}
-.model-portfolio::after {
- background:
- radial-gradient(ellipse at 18% 22%,#a4816824,transparent 51%),
- radial-gradient(ellipse at 50% 48%,transparent 30%,#17131c80 100%),
- url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)' opacity='.075'/%3E%3C/svg%3E");
-}
-.model-portfolio .model-profile-heading { margin-bottom:clamp(24px,4vw,55px); }
-.model-portfolio-photos a { display:block; }
-.model-portfolio-photos img { outline:1px solid #eadfcd26; outline-offset:-1px; box-shadow:0 12px 26px #100d1760; }
+.home-page .model-portfolio-photos a { display:block; }
+.home-page .model-portfolio-photos figcaption { color:#4a414d; padding-bottom:0; }
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
