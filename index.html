@@ -218,6 +218,12 @@ main:not(.home-page) h1 {
 .daily-name-options label { display:flex; align-items:center; gap:5px; }
 .daily-name-options input { width:auto; }
 .daily-task-report[hidden],#dailyForm tr[hidden],#dailyStaffNames[hidden] { display:none; }
+.note-actions { display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin:5px 0; }
+.note-actions button { padding:4px 8px; }
+.note-preview { white-space:pre-wrap; overflow-wrap:anywhere; padding:8px; border:1px solid #ffffff24; border-radius:6px; }
+.note-color-gold,.note-actions .note-color-gold { color:#ffd17c; }
+.note-color-red,.note-actions .note-color-red { color:#ff989d; }
+.note-color-blue,.note-actions .note-color-blue { color:#9bcaff; }
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
@@ -306,6 +312,34 @@ function referenceEditor(task,formId){
  const urls=[...new Set((String(task.link||'').match(referenceUrlPattern)||[]).filter(safeLink))];
  return '<details class="reference-fold"><summary><span class="reference-expand">编辑对标链接</span><span class="reference-collapse">收起对标编辑</span></summary><div class="reference-editor"><div>'+ (urls.length?urls:['']).map(url=>referenceEditorRow(formId,url,task.referenceNames?.[url])).join('')+
  '</div><button type="button" data-reference-add="'+formId+'">＋ 添加对标链接</button></div></details>';
+}
+const noteColors={gold:'金色',red:'红色',blue:'蓝色'};
+function readNoteMarks(value){
+ try{return JSON.parse(value||'{}')||{}}catch{return {}}
+}
+function markedNotes(notes,marks){
+ const value=String(notes||'');
+ const phrases=Object.keys(marks||{}).filter(Boolean).sort((a,b)=>b.length-a.length);
+ if(!phrases.length)return esc(value);
+ const pattern=new RegExp(phrases.map(phrase=>phrase.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'g');
+ let cursor=0;
+ let html='';
+ for(const match of value.matchAll(pattern)){
+  const style=marks[match[0]];
+  const color=Object.hasOwn(noteColors,style?.color)?style.color:'';
+  html+=esc(value.slice(cursor,match.index))+'<span class="note-color-'+color+'">'+(style?.bold?'<strong>'+esc(match[0])+'</strong>':esc(match[0]))+'</span>';
+  cursor=match.index+match[0].length;
+ }
+ return html+esc(value.slice(cursor));
+}
+function notesEditor(task,formId){
+ const marks=typeof task.noteMarks==='string'?readNoteMarks(task.noteMarks):task.noteMarks||{};
+ return '<div class="notes-editor"><textarea aria-label="运营要求" form="'+formId+'" name="notes" placeholder="填写数量、脚本、道具、参考和核心拍摄要求">'+esc(task.notes)+'</textarea>'+
+ '<input type="hidden" name="noteMarks" form="'+formId+'" value="'+esc(JSON.stringify(marks))+'">'+
+ '<div class="note-actions" aria-label="运营要求重点标注"><button type="button" data-note-style="bold">加粗</button>'+
+ Object.entries(noteColors).map(([id,label])=>'<button type="button" class="note-color-'+id+'" data-note-style="'+id+'">'+label+'</button>').join('')+
+ '<button type="button" data-note-style="clear">清除标注</button><small role="status"></small></div>'+
+ '<div class="note-preview" aria-label="标注预览"'+(Object.keys(marks).length?'':' hidden')+'>'+markedNotes(task.notes,marks)+'</div></div>';
 }
 function readReferenceNames(task,fields){
  const urls=fields.getAll('referenceUrl').map(value=>value.trim());
@@ -592,7 +626,7 @@ function schedule(){
  const headings=['日期','摄影师','手模','模特','拍摄内容','运营要求'];
  if(captureMode){
   main.innerHTML='<div class="capture-heading"><h1>拍摄安排 · '+esc(day||'全部日期')+'</h1><button id="exitCapture">返回编辑</button></div><div class="panel worksheet capture"><table><colgroup><col style="width:10%"><col style="width:10%"><col style="width:9%"><col style="width:10%"><col style="width:17%"><col style="width:44%"></colgroup><thead><tr>'+headings.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+
-  (rows.length?rows.map(t=>'<tr>'+[t.date,t.lead,t.handModel,t.model,t.title].map(x=>'<td>'+esc(x||'—')+'</td>').join('')+'<td class="capture-notes">'+esc(t.notes)+referenceLinks(t,true)+'</td></tr>').join(''):'<tr><td colspan="6" class="empty">暂无匹配任务。</td></tr>')+'</tbody></table></div>';
+  (rows.length?rows.map(t=>'<tr>'+[t.date,t.lead,t.handModel,t.model,t.title].map(x=>'<td>'+esc(x||'—')+'</td>').join('')+'<td class="capture-notes">'+markedNotes(t.notes,t.noteMarks)+referenceLinks(t,true)+'</td></tr>').join(''):'<tr><td colspan="6" class="empty">暂无匹配任务。</td></tr>')+'</tbody></table></div>';
   document.querySelector('#exitCapture').onclick=()=>{captureMode=false;render()};
   return;
  }
@@ -627,6 +661,33 @@ function schedule(){
   return '保存失败，请重试。';
  }});
  document.querySelectorAll('[data-schedule-day]').forEach(button=>button.onclick=()=>{day=button.dataset.scheduleDay;render()});
+ main.querySelectorAll('.notes-editor').forEach(editor=>{
+  const field=editor.querySelector('textarea'), stored=editor.querySelector('[name="noteMarks"]'), preview=editor.querySelector('.note-preview');
+  const update=()=>{
+   const marks=readNoteMarks(stored.value);
+   preview.hidden=!Object.keys(marks).some(phrase=>field.value.includes(phrase));
+   preview.innerHTML=markedNotes(field.value,marks);
+  };
+  field.addEventListener('input',update);
+  editor.querySelectorAll('[data-note-style]').forEach(button=>{
+   button.onmousedown=event=>event.preventDefault();
+   button.onclick=()=>{
+    const phrase=field.value.slice(field.selectionStart,field.selectionEnd);
+    const status=editor.querySelector('[role="status"]');
+    if(!phrase.trim()){status.textContent='请先选中要标注的文字。';return}
+    const marks=Object.assign(Object.create(null),readNoteMarks(stored.value));
+    const style=button.dataset.noteStyle;
+    if(style==='clear')delete marks[phrase];
+    else{
+     const old=marks[phrase]||{};
+     marks[phrase]=style==='bold'?{...old,bold:!old.bold}:{...old,color:style};
+    }
+    stored.value=JSON.stringify(marks);
+    status.textContent='保存任务后同步标注。';
+    update();
+   };
+  });
+ });
  document.querySelectorAll('[data-reference-add]').forEach(button=>button.onclick=()=>{
   const rows=button.previousElementSibling;
   rows.insertAdjacentHTML('beforeend',referenceEditorRow(button.dataset.referenceAdd));
@@ -640,6 +701,7 @@ function schedule(){
   }
   const notes=cell.querySelector('[name="notes"]');
   notes.value=notes.value.replace(referenceUrlPattern,match=>match===url?'':match);
+  notes.dispatchEvent(new Event('input'));
   const preview=button.closest('.reference-links');
   button.closest('.reference-item').remove();
   if(!preview.querySelector('.reference-item'))preview.remove();
@@ -686,6 +748,7 @@ function schedule(){
   const original=tasks.find(t=>t.id===rowForm.dataset.rowForm);
   const formData=new FormData(rowForm);
   const next={...original,...Object.fromEntries(formData)};
+  next.noteMarks=Object.fromEntries(Object.entries(readNoteMarks(next.noteMarks)).filter(([phrase])=>phrase&&next.notes.includes(phrase)));
   if(!readReferenceNames(next,formData)){alert('请为每条对标填写一个有效的 HTTP 或 HTTPS 链接。');return}
   for(const k of [...roles,'handModel','product','type'])next[k]=formData.getAll(k).join('、');
   const batchDates=formData.getAll('batchDate'),batchTimes=formData.getAll('batchTimes'),batchQuantities=formData.getAll('batchQuantity');
@@ -736,7 +799,7 @@ function mobileTask(t){
  const people=[['lead','摄影师',t.lead],['handModel','手模',t.handModel],['model','模特',t.model]];
  return '<article class="mobile-task"'+(savedTask?.id===t.id?' data-saved-card':'')+'><div class="mobile-task-meta"><time datetime="'+esc(t.date)+'">'+esc(t.date)+'</time><span class="tag">'+esc(t.priority==='加急'?'加急 · '+t.status:t.status)+'</span></div>'+
  '<h3>'+esc([t.product,t.type].filter(Boolean).join(' · ')||t.title)+'</h3><dl>'+people.map(([role,label,name])=>'<div class="schedule-field schedule-field--'+role+'"><dt>'+label+'</dt><dd>'+esc(name||'待分配')+'</dd></div>').join('')+'</dl>'+
- (t.notes?'<div class="mobile-notes"><strong>运营要求</strong><br>'+esc(t.notes)+'</div>':'')+referenceLinks(t,true)+'<button type="button" class="edit-mobile-task" data-edit-task="'+esc(t.id)+'">编辑安排 ↗</button></article>';
+ (t.notes?'<div class="mobile-notes"><strong>运营要求</strong><br>'+markedNotes(t.notes,t.noteMarks)+'</div>':'')+referenceLinks(t,true)+'<button type="button" class="edit-mobile-task" data-edit-task="'+esc(t.id)+'">编辑安排 ↗</button></article>';
 }
 function showSavedTask(task){
  savedTask=task;
@@ -794,7 +857,7 @@ function taskRow(t,index){
  return '<tr data-task-id="'+esc(t.id)+'"'+(!t.id?' class="new-task"':savedTask?.id===t.id?' data-saved-row style="outline:2px solid #e0bd70;outline-offset:-2px"':'')+'><td class="ops-date" data-label="日期">'+input('date','排班日期','date','required')+'</td>'+
  '<td data-label="摄影师">'+staffSelect('lead','摄影师')+'</td><td data-label="手模">'+staffSelect('handModel','手模')+'</td><td data-label="模特">'+staffSelect('model','模特')+'</td>'+
  '<td class="ops-content" data-label="品类 / 拍摄类型">'+staffSelect('product','品类',['',...new Set([...products,...(t.product?[t.product]:[])])])+staffSelect('type','拍摄类型',['',...new Set([...types,...(t.type?[t.type]:[])])])+'</td>'+
- '<td class="ops-requirement" data-label="运营要求与对标链接"><textarea aria-label="运营要求" form="'+formId+'" name="notes" placeholder="填写数量、脚本、道具、参考和核心拍摄要求">'+esc(t.notes)+'</textarea>'+referenceEditor(t,formId)+referenceLinks(t,true,true)+
+ '<td class="ops-requirement" data-label="运营要求与对标链接">' +notesEditor(t,formId)+referenceEditor(t,formId)+referenceLinks(t,true,true)+
  '<div class="ops-actions"><form id="'+formId+'" data-row-form="'+esc(t.id)+'"><button class="primary">'+(t.id?'保存':'保存新安排')+'</button></form>'+(t.id?'<button type="button" data-delete="'+esc(t.id)+'">删除</button>':'<button type="button" data-cancel-row="'+index+'">取消</button>')+(safeLink(t.workOrder)?'<a target="_blank" rel="noopener noreferrer" href="'+esc(t.workOrder)+'">打开工单</a>':'')+overtime+'</div></td></tr>'+
  '<tr class="row-edit"><td colspan="6"><details><summary>工单与交付 · '+esc(t.status)+' · '+esc(t.title)+'</summary><div class="grid">'+detail.map(([label,field])=>'<label>'+label+field+'</label>').join('')+'</div>'+acceptanceEditor(t,formId)+'</details></td></tr>';
 }
