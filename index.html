@@ -146,6 +146,19 @@ main:not(.home-page) h1 {
 .model-profile-heading h3 { margin:0; font:500 clamp(26px,4vw,55px)/1.15 "Songti SC", SimSun, serif; }
 .model-profile-heading p { margin:.5em 0 0; }
 .model-signature { padding-inline:8px; color:#e8c893; font:italic 500 clamp(32px,6vw,90px)/1.15 "Segoe Script","Brush Script MT",cursive; transform:rotate(-7deg); }
+.reference-fold { margin-block:8px; }
+.reference-fold > summary { cursor:pointer; color:#d9caf2; font-size:13px; padding-block:4px; }
+.reference-fold:not([open]) .reference-collapse,.reference-fold[open] .reference-expand { display:none; }
+.model-portfolio {
+ background:#242335;
+ background-image:radial-gradient(ellipse at 5% 10%,#473954 0%,transparent 42%),radial-gradient(ellipse at 95% 55%,#344752 0%,transparent 46%),radial-gradient(circle,#ffffff12 1px,transparent 1px);
+ background-size:auto,auto,10px 10px;
+ border-top-color:#b49abe;
+}
+.model-profile:nth-of-type(2) .model-portfolio-photos { grid-template-columns:1fr 1.45fr 1fr; }
+.model-profile:nth-of-type(3) .model-portfolio-photos { grid-template-columns:1.35fr 1fr 1fr; }
+.model-profile:nth-of-type(3) .model-portfolio-photos figure:nth-child(2) { padding-block-start:9%; }
+@media(max-width:620px){ .model-portfolio .model-profile .model-portfolio-photos { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
@@ -227,8 +240,8 @@ function referenceEditorRow(formId,url='',name=''){
 }
 function referenceEditor(task,formId){
  const urls=[...new Set((String(task.link||'').match(/https?:\/\/[^\s<>，。；、）】]+/g)||[]).filter(safeLink))];
- return '<div class="reference-editor"><div>'+ (urls.length?urls:['']).map(url=>referenceEditorRow(formId,url,task.referenceNames?.[url])).join('')+
- '</div><button type="button" data-reference-add="'+formId+'">＋ 添加对标链接</button></div>';
+ return '<details class="reference-fold"><summary><span class="reference-expand">编辑对标链接</span><span class="reference-collapse">收起对标编辑</span></summary><div class="reference-editor"><div>'+ (urls.length?urls:['']).map(url=>referenceEditorRow(formId,url,task.referenceNames?.[url])).join('')+
+ '</div><button type="button" data-reference-add="'+formId+'">＋ 添加对标链接</button></div></details>';
 }
 function readReferenceNames(task,fields){
  const urls=fields.getAll('referenceUrl').map(value=>value.trim());
@@ -413,16 +426,16 @@ function home(){
 function getTeamPhotos(){return settings.gallery===null?defaultTeamPhotos():settings.gallery;}
 function modelPortfolio(){
  const profiles=[
-  {name:'夏艺方', signature:'Yifang', slug:'xia-yifang', title:'湖畔与室内', photos:[['湖畔肖像',1280,1535],['画廊肖像',1279,1706],['室内肖像',810,1216]]},
-  {name:'张智', signature:'Zhi', slug:'zhang-zhi', title:'从棚拍到夜色', photos:[['棚拍肖像', 1267, 1900], ['树影肖像', 1425, 1900], ['夜景肖像', 1426, 1900]]},
-  {name:'何雨馨'}, {name:'穆灿'}, {name:'钱小蝶'}
+  {name:'夏艺方', signature:'Yifang', slug:'xia-yifang', photos:[['湖畔肖像',1280,1535],['画廊肖像',1279,1706],['室内肖像',810,1216]]},
+  {name:'张智', signature:'Zhi', slug:'zhang-zhi', photos:[['棚拍肖像', 1267, 1900], ['树影肖像', 1425, 1900], ['夜景肖像', 1426, 1900]]},
+  {name:'何雨馨',signature:'Yuxin',slug:'he-yuxin',photos:[['棚拍肖像', 1133, 1700], ['窗边肖像', 1133, 1700], ['蓝光肖像', 1275, 1700]]}, {name:'穆灿'}, {name:'钱小蝶'}
  ];
  return '<section class="model-portfolio" aria-labelledby="model-portfolio-title">'+
-  '<div class="model-portfolio-heading"><h2 id="model-portfolio-title">模特档案</h2><p>棚内有光，镜头之外也有。</p></div>'+
+  '<div class="model-portfolio-heading"><h2 id="model-portfolio-title">模特档案</h2></div>'+
   '<div class="model-index" aria-label="模特索引">'+profiles.map(profile=>'<button type="button" data-profile-target="'+esc(profile.name)+'">'+esc(profile.name)+'</button>').join('')+'</div>'+
   profiles.map(profile=>{
-   const {name,signature,slug,title,photos}=profile;
-   const heading='<div class="model-profile-heading"><div><h3>'+esc(name)+'</h3>'+(title?'<p>'+esc(title)+'</p>':'')+'</div>'+
+   const {name,signature,slug,photos}=profile;
+   const heading='<div class="model-profile-heading"><div><h3>'+esc(name)+'</h3>'+'</div>'+
     (signature?'<span class="model-signature" aria-hidden="true">'+esc(signature)+'</span>':'')+'</div>';
    return '<article class="model-profile" data-profile="'+esc(name)+'">'+heading+
     (photos?'<div class="model-portfolio-photos">'+photos.map(([label,w,h],i)=>{
@@ -671,7 +684,7 @@ function taskRow(t,index){
  return '<tr data-task-id="'+esc(t.id)+'"'+(!t.id?' class="new-task"':savedTask?.id===t.id?' data-saved-row style="outline:2px solid #e0bd70;outline-offset:-2px"':'')+'><td class="ops-date" data-label="日期">'+input('date','排班日期','date','required')+'</td>'+
  '<td data-label="摄影师">'+staffSelect('lead','摄影师',roleNames.lead)+'</td><td data-label="手模">'+staffSelect('handModel','手模',roleNames.model)+'</td><td data-label="模特">'+staffSelect('model','模特',roleNames.model)+'</td>'+
  '<td class="ops-content" data-label="品类 / 拍摄类型">'+staffSelect('product','品类',['',...new Set([...products,...(t.product?[t.product]:[])])])+staffSelect('type','拍摄类型',['',...new Set([...types,...(t.type?[t.type]:[])])])+'</td>'+
- '<td class="ops-requirement" data-label="运营要求与对标链接"><textarea aria-label="运营要求" form="'+formId+'" name="notes" placeholder="填写数量、脚本、道具、参考和核心拍摄要求">'+esc(t.notes)+'</textarea>'+referenceEditor(t,formId)+referenceLinks(t)+
+ '<td class="ops-requirement" data-label="运营要求与对标链接"><textarea aria-label="运营要求" form="'+formId+'" name="notes" placeholder="填写数量、脚本、道具、参考和核心拍摄要求">'+esc(t.notes)+'</textarea>'+referenceEditor(t,formId)+referenceLinks(t,true)+
  '<div class="ops-actions"><form id="'+formId+'" data-row-form="'+esc(t.id)+'"><button class="primary">'+(t.id?'保存':'保存新安排')+'</button></form>'+(t.id?'<button type="button" data-delete="'+esc(t.id)+'">删除</button>':'<button type="button" data-cancel-row="'+index+'">取消</button>')+(safeLink(t.workOrder)?'<a target="_blank" rel="noopener noreferrer" href="'+esc(t.workOrder)+'">打开工单</a>':'')+overtime+'</div></td></tr>'+
  '<tr class="row-edit"><td colspan="6"><details><summary>工单与交付 · '+esc(t.status)+' · '+esc(t.title)+'</summary><div class="grid">'+detail.map(([label,field])=>'<label>'+label+field+'</label>').join('')+'</div>'+acceptanceEditor(t,formId)+'</details></td></tr>';
 }
