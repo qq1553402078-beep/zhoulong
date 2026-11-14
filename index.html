@@ -122,6 +122,9 @@ main:not(.home-page) h1 {
  font-size:14px; font-weight:750; min-height:36px;
 }
 .rest-page .rest-grid td[data-shift] > select option { background:#251f2b; color:#f6effb; }
+.reference-item { min-width:0; margin-block:4px; }
+.reference-label-row { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; }
+.reference-label-row .reference-name { flex:1 1 160px; max-width:260px; min-width:0; }
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
@@ -184,17 +187,29 @@ const plusDay=(date,n)=>new Date(Date.parse(date+'T00:00:00Z')+n*86400000).toISO
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const options=(items,val)=>items.map(v=>'<option '+(v===val?'selected':'')+'>'+esc(v)+'</option>').join('');
 const safeLink=v=>{try{return /^https?:$/.test(new URL(v).protocol)?v:''}catch{return ''}};
-function referenceLinks(task,compact=false){
+function referenceLinks(task,compact=false,formId=""){
  const links=[...new Set(([task.link,task.notes].join('\n').match(/https?:\/\/[^\s<>，。；、）】]+/g)||[]).filter(safeLink))];
  if(!links.length)return '';
  return '<div class="reference-links">'+links.map((url,index)=>{
   const host=new URL(url).hostname.toLowerCase();
   const isDomain=domain=>host===domain||host.endsWith('.'+domain);
   const platform=isDomain('feishu.cn')||isDomain('larksuite.com')?'飞书':isDomain('dingtalk.com')?'钉钉':'';
-  const label=(platform?platform+'对标':'打开对标')+(links.length>1?' '+(index+1):'');
+  const name=task.referenceNames?.[url]||'';
+  const label=name||((platform?platform+'对标':'打开对标')+(links.length>1?' '+(index+1):''));
   const href=' href="'+esc(url)+'" target="_blank" rel="noopener noreferrer"';
-  return '<a class="reference-jump"'+href+' title="'+esc(url)+'">'+label+' ↗</a>'+(compact?'':'<a class="reference-address"'+href+'>'+esc(url)+'</a>');
+  const input=formId?'<input class="reference-name" form="'+formId+'" name="referenceName:'+esc(url)+'" aria-label="对标 '+(index+1)+' 的名称" placeholder="填写对标名称" maxlength="100" value="'+esc(name)+'">':'';
+  return '<div class="reference-item"><div class="reference-label-row"><a class="reference-jump"'+href+' title="'+esc(url)+'">'+esc(label)+' ↗</a>'+input+'</div>'+(compact?'':'<a class="reference-address"'+href+'>'+esc(url)+'</a>')+'</div>';
  }).join('')+'</div>';
+}
+function readReferenceNames(task,fields){
+ const names={...task.referenceNames};
+ for(const [field,value] of fields){
+  if(!field.startsWith('referenceName:'))continue;
+  const url=field.slice('referenceName:'.length);
+  delete task[field];
+  if(value.trim())names[url]=value.trim();else delete names[url];
+ }
+ task.referenceNames=names;
 }
 const roles=['lead','assistant','model','retouch'];
 const done=t=>t.status==='已验收';
@@ -234,6 +249,7 @@ function rememberDraftRows(){
   if(!draftRows.has(index))continue;
   const fields=new FormData(form);
   const draft={...draftRows.get(index),...Object.fromEntries(fields)};
+  readReferenceNames(draft,fields);
   for(const key of [...roles,'handModel','product','type'])draft[key]=fields.getAll(key).join('、');
   draft.acceptanceBatches=fields.getAll('batchDate').map((date,i)=>({
    date,times:fields.getAll('batchTimes')[i],quantity:fields.getAll('batchQuantity')[i]
@@ -467,6 +483,7 @@ function schedule(){
   const original=tasks.find(t=>t.id===rowForm.dataset.rowForm);
   const formData=new FormData(rowForm);
   const next={...original,...Object.fromEntries(formData)};
+  readReferenceNames(next,formData);
   for(const k of [...roles,'handModel','product','type'])next[k]=formData.getAll(k).join('、');
   const batchDates=formData.getAll('batchDate'),batchTimes=formData.getAll('batchTimes'),batchQuantities=formData.getAll('batchQuantity');
   next.acceptanceBatches=batchDates.map((date,index)=>({date,times:Number(batchTimes[index]),quantity:Number(batchQuantities[index])}));
@@ -568,8 +585,8 @@ function taskRow(t,index){
  return '<tr data-task-id="'+esc(t.id)+'"'+(!t.id?' class="new-task"':savedTask?.id===t.id?' data-saved-row style="outline:2px solid #e0bd70;outline-offset:-2px"':'')+'><td class="ops-date" data-label="日期">'+input('date','排班日期','date','required')+'</td>'+
  '<td data-label="摄影师">'+staffSelect('lead','摄影师',roleNames.lead)+'</td><td data-label="手模">'+staffSelect('handModel','手模',roleNames.model)+'</td><td data-label="模特">'+staffSelect('model','模特',roleNames.model)+'</td>'+
  '<td class="ops-content" data-label="品类 / 拍摄类型">'+staffSelect('product','品类',['',...new Set([...products,...(t.product?[t.product]:[])])])+staffSelect('type','拍摄类型',['',...new Set([...types,...(t.type?[t.type]:[])])])+'</td>'+
- '<td class="ops-requirement" data-label="运营要求与对标链接"><textarea aria-label="运营要求" form="'+formId+'" name="notes" placeholder="填写数量、脚本、道具、参考和核心拍摄要求">'+esc(t.notes)+'</textarea><textarea class="reference-editor" aria-label="参考链接，每行一个" form="'+formId+'" name="link" placeholder="参考链接，每行一个">'+esc(t.link)+'</textarea>'+
- referenceLinks(t)+
+ '<td class="ops-requirement" data-label="运营要求与对标链接"><textarea aria-label="运营要求" form="'+formId+'" name="notes" placeholder="填写数量、脚本、道具、参考和核心拍摄要求">'+esc(t.notes)+'</textarea><textarea class="reference-editor" aria-label="参考链接，每行一个" form="'+formId+'" name="link" placeholder="参考链接，每行一个；保存后可填写对标名称">'+esc(t.link)+'</textarea>'+
+ referenceLinks(t,false,formId)+
  '<div class="ops-actions"><form id="'+formId+'" data-row-form="'+esc(t.id)+'"><button class="primary">'+(t.id?'保存':'保存新安排')+'</button></form>'+(t.id?'<button type="button" data-delete="'+esc(t.id)+'">删除</button>':'<button type="button" data-cancel-row="'+index+'">取消</button>')+(safeLink(t.workOrder)?'<a target="_blank" rel="noopener noreferrer" href="'+esc(t.workOrder)+'">打开工单</a>':'')+overtime+'</div></td></tr>'+
  '<tr class="row-edit"><td colspan="6"><details><summary>工单与交付 · '+esc(t.status)+' · '+esc(t.title)+'</summary><div class="grid">'+detail.map(([label,field])=>'<label>'+label+field+'</label>').join('')+'</div>'+acceptanceEditor(t,formId)+'</details></td></tr>';
 }
