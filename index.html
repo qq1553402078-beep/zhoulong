@@ -1243,8 +1243,10 @@ function people(){
   event.preventDefault();
   const current=tasks.find(task=>task.id===form.dataset.dailyTask&&task.date===outputDay);
   if(!current)return;
-  const {shotBatch,target,completion,status,delivery,reason}=Object.fromEntries(new FormData(form));
-  const next={...current,actual:shotBatch===''?current.actual:Number(current.actual||0)+Number(shotBatch),lastShotBatch:shotBatch===''?current.lastShotBatch:Number(shotBatch),target:target===''?'':Number(target),shootingCompletion:completion,status,delivery,unfinishedReason:reason.trim()};
+  const {cumulative,shotBatch,target,completion,status,delivery,reason}=Object.fromEntries(new FormData(form));
+  const corrected=cumulative!==form.elements.cumulative.defaultValue;
+  const base=corrected?(cumulative===''?'':Number(cumulative)):current.actual;
+  const next={...current,actual:shotBatch===''?base:Number(base||0)+Number(shotBatch),lastShotBatch:shotBatch===''?current.lastShotBatch:Number(shotBatch),target:target===''?'':Number(target),shootingCompletion:completion,status,delivery,unfinishedReason:reason.trim()};
   const message=form.querySelector('[role="status"]');
   if(statuses.slice(3).includes(status)&&!delivery){message.textContent='请填写首次交付时间。';return}
   if(delivery&&!statuses.slice(3).includes(status)){message.textContent='已填写交付时间，请选择已交付或已验收。';return}
@@ -1514,7 +1516,7 @@ function dailyTaskReports(assignments){
   const crew=crewRoles.filter(([field])=>members(task[field]).length).map(([field,label])=>label+'：'+members(task[field]).join('、')).join(' · ');
   return '<form class="daily-task-report" data-daily-task="'+esc(task.id)+'"><h4>'+esc(task.title||task.product||'拍摄任务')+'</h4>'+
    '<p>'+esc(crew||'待安排人员')+'</p><p>计划 '+esc(task.target==null||task.target===''?'—':task.target)+' 条 · 条数完成度 '+progress+' · '+(shootingComplete(task)?'已完成':'未完成')+(task.lastShotBatch!=null?' · 上次新增 '+count(task.lastShotBatch)+' 条':'')+'</p>'+
-   '<div class="bar"><label>任务下发量（条）<input type="number" min="1" step="1" name="target" value="'+esc(task.target)+'"></label><label>累计拍摄量（条）<input type="number" value="'+esc(task.actual)+'" placeholder="暂无记录" readonly></label><label>本次拍摄量（条）<input type="number" min="0" step="1" name="shotBatch" placeholder="本次新增条数"></label>'+
+   '<div class="bar"><label>任务下发量（条）<input type="number" min="1" step="1" name="target" value="'+esc(task.target)+'"></label><label>累计拍摄量（条）<input type="number" min="0" step="1" name="cumulative" value="'+esc(task.actual)+'" placeholder="可直接修正累计量"></label><label>本次拍摄量（条）<input type="number" min="0" step="1" name="shotBatch" placeholder="本次新增条数"></label>'+
    '<label>拍摄完成状态<select name="completion">'+[['auto','自动按数量判断'],['complete','已完成'],['incomplete','未完成']].map(([value,label])=>'<option value="'+value+'"'+((task.shootingCompletion||'auto')===value?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
    '<label>交付阶段<select name="status">'+options(task.status==='已验收'?statuses:statuses.slice(0,4),task.status||statuses[0])+'</select></label>'+
    '<label>首次交付时间<input type="datetime-local" name="delivery" value="'+esc(task.delivery)+'"></label></div>'+
