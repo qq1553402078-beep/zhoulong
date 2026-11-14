@@ -180,6 +180,21 @@ main:not(.home-page) h1 {
 .report-section > summary { padding:13px 16px; font-size:16px; font-weight:700; cursor:pointer; }
 .report-section[open] > summary { border-bottom:1px solid var(--dash-border); }
 .report-section > .panel { margin:0; border:0; border-radius:0; }
+
+.rest-page .rest-scroll { overflow-x:auto; }
+.rest-scroll-hint { margin:0 0 8px; }
+.rest-page .rest-scroll .rest-grid { width:max-content; min-width:100%; border-collapse:separate; border-spacing:0; --rest-name-width:100px; }
+.rest-page .rest-scroll .rest-grid :is(th,td) { box-sizing:border-box; }
+.rest-page .rest-scroll .rest-grid :is(th,td):nth-child(-n+2) { position:sticky; z-index:1; background:var(--rest-group-bg,#292533); }
+.rest-page .rest-scroll .rest-grid :is(th,td):first-child { left:0; width:var(--rest-name-width); min-width:var(--rest-name-width); }
+.rest-page .rest-scroll .rest-grid :is(th,td):nth-child(2) { left:var(--rest-name-width); min-width:100px; box-shadow:2px 0 #15121b; }
+.rest-page .rest-scroll .rest-grid :is(th,td):nth-child(n+3) { width:116px; min-width:116px; padding-inline:7px; }
+.rest-page .rest-scroll .rest-grid .rest-date-focus { background:#3c3250; }
+.rest-date-focus small { color:#e2d0ff; white-space:nowrap; }
+@media(max-width:600px){
+ .rest-page .rest-scroll .rest-grid { --rest-name-width:76px; }
+ .rest-page .rest-scroll .rest-grid :is(th,td):nth-child(2) { min-width:76px; }
+}
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
@@ -333,7 +348,7 @@ const expandedGoalGroups=new Set();
 const dailyKey='studio-ops-daily-output-v1';
 const managementKey='studio-ops-management-v1';
 const restKey='studio-ops-rest-v1';
-let restWeek=weekOf(today());
+let restDateFocus=today();
 let restMonth=today().slice(0,7);
 function weekOf(date){return plusDay(date,-((new Date(date+'T00:00:00Z').getUTCDay()+6)%7))}
 function readRest(){try{return JSON.parse(localStorage.getItem(restKey)||'{}')||{}}catch{return {}}}
@@ -812,26 +827,40 @@ function restFilterBar(){
 }
 function restView(message=''){
  const values=readRest();
- const dates=Array.from({length:7},(_,i)=>plusDay(restWeek,i));
- const conflicts=tasks.filter(t=>dates.includes(t.date)&&[...roles,'handModel'].some(k=>members(t[k]).some(n=>resting(values,t.date,n))));
- main.innerHTML='<div class="eyebrow">ROSTER / 出勤与调休</div><h1>'+esc(settings.restTitle)+'</h1><p>按周安排人员出勤。休息和公休均会限制当天任务排班。同岗同日两人或以上休息时需要确认。</p>'+restFilterBar()+
- '<div class="bar"><button id="prevRest">上一周</button><label>查看日期<input id="pickRest" type="date" value="'+restWeek+'"></label><button id="nextRest">下一周</button><span class="spacer"></span><label>导入排班文件<input id="restFile" type="file" accept=".xls,.xlsx,.csv,.tsv"></label></div>'+
- '<div class="panel"><table class="rest-grid"><thead><tr><th>姓名</th><th>岗位</th>'+dates.map((d,i)=>'<th>'+d.slice(5)+' 周'+'一二三四五六日'[i]+'</th>').join('')+'</tr></thead><tbody>'+
+ const previousScroll=main.querySelector('.rest-scroll');
+ const scrollLeft=previousScroll?.dataset.focus===restDateFocus?previousScroll.scrollLeft:null;
+ const dates=Array.from({length:43},(_,i)=>plusDay(restDateFocus,i-14));
+ const conflicts=tasks.filter(t=>t.date>=plusDay(restDateFocus,-1)&&t.date<=plusDay(restDateFocus,7)&&[...roles,'handModel'].some(k=>members(t[k]).some(n=>resting(values,t.date,n))));
+ main.innerHTML='<div class="eyebrow">ROSTER / 出勤与调休</div><h1>'+esc(settings.restTitle)+'</h1><p>按日期查看和安排人员出勤。休息和公休均会限制当天任务排班。同岗同日两人或以上休息时需要确认。</p>'+restFilterBar()+
+ '<div class="bar"><button id="prevRest">上一周</button><label>查看日期<input id="pickRest" type="date" value="'+restDateFocus+'"></label><button id="nextRest">下一周</button><span class="spacer"></span><label>导入排班文件<input id="restFile" type="file" accept=".xls,.xlsx,.csv,.tsv"></label></div>'+
+ '<p class="rest-scroll-hint">左右滑动查看其他日期，姓名和岗位固定在左侧。</p>'+
+ '<div class="panel rest-scroll" tabindex="0" role="region" aria-label="可横向滑动的休息表" data-focus="'+restDateFocus+'"><table class="rest-grid"><thead><tr><th>姓名</th><th>岗位</th>'+dates.map(d=>{
+  const selected=d===restDateFocus;
+  return '<th scope="col" data-date-heading="'+d+'"'+(selected?' class="rest-date-focus"':'')+'>'+d.slice(5)+' 周'+'日一二三四五六'[new Date(d+'T00:00:00Z').getUTCDay()]+(selected?' <small>'+(d===today()?'今天':'所选')+'</small>':'')+'</th>';
+ }).join('')+'</tr></thead><tbody>'+
  visibleRestStaff().map(p=>'<tr'+restRowClass(p.role)+'><td>'+esc(p.name)+'</td><td>'+esc(restRoleLabel(p.role))+'</td>'+dates.map(d=>{
   const shift=values[d]?.[p.name]||'未安排';
-  return '<td data-shift="'+esc(shift)+'"><select aria-label="'+esc(p.name+' '+d)+'" data-rest-date="'+d+'" data-rest-name="'+esc(p.name)+'">'+['未安排','上班','加班','休','公休'].map(value=>'<option value="'+value+'" '+(value===shift?'selected':'')+'>'+(value==='休'?'休息':value)+'</option>').join('')+'</select></td>';
+  return '<td data-shift="'+esc(shift)+'"'+(d===restDateFocus?' class="rest-date-focus"':'')+'><select aria-label="'+esc(p.name+' '+d)+'" data-rest-date="'+d+'" data-rest-name="'+esc(p.name)+'">'+['未安排','上班','加班','休','公休'].map(value=>'<option value="'+value+'" '+(value===shift?'selected':'')+'>'+(value==='休'?'休息':value)+'</option>').join('')+'</select></td>';
  }).join('')+'</tr>').join('')+'</tbody></table></div>'+
- '<p role="status">'+esc(message)+'</p>'+(conflicts.length?'<p>本周已有 '+conflicts.length+' 条任务安排了休息人员，请到工作安排调整。'+conflicts.slice(0,5).map(t=>esc(t.date+' '+t.title)).join('、')+'</p>':'')+
+ '<p role="status">'+esc(message)+'</p>'+(conflicts.length?'<p>前一天至所选日后七天内已有 '+conflicts.length+' 条任务安排了休息人员，请到工作安排调整。'+conflicts.slice(0,5).map(t=>esc(t.date+' '+t.title)).join('、')+'</p>':'')+
  '<details class="panel ops-flow"><summary>从 WPS 或 Excel 复制粘贴</summary><p>复制包含「姓名」和日期表头的范围，粘贴后导入。「休」和「休息」记为休息，「加班」和「公休」按原班次导入，其他行政班次记为上班，空白跳过。</p><form id="restPaste"><textarea name="rows" required aria-label="粘贴排班表"></textarea><button class="primary">导入排班</button></form></details>'+restMonthlySummary(values);
  document.querySelectorAll('[data-rest-filter]').forEach(button=>button.onclick=()=>{
   restRoleFilter=button.dataset.restFilter;
   restView();
   document.querySelector('[data-rest-filter][aria-pressed="true"]')?.focus();
  });
- const showWeek=date=>{restWeek=weekOf(date);restMonth=date.slice(0,7);restView()};
- document.querySelector('#prevRest').onclick=()=>showWeek(plusDay(restWeek,-7));
- document.querySelector('#nextRest').onclick=()=>showWeek(plusDay(restWeek,7));
- document.querySelector('#pickRest').onchange=e=>{if(e.target.value)showWeek(e.target.value)};
+ const scroll=main.querySelector('.rest-scroll');
+ const firstDate=scroll.querySelector('[data-date-heading="'+plusDay(restDateFocus,-1)+'"]');
+ const roleHeading=scroll.querySelector('thead th:nth-child(2)');
+ scroll.scrollLeft=scrollLeft??(firstDate.getBoundingClientRect().left-roleHeading.getBoundingClientRect().right);
+ const showDate=date=>{
+  restDateFocus=date;
+  restMonth=date.slice(0,7);
+  restView();
+ };
+ document.querySelector('#prevRest').onclick=()=>showDate(plusDay(restDateFocus,-7));
+ document.querySelector('#nextRest').onclick=()=>showDate(plusDay(restDateFocus,7));
+ document.querySelector('#pickRest').onchange=e=>{if(e.target.value)showDate(e.target.value)};
  document.querySelector('#restMonth').onchange=e=>{
   if(e.target.value)restMonth=e.target.value;
   restView();
@@ -930,7 +959,7 @@ function applyRestImport(rows){
  if(!confirmRestConflicts(previous,values,importedDates))return;
  localStorage.setItem(restKey,JSON.stringify(values));
  const firstDate=importedDates.sort()[0];
- restWeek=weekOf(firstDate);
+ restDateFocus=firstDate;
  restMonth=firstDate.slice(0,7);
  restView('已导入 '+changes+' 个班次。'+(skipped.size?'未匹配姓名：'+[...skipped].join('、'):''));
 }
