@@ -24,7 +24,40 @@ body:has(.people-page){background:#071326;color:#edf4ff}body:has(.people-page) h
 </style><style>.schedule-dates,.date-options{display:flex;align-items:flex-start;flex-wrap:wrap;gap:8px}.schedule-dates{margin:0 0 18px}.date-options{margin-top:8px}.schedule-dates button,.schedule-dates summary{padding:9px 12px;border:1px solid #554362;border-radius:8px;background:#211c29;color:#efe7fa}.schedule-dates summary{cursor:pointer}.schedule-dates button[aria-pressed="true"]{outline:2px solid #d4b3ff;outline-offset:1px}.schedule-dates .date-today button{background:#d8c0ff;color:#21152e;border-color:#d8c0ff}</style>
 <link rel="stylesheet" href="./studio-theme.css">
 <link rel="stylesheet" href="./studio-editorial.css">
-<header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
+<style id="darkroom-motion">
+.home-page .cover-text h1,.home-page .section-heading h2 { text-shadow:0 -1px #0009,0 1px 1px #eee2; }
+.home-page .team-photo img,.home-page .team-photo:hover img { transform:none; }
+@media(prefers-reduced-motion:no-preference){
+  .home-page .cover-text h1 { animation:darkroom-title 2400ms ease-out both; }
+  .home-page .cover-text .eyebrow { animation:darkroom-print 1800ms ease-out 180ms both; }
+  .home-page .cover-photo img { animation:darkroom-breath 24s ease-in-out 600ms both; }
+  @supports(animation-timeline:view()){
+    .home-page .team-photo:not(:hover) img,.home-page .service-visual img {
+      animation:darkroom-develop ease-out both;
+      animation-timeline:view();
+      animation-range:entry 0% entry 85%;
+    }
+    .home-page .section-heading {
+      animation:darkroom-title linear both;
+      animation-timeline:view();
+      animation-range:entry 0% entry 90%;
+    }
+  }
+  @media(hover:hover){
+    .home-page .team-photo img { transition:filter 420ms ease; }
+    .home-page .team-photo:hover img { filter:brightness(1.045) contrast(1.015); }
+  }
+  .home-page :is(button,a):active { box-shadow:inset 0 1px #ffffff88; }
+}
+@keyframes darkroom-title { from{opacity:.48} to{opacity:1} }
+@keyframes darkroom-print { from{opacity:.55;transform:translateX(3px)} to{opacity:1;transform:none} }
+@keyframes darkroom-breath { 0%,100%{opacity:1} 45%{opacity:.88} }
+@keyframes darkroom-develop {
+  0%{filter:grayscale(.32) brightness(.68) contrast(.82) blur(1.4px)}
+  78%{filter:grayscale(.08) brightness(.93) contrast(.96) blur(.55px)}
+  100%{filter:none}
+}
+</style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
 const defaultRoster={
