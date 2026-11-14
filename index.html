@@ -89,7 +89,7 @@ main:not(.home-page) h1 {
 .rest-grid tr[class^="rest-group--"] > td:nth-child(-n+2),
 #restMonthly tr[class^="rest-group--"] > td:nth-child(-n+2) { color:var(--rest-group-color); }
 .rest-grid tr[class^="rest-group--"] > td[data-shift="休"] select { border-color:var(--rest-group-color); color:var(--rest-group-color); }
-.rest-group-legend span { color:var(--rest-group-color); background:var(--rest-group-bg); padding:.25em .65em; border-radius:4px; }
+.rest-group-legend button[class^="rest-group--"] { color:var(--rest-group-color); background:var(--rest-group-bg); padding:.25em .65em; border-radius:4px; }
 .schedule-field { --field-accent:#d5bbff; }
 .schedule-field--lead { --field-accent:#a7ceff; }
 .schedule-field--handModel { --field-accent:#ffd298; }
@@ -98,6 +98,9 @@ main:not(.home-page) h1 {
 .schedule-field-label { display:inline-block; margin-inline-end:.45em; color:var(--field-accent); font-size:12px; font-weight:750; }
 .schedule-field-value { color:#f5effc; font-size:14px; font-weight:650; overflow-wrap:anywhere; }
 .mobile-task .schedule-field dt { color:var(--field-accent); font-weight:750; }
+.rest-group-legend button[aria-pressed="true"] { outline:2px solid var(--rest-group-color,#eee); outline-offset:2px; font-weight:750; }
+.rest-grid td[data-shift="公休"] select { color:#c9b5ff; font-weight:700; }
+.rest-grid td[data-shift="加班"] select { color:#ffd298; font-weight:700; }
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
@@ -224,7 +227,9 @@ let restWeek=weekOf(today());
 let restMonth=today().slice(0,7);
 function weekOf(date){return plusDay(date,-((new Date(date+'T00:00:00Z').getUTCDay()+6)%7))}
 function readRest(){try{return JSON.parse(localStorage.getItem(restKey)||'{}')||{}}catch{return {}}}
-const resting=(roster,date,name)=>roster[date]?.[name]==='休';
+const isRestShift=shift=>shift==='休'||shift==='公休';
+const isWorkShift=shift=>shift==='上班'||shift==='加班';
+const resting=(roster,date,name)=>isRestShift(roster[date]?.[name]);
 function readDaily(){
  try{return JSON.parse(localStorage.getItem(dailyKey)||'{}')||{}}catch{return {}}
 }
@@ -271,8 +276,8 @@ function home(){
  const section=(title,body)=>'<article class="delivery-card"><h3>'+esc(title)+'</h3><p>'+esc(body)+'</p></article>';
  const dailyTasks=tasks.filter(t=>t.date===today());
  const availability=readRest()[today()]||{};
- const available=restStaff.filter(p=>availability[p.name]==='上班').length;
- const off=restStaff.filter(p=>availability[p.name]==='休').length;
+ const available=restStaff.filter(p=>isWorkShift(availability[p.name])).length;
+ const off=restStaff.filter(p=>isRestShift(availability[p.name])).length;
  const title=(number,label,en)=>'<div class="section-heading"><span class="section-index">'+number+' / '+en+'</span><h2>'+label+'</h2></div>';
  const lens='<svg class="lens-art" viewBox="0 0 320 320" aria-hidden="true"><circle cx="160" cy="160" r="144"/><circle cx="160" cy="160" r="113"/><circle cx="160" cy="160" r="70"/><path d="M160 0v43M160 277v43M0 160h43M277 160h43M160 47l98 57v112l-98 57-98-57V104zM160 90l61 35v70l-61 35-61-35v-70z"/><circle cx="160" cy="160" r="4"/></svg>';
  main.innerHTML='<section class="studio-cover"><div class="cover-heading"><div class="cover-text"><div class="eyebrow">'+esc(settings.brandLine)+' <span>'+esc(settings.brandSubtitle)+'</span></div><h1>'+esc(settings.homeTitle)+'</h1><p>'+esc(settings.intro)+'</p><div class="cover-actions"><button class="primary" id="openSchedule">'+esc(settings.scheduleButton)+' <span aria-hidden="true">↗</span></button><button id="openPeople">'+esc(settings.peopleButton)+' <span aria-hidden="true">→</span></button></div></div><div class="cover-art">'+lens+'<span>FOCUS ON<br>WHAT MATTERS.</span></div></div><figure class="cover-photo"><img src="'+esc(settings.photo||'./infinite-progress-original.jpg')+'" alt="无限进步 · 字标" fetchpriority="high" width="1200" height="675"><figcaption><span>保持热爱，无限进步。</span><span>KEEP CREATING / KEEP EVOLVING</span></figcaption></figure><div class="cover-foot"><span><i></i> 创作从这里开始</span><a href="#services">探索中台 ↓</a></div></section>'+
@@ -576,30 +581,43 @@ function confirmRestConflicts(previous, next, dates) {
  for (const date of new Set(dates)) {
   const byRole = new Map();
   for (const {name, role} of restStaff) {
-   if (next[date]?.[name] !== '休') continue;
+   if (!resting(next,date,name)) continue;
    if (!byRole.has(role)) byRole.set(role, new Set());
    byRole.get(role).add(name);
   }
   for (const [role, names] of byRole) {
-   if (names.size < 2 || [...names].every(name => previous[date]?.[name] === '休')) continue;
+   if (names.size < 2 || [...names].every(name => resting(previous,date,name))) continue;
    conflicts.push(date+' · '+restRoleLabel(role)+' · '+[...names].join('、')+' 休息');
   }
  }
  return !conflicts.length || window.confirm('同岗多人休息，请确认是否作为特殊安排继续保存。\n\n'+conflicts.join('\n'));
 }
+let restRoleFilter='';
+const restGroups=[['','全部'],['shooting','拍摄组'],['creative','创新组'],['model','模特']];
+const visibleRestStaff=()=>restStaff.filter(person=>!restRoleFilter||restGroup(person.role)===restRoleFilter);
+function restFilterBar(){
+ return '<div class="bar rest-group-legend" role="group" aria-label="按岗位筛选">'+restGroups.map(([role,label])=>
+  '<button type="button"'+(role?' class="rest-group--'+role+'"':'')+' data-rest-filter="'+role+'" aria-pressed="'+(role===restRoleFilter)+'">'+label+'</button>'
+ ).join('')+'</div>';
+}
 function restView(message=''){
  const values=readRest();
  const dates=Array.from({length:7},(_,i)=>plusDay(restWeek,i));
  const conflicts=tasks.filter(t=>dates.includes(t.date)&&[...roles,'handModel'].some(k=>members(t[k]).some(n=>resting(values,t.date,n))));
- main.innerHTML='<div class="eyebrow">ROSTER / 出勤与调休</div><h1>'+esc(settings.restTitle)+'</h1><p>按周安排人员出勤。设为「休」后，该日期的任务排班会标记并限制选择。同岗同日两人或以上休息时需要确认。</p><p class="bar rest-group-legend"><span class="rest-group--shooting">拍摄组</span><span class="rest-group--creative">创新组</span><span class="rest-group--model">模特</span></p>'+
+ main.innerHTML='<div class="eyebrow">ROSTER / 出勤与调休</div><h1>'+esc(settings.restTitle)+'</h1><p>按周安排人员出勤。休息和公休均会限制当天任务排班。同岗同日两人或以上休息时需要确认。</p>'+restFilterBar()+
  '<div class="bar"><button id="prevRest">上一周</button><label>查看日期<input id="pickRest" type="date" value="'+restWeek+'"></label><button id="nextRest">下一周</button><span class="spacer"></span><label>导入排班文件<input id="restFile" type="file" accept=".xlsx,.csv,.tsv"></label></div>'+
  '<div class="panel"><table class="rest-grid"><thead><tr><th>姓名</th><th>岗位</th>'+dates.map((d,i)=>'<th>'+d.slice(5)+' 周'+'一二三四五六日'[i]+'</th>').join('')+'</tr></thead><tbody>'+
- restStaff.map(p=>'<tr'+restRowClass(p.role)+'><td>'+esc(p.name)+'</td><td>'+esc(restRoleLabel(p.role))+'</td>'+dates.map(d=>{
+ visibleRestStaff().map(p=>'<tr'+restRowClass(p.role)+'><td>'+esc(p.name)+'</td><td>'+esc(restRoleLabel(p.role))+'</td>'+dates.map(d=>{
   const shift=values[d]?.[p.name]||'未安排';
-  return '<td data-shift="'+esc(shift)+'"><select aria-label="'+esc(p.name+' '+d)+'" data-rest-date="'+d+'" data-rest-name="'+esc(p.name)+'">'+['未安排','上班','休'].map(value=>'<option value="'+value+'" '+(value===shift?'selected':'')+'>'+(value==='休'?'休息':value)+'</option>').join('')+'</select></td>';
+  return '<td data-shift="'+esc(shift)+'"><select aria-label="'+esc(p.name+' '+d)+'" data-rest-date="'+d+'" data-rest-name="'+esc(p.name)+'">'+['未安排','上班','加班','休','公休'].map(value=>'<option value="'+value+'" '+(value===shift?'selected':'')+'>'+(value==='休'?'休息':value)+'</option>').join('')+'</select></td>';
  }).join('')+'</tr>').join('')+'</tbody></table></div>'+
  '<p role="status">'+esc(message)+'</p>'+(conflicts.length?'<p>本周已有 '+conflicts.length+' 条任务安排了休息人员，请到工作安排调整。'+conflicts.slice(0,5).map(t=>esc(t.date+' '+t.title)).join('、')+'</p>':'')+
- '<details class="panel ops-flow"><summary>从 WPS 或 Excel 复制粘贴</summary><p>复制包含「姓名」和日期表头的范围，粘贴后导入。「休」和「休息」记为休息，行政班次记为上班，空白跳过。</p><form id="restPaste"><textarea name="rows" required aria-label="粘贴排班表"></textarea><button class="primary">导入排班</button></form></details>'+restMonthlySummary(values);
+ '<details class="panel ops-flow"><summary>从 WPS 或 Excel 复制粘贴</summary><p>复制包含「姓名」和日期表头的范围，粘贴后导入。「休」和「休息」记为休息，「加班」和「公休」按原班次导入，其他行政班次记为上班，空白跳过。</p><form id="restPaste"><textarea name="rows" required aria-label="粘贴排班表"></textarea><button class="primary">导入排班</button></form></details>'+restMonthlySummary(values);
+ document.querySelectorAll('[data-rest-filter]').forEach(button=>button.onclick=()=>{
+  restRoleFilter=button.dataset.restFilter;
+  restView();
+  document.querySelector('[data-rest-filter="'+restRoleFilter+'"]').focus();
+ });
  const showWeek=date=>{restWeek=weekOf(date);restMonth=date.slice(0,7);restView()};
  document.querySelector('#prevRest').onclick=()=>showWeek(plusDay(restWeek,-7));
  document.querySelector('#nextRest').onclick=()=>showWeek(plusDay(restWeek,7));
@@ -628,6 +646,7 @@ function restView(message=''){
  document.querySelector('#restFile').onchange=async e=>{
   const file=e.target.files[0];
   if(!file)return;
+  e.target.value='';
   try{applyRestImport(file.name.toLowerCase().endsWith('.xlsx')?await readRestXlsx(await file.arrayBuffer()):parseDelimited(await file.text()))}catch(error){alert(error.message);e.target.value=''}
  };
 }
@@ -636,15 +655,17 @@ function restMonthlySummary(values){
  const dayCount=new Date(Date.UTC(year,month,0)).getUTCDate();
  const dates=Array.from({length:dayCount},(_,i)=>restMonth+'-'+String(i+1).padStart(2,'0'));
  const quota=dates.filter(date=>new Date(date+'T00:00:00Z').getUTCDay()===0).length;
- const rows=restStaff.map(person=>{
+ const rows=visibleRestStaff().map(person=>{
   const shifts=dates.map(date=>values[date]?.[person.name]);
-  const work=shifts.filter(shift=>shift==='上班').length;
-  const rest=shifts.filter(shift=>shift==='休').length;
+  const work=shifts.filter(isWorkShift).length;
+  const overtime=shifts.filter(shift=>shift==='加班').length;
+  const publicRest=shifts.filter(shift=>shift==='公休').length;
+  const rest=shifts.filter(isRestShift).length;
   const balance=quota-rest;
   const remaining=balance<0?'超排 '+Math.abs(balance)+' 天':balance+' 天';
-  return '<tr'+restRowClass(person.role)+'><td>'+esc(person.name)+'</td><td>'+esc(restRoleLabel(person.role))+'</td><td>'+work+'</td><td>'+rest+'</td><td>'+quota+'</td><td><strong>'+remaining+'</strong></td><td>'+(dayCount-work-rest)+'</td></tr>';
+  return '<tr'+restRowClass(person.role)+'><td>'+esc(person.name)+'</td><td>'+esc(restRoleLabel(person.role))+'</td><td>'+work+'</td><td>'+overtime+'</td><td>'+rest+'</td><td>'+publicRest+'</td><td>'+quota+'</td><td><strong>'+remaining+'</strong></td><td>'+(dayCount-work-rest)+'</td></tr>';
  }).join('');
- return '<section class="panel month-actuals" id="restMonthly"><div class="report-meta"><h2>月度班休汇总</h2><div class="bar"><label>统计月份<input type="month" id="restMonth" value="'+esc(restMonth)+'"></label><strong>当月 '+quota+' 个周日 · 每人应休 '+quota+' 天</strong></div><p>按排班表已填写的班次统计。休息可排在任意日期，剩余可排休＝当月应休天数减去已排休天数。</p></div><table class="report"><thead><tr><th>姓名</th><th>岗位</th><th>已排上班（天）</th><th>已排休息（天）</th><th>应休（天）</th><th>剩余可排休</th><th>未安排（天）</th></tr></thead><tbody>'+rows+'</tbody></table></section>';
+ return '<section class="panel month-actuals" id="restMonthly"><div class="report-meta"><h2>月度班休汇总</h2><div class="bar"><label>统计月份<input type="month" id="restMonth" value="'+esc(restMonth)+'"></label><strong>当月 '+quota+' 个周日 · 每人应休 '+quota+' 天</strong></div><p>按排班表已填写的班次统计。加班计入出勤，公休计入已休。剩余可排休＝当月应休天数减去已休天数。</p></div><table class="report"><thead><tr><th>姓名</th><th>岗位</th><th>出勤（天）</th><th>其中加班</th><th>休息（天）</th><th>其中公休</th><th>应休（天）</th><th>剩余可排休</th><th>未安排（天）</th></tr></thead><tbody>'+rows+'</tbody></table></section>';
 }
 function parseDelimited(text){
  const separator=text.includes('\t')?'\t':',';
@@ -686,7 +707,7 @@ function applyRestImport(rows){
    const value=String(row[col]||'').trim();
    if(!date||!value) return;
    const day=values[date]??={};
-   if(value==='清空'||value==='未安排')delete day[name];else day[name]=/^(休|休息|调休)$/.test(value)?'休':'上班';
+   if(value==='清空'||value==='未安排')delete day[name];else day[name]=/^(休|休息|调休)$/.test(value)?'休':['加班','公休'].includes(value)?value:'上班';
    importedDates.push(date);changes++;
   });
  }
