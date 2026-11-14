@@ -141,6 +141,7 @@ main:not(.home-page) h1 {
 .model-profile-heading h3 { margin:0; font:500 clamp(32px,5vw,68px)/1.12 "Songti SC",SimSun,serif; }
 .model-signature { color:#e8c893; font:italic 500 clamp(26px,4vw,60px)/1.15 "Segoe Script","Brush Script MT",cursive; }
 .reference-fold { margin-block:8px; }
+.reference-label-row .reference-remove { padding:4px 7px; font-size:12px; white-space:nowrap; }
 .reference-fold > summary { cursor:pointer; color:#d9caf2; font-size:13px; padding-block:4px; }
 .reference-fold:not([open]) .reference-collapse,.reference-fold[open] .reference-expand { display:none; }
 @media(min-width:621px){
@@ -241,8 +242,9 @@ const plusDay=(date,n)=>new Date(Date.parse(date+'T00:00:00Z')+n*86400000).toISO
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const options=(items,val)=>items.map(v=>'<option '+(v===val?'selected':'')+'>'+esc(v)+'</option>').join('');
 const safeLink=v=>{try{return /^https?:$/.test(new URL(v).protocol)?v:''}catch{return ''}};
-function referenceLinks(task,compact=false,formId=""){
- const links=[...new Set(([task.link,task.notes].join('\n').match(/https?:\/\/[^\s<>，。；、）】]+/g)||[]).filter(safeLink))];
+const referenceUrlPattern=/https?:\/\/[^\s<>，。；、）】]+/g;
+function referenceLinks(task,compact=false,editable=false){
+ const links=[...new Set(([task.link,task.notes].join('\n').match(referenceUrlPattern)||[]).filter(safeLink))];
  if(!links.length)return '';
  return '<div class="reference-links">'+links.map((url,index)=>{
   const host=new URL(url).hostname.toLowerCase();
@@ -251,15 +253,15 @@ function referenceLinks(task,compact=false,formId=""){
   const name=task.referenceNames?.[url]||'';
   const label=name||((platform?platform+'对标':'打开对标')+(links.length>1?' '+(index+1):''));
   const href=' href="'+esc(url)+'" target="_blank" rel="noopener noreferrer"';
-  const input=formId?'<input class="reference-name" form="'+formId+'" name="referenceName:'+esc(url)+'" aria-label="对标 '+(index+1)+' 的名称" placeholder="填写对标名称" maxlength="100" value="'+esc(name)+'">':'';
-  return '<div class="reference-item"><div class="reference-label-row"><a class="reference-jump"'+href+' title="'+esc(url)+'">'+esc(label)+' ↗</a>'+input+'</div>'+(compact?'':'<a class="reference-address"'+href+'>'+esc(url)+'</a>')+'</div>';
+  const remove=editable?'<button type="button" class="reference-remove" data-reference-remove="'+esc(url)+'" aria-label="删除对标链接：'+esc(label)+'">删除链接</button>':'';
+  return '<div class="reference-item"><div class="reference-label-row"><a class="reference-jump"'+href+' title="'+esc(url)+'">'+esc(label)+' ↗</a>'+remove+'</div>'+(compact?'':'<a class="reference-address"'+href+'>'+esc(url)+'</a>')+'</div>';
  }).join('')+'</div>';
 }
 function referenceEditorRow(formId,url='',name=''){
  return '<div class="reference-label-row"><input aria-label="对标名称" placeholder="对标名称" maxlength="100" form="'+formId+'" name="referenceTitle" value="'+esc(name)+'"><input aria-label="对标链接" placeholder="https://…" form="'+formId+'" name="referenceUrl" value="'+esc(url)+'"><button type="button" onclick="this.parentElement.remove()" aria-label="移除此对标">移除</button></div>';
 }
 function referenceEditor(task,formId){
- const urls=[...new Set((String(task.link||'').match(/https?:\/\/[^\s<>，。；、）】]+/g)||[]).filter(safeLink))];
+ const urls=[...new Set((String(task.link||'').match(referenceUrlPattern)||[]).filter(safeLink))];
  return '<details class="reference-fold"><summary><span class="reference-expand">编辑对标链接</span><span class="reference-collapse">收起对标编辑</span></summary><div class="reference-editor"><div>'+ (urls.length?urls:['']).map(url=>referenceEditorRow(formId,url,task.referenceNames?.[url])).join('')+
  '</div><button type="button" data-reference-add="'+formId+'">＋ 添加对标链接</button></div></details>';
 }
@@ -572,6 +574,19 @@ function schedule(){
   rows.insertAdjacentHTML('beforeend',referenceEditorRow(button.dataset.referenceAdd));
   rows.lastElementChild.querySelector('input').focus();
  });
+ document.querySelectorAll('[data-reference-remove]').forEach(button=>button.onclick=()=>{
+  const url=button.dataset.referenceRemove;
+  const cell=button.closest('.ops-requirement');
+  for(const input of cell.querySelectorAll('[name="referenceUrl"]')){
+   if(input.value.trim()===url)input.parentElement.remove();
+  }
+  const notes=cell.querySelector('[name="notes"]');
+  notes.value=notes.value.replace(referenceUrlPattern,match=>match===url?'':match);
+  const preview=button.closest('.reference-links');
+  button.closest('.reference-item').remove();
+  if(!preview.querySelector('.reference-item'))preview.remove();
+  cell.querySelector('[data-row-form] button').focus();
+ });
  document.querySelector('#undoSchedule').onclick=undoSchedule;
  document.querySelector('#addRow').onclick=()=>{rememberDraftRows();const index=--draftSequence;draftRows.set(index,newTask);mobileEditing=true;render();document.getElementById('task-row-'+index)?.closest('tr')?.scrollIntoView({block:'nearest'})};
  document.querySelector('#toggleTools').onclick=()=>{scheduleToolsOpen=!scheduleToolsOpen;render()};
@@ -715,7 +730,7 @@ function taskRow(t,index){
  return '<tr data-task-id="'+esc(t.id)+'"'+(!t.id?' class="new-task"':savedTask?.id===t.id?' data-saved-row style="outline:2px solid #e0bd70;outline-offset:-2px"':'')+'><td class="ops-date" data-label="日期">'+input('date','排班日期','date','required')+'</td>'+
  '<td data-label="摄影师">'+staffSelect('lead','摄影师',roleNames.lead)+'</td><td data-label="手模">'+staffSelect('handModel','手模',roleNames.model)+'</td><td data-label="模特">'+staffSelect('model','模特',roleNames.model)+'</td>'+
  '<td class="ops-content" data-label="品类 / 拍摄类型">'+staffSelect('product','品类',['',...new Set([...products,...(t.product?[t.product]:[])])])+staffSelect('type','拍摄类型',['',...new Set([...types,...(t.type?[t.type]:[])])])+'</td>'+
- '<td class="ops-requirement" data-label="运营要求与对标链接"><textarea aria-label="运营要求" form="'+formId+'" name="notes" placeholder="填写数量、脚本、道具、参考和核心拍摄要求">'+esc(t.notes)+'</textarea>'+referenceEditor(t,formId)+referenceLinks(t,true)+
+ '<td class="ops-requirement" data-label="运营要求与对标链接"><textarea aria-label="运营要求" form="'+formId+'" name="notes" placeholder="填写数量、脚本、道具、参考和核心拍摄要求">'+esc(t.notes)+'</textarea>'+referenceEditor(t,formId)+referenceLinks(t,true,true)+
  '<div class="ops-actions"><form id="'+formId+'" data-row-form="'+esc(t.id)+'"><button class="primary">'+(t.id?'保存':'保存新安排')+'</button></form>'+(t.id?'<button type="button" data-delete="'+esc(t.id)+'">删除</button>':'<button type="button" data-cancel-row="'+index+'">取消</button>')+(safeLink(t.workOrder)?'<a target="_blank" rel="noopener noreferrer" href="'+esc(t.workOrder)+'">打开工单</a>':'')+overtime+'</div></td></tr>'+
  '<tr class="row-edit"><td colspan="6"><details><summary>工单与交付 · '+esc(t.status)+' · '+esc(t.title)+'</summary><div class="grid">'+detail.map(([label,field])=>'<label>'+label+field+'</label>').join('')+'</div>'+acceptanceEditor(t,formId)+'</details></td></tr>';
 }
