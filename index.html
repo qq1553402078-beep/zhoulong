@@ -160,14 +160,24 @@ main:not(.home-page) h1 {
 @media(max-width:650px){.roadmap-grid { grid-template-columns:1fr; gap:16px; }}
 .model-profile[data-profile="钱小蝶"] .model-portfolio-photos figure:first-child img { width:100%; height:auto; aspect-ratio:9/14; object-fit:cover; object-position:44% 69%; }
  .home-page > section,.home-page > .workspace-shortcuts { scroll-margin-top:110px; }
-.home-directory { display:flex; flex-wrap:wrap; align-items:center; gap:5px; padding:10px; margin:0 0 14px; border:1px solid #ffffff24; background:#171419; color:#eee3f4; }
-.home-directory strong { font-size:13px; margin:0 6px; }
+.home-directory { position:fixed; z-index:8; left:12px; top:25vh; width:140px; max-height:65vh; overflow:auto; border:1px solid #ffffff24; border-radius:10px; background:#171419; color:#eee3f4; }
+.home-directory summary { padding:11px; font-size:13px; font-weight:700; cursor:pointer; }
+.home-directory nav { display:grid; gap:2px; padding:0 7px 7px; }
 .home-directory button { background:transparent; border:1px solid transparent; color:#ded1e7; padding:7px; text-align:left; font-size:12px; }
 .home-directory button:hover,.home-directory button:focus-visible { background:#382b42; border-color:#a88fb7; }
-@media(min-width:1700px){
- .home-directory { position:fixed; z-index:5; left:12px; top:25vh; width:142px; display:grid; max-height:65vh; overflow:auto; }
- .home-directory strong { padding:5px 0; }
+@media(min-width:1050px){.home-page { padding-left:max(4%, calc(168px - max(0px, (100vw - 1520px) / 2))); }}
+@media(max-width:1049px){
+ .home-directory { left:6px; max-height:62vh; }
+ .home-directory:not([open]) { width:auto; }
+ .home-directory:not([open]) summary { padding:8px 4px; writing-mode:vertical-rl; list-style:none; }
 }
+.dashboard-title .dashboard-month { display:inline-flex; align-items:center; gap:9px; }
+.dashboard-month input,.daily-date input { width:auto; }
+.daily-date { display:inline-flex; align-items:center; gap:9px; }
+.people-page .report-section { margin:14px 0; scroll-margin-top:110px; }
+.report-section > summary { padding:13px 16px; font-size:16px; font-weight:700; cursor:pointer; }
+.report-section[open] > summary { border-bottom:1px solid var(--dash-border); }
+.report-section > .panel { margin:0; border:0; border-radius:0; }
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
@@ -311,7 +321,7 @@ function rememberDraftRows(){
 let mobileEditing=false;
 let scheduleToolsOpen=false;
 let outputDay=day;
-let chartPeriod=0;
+let chartPeriod=2;
 let mixPhotographer='',mixBasis='tasks';
 const expandedGoalGroups=new Set();
 const dailyKey='studio-ops-daily-output-v1';
@@ -377,7 +387,7 @@ function render(){
  main.dispatchEvent(new Event('studio-home-leave'));
  document.querySelector('#siteTitle').textContent=settings.title;
  document.title=settings.title;
- for(const button of document.querySelectorAll('nav button')){
+ for(const button of document.querySelectorAll('nav button[data-tab]')){
   const route=button.dataset.tab;
   button.textContent=settings['nav'+route[0].toUpperCase()+route.slice(1)];
  }
@@ -387,7 +397,7 @@ function render(){
   footerLabels[1].textContent=settings.footerText;
  }
  main.className=tab==='schedule'?'schedule-page'+(mobileEditing?' mobile-editing':''):tab+'-page';
- document.querySelectorAll('nav button').forEach(b=>{const active=b.dataset.tab===tab;b.classList.toggle('active',active);b.setAttribute('aria-current',active?'page':'false')});
+ document.querySelectorAll('nav button[data-tab]').forEach(b=>{const active=b.dataset.tab===tab;b.classList.toggle('active',active);b.setAttribute('aria-current',active?'page':'false')});
  if(tab==='home') home();
  if(tab==='schedule') schedule();
  if(tab==='rest') restView();
@@ -397,7 +407,7 @@ function render(){
 }
 function home(){
  const sections=[['studio-cover','部门首页'],['workspace-shortcuts','工作入口'],['home-products',settings.productsTitle],['service-section',settings.shootingTitle],['delivery-section',settings.deliveryTitle],['org-section',settings.orgTitle],['growth-roadmaps','团队成长路线图'],['team-journal',settings.galleryTitle],['model-portfolio','模特档案']];
- const directory='<aside class="home-directory" aria-label="首页快捷目录"><strong>快捷目录</strong>'+sections.map(([target,label])=>'<button type="button" data-home-section="'+target+'">'+esc(label)+'</button>').join('')+'</aside>';
+ const directory='<details class="home-directory"'+(matchMedia('(min-width:1050px)').matches?' open':'')+'><summary>快捷目录</summary><nav aria-label="首页快捷目录">'+sections.map(([target,label])=>'<button type="button" data-home-section="'+target+'">'+esc(label)+'</button>').join('')+'</nav></details>';
 
  const shooting=labelledLines(settings.shooting);
  const section=(title,body)=>'<article class="delivery-card"><h3>'+esc(title)+'</h3><p>'+esc(body)+'</p></article>';
@@ -416,6 +426,7 @@ function home(){
  main.querySelectorAll('[data-home-section]').forEach(button=>button.onclick=()=>{
   const section=main.querySelector('.'+button.dataset.homeSection);
   if(!section)return;
+  if(matchMedia('(max-width:1049px)').matches)button.closest('details').open=false;
   section.tabIndex=-1;
   section.focus({preventScroll:true});
   section.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
@@ -930,7 +941,17 @@ async function readRestXlsx(buffer){
  }
  throw Error('工作簿中没有找到含「姓名」和日期的排班表。');
 }
+const reportSectionsKey='studio-ops-report-sections-v1';
 function people(){
+ let collapsed={};
+ try{collapsed=JSON.parse(localStorage.getItem(reportSectionsKey)||'{}')||{}}catch{}
+ const panel=(id,title,body,defaultOpen=true)=>'<details class="panel report-section" id="'+id+'" data-report-section'+
+  ((collapsed[id]??defaultOpen)?' open':'')+'><summary>'+title+'</summary>'+body+'</details>';
+ if(!outputDay.startsWith(month))outputDay=month===today().slice(0,7)?today():month+'-01';
+ const monthStart=month+'-01';
+ const nextMonth=new Date(monthStart+'T00:00:00Z');
+ nextMonth.setUTCMonth(nextMonth.getUTCMonth()+1);
+ const monthEnd=plusDay(nextMonth.toISOString().slice(0,10),-1);
  const recordsInMonth=t=>acceptanceRecords(t).filter(record=>!month||record.date.startsWith(month));
  const rows=tasks.filter(t=>recordsInMonth(t).length);
  const scheduled=tasks.filter(t=>!month||t.date.startsWith(month));
@@ -947,10 +968,12 @@ function people(){
   const recorded=tasks.filter(t=>t.date>=from&&t.date<=to&&participates(t,name)&&!filledDays.has(t.date)&&t.actual!=null&&t.actual!=='');
   return recorded.length||dayTotals.length?sum(recorded,'actual')+dayTotals.reduce((total,[,values])=>total+Number(values[name]),0):'—';
  };
- const weekStart=plusDay(outputDay,-((new Date(outputDay+'T00:00:00Z').getUTCDay()+6)%7));
- const weekEnd=plusDay(weekStart,6);
- const outputMonth=outputDay.slice(0,7);
- const outputRows=staff.map(p=>[p.name,p.role,production(p.name,outputDay,outputDay),production(p.name,weekStart,weekEnd),monthly[outputMonth]?.[p.name]??production(p.name,outputMonth+'-01',outputMonth+'-31')]);
+ const monday=weekOf(outputDay);
+ const sunday=plusDay(monday,6);
+ const weekStart=monday<monthStart?monthStart:monday;
+ const weekEnd=sunday>monthEnd?monthEnd:sunday;
+ const outputMonth=month;
+ const outputRows=staff.map(p=>[p.name,p.role,production(p.name,outputDay,outputDay),production(p.name,weekStart,weekEnd),monthly[outputMonth]?.[p.name]??production(p.name,monthStart,monthEnd)]);
  const outputCell=x=>esc(typeof x==='number'?count(x):x);
  const pct=(n,d)=>d?(100*n/d).toFixed(1)+'%':'—';
  const report=groups.map(p=>{
@@ -960,19 +983,21 @@ function people(){
   const onTime=timed.filter(t=>t.delivery<=t.due).length;
   const receipts=work.flatMap(recordsInMonth);
   const accepted=sum(receipts,'quantity');
-  const actual=monthly[month]?.[p.name]??production(p.name,month+'-01',month+'-31');
+  const actual=monthly[month]?.[p.name]??production(p.name,monthStart,monthEnd);
   return [p.name,p.role,assignmentTotal(assigned),actual,sum(receipts,'times'),accepted,timed.length,pct(onTime,timed.length)];
  });
- main.innerHTML='<section class="dashboard-title"><div class="eyebrow">STUDIO INTELLIGENCE / 人效分析</div><time>'+esc(outputMonth.replace('-',' 年 '))+' 月</time><h1>'+esc(settings.peopleTitle)+'</h1></section>'+managementView(outputMonth,outputRows)+
- '<section class="panel month-actuals" id="personalOutput"><div class="report-meta"><h2>个人产出总览</h2><div class="bar"><label>查看与填报日期<input id="outputDay" type="date" value="'+outputDay+'"></label><a href="#dailyOutput">填写当天产出</a></div><p>'+esc(outputDay)+' 当日 · '+weekStart+' 至 '+weekEnd+' 本周 · '+outputMonth+' 本月</p></div><div id="outputChart" class="output-chart"></div><table class="report"><thead><tr><th>姓名</th><th>岗位</th><th>日产出（条）</th><th>周产出（条）</th><th>月产出（条）</th></tr></thead><tbody>'+
- outputRows.map(row=>'<tr>'+row.map(x=>'<td>'+outputCell(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table><div class="report-meta"><small>周一至周日为一周。月度补录只覆盖月产出。</small></div></section>'+
- '<section class="panel month-actuals"><div class="report-meta"><h2>团队实际拍摄量</h2><p>团队月度汇总 · 依据已提供的 9 月、10 月拍摄记录</p></div><table><thead><tr><th>月份</th><th>实际拍摄（条）</th><th>环比增量（条）</th><th>环比增幅</th></tr></thead><tbody><tr><td>9 月</td><td>16,771</td><td>—</td><td>—</td></tr><tr><td>10 月</td><td>17,266</td><td>+495</td><td>+2.95%</td></tr></tbody></table><div class="report-meta"><small>原记录另列基础组 16,771 条、创新组 19 个视频，月份及是否计入总量待核对。团队工时和历史个人明细待补录。</small></div></section>'+
- dailyOutput(daily)+groupOutput()+'<h2 class="home-title">个人人效月报</h2><p>工作安排保存后自动累计接单次数。验收按各批日期归月，每日拍摄条数汇入对应月份。</p>'+
- '<div class="bar"><label>统计月份<input id="month" type="month" value="'+month+'"></label><label>人员<select id="person">'+options(['全部人员',...staff.map(p=>p.name)],person||'全部人员')+'</select></label><span class="spacer"></span><button id="exportReport" class="primary">导出月报 CSV</button></div>'+
+ main.innerHTML='<section class="dashboard-title"><div class="eyebrow">STUDIO INTELLIGENCE / 人效分析</div><label class="dashboard-month">统计月份<input id="managementMonth" type="month" required value="'+esc(month)+'"></label><h1>'+esc(settings.peopleTitle)+'</h1></section>'+panel('teamOverview','团队月度总览',managementView(outputMonth,outputRows))+
+ panel('personalOutput','个人产出总览','<div class="report-meta"><div class="bar"><span>填报日期 '+esc(outputDay)+'</span><a href="#dailyOutput" data-report-jump>填写当天产出</a></div><p>'+esc(outputDay)+' 当日 · '+weekStart+' 至 '+weekEnd+' 本周 · '+outputMonth+' 本月</p></div><div id="outputChart" class="output-chart"></div><table class="report"><thead><tr><th>姓名</th><th>岗位</th><th>日产出（条）</th><th>周产出（条）</th><th>月产出（条）</th></tr></thead><tbody>'+
+ outputRows.map(row=>'<tr>'+row.map(x=>'<td>'+outputCell(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table><div class="report-meta"><small>周产出统计所选月份内的周一至周日。月度补录只覆盖月产出。</small></div>')+
+ panel('teamActuals','团队实际拍摄量',teamActuals(month),false)+
+ panel('dailyOutput','每日拍摄条数 · '+outputDay,dailyOutput(daily,monthStart,monthEnd))+
+ panel('originalGroups','原始组别人均产出',groupOutput(),false)+
+ panel('personalReport','个人人效月报','<div class="report-meta"><p>工作安排保存后自动累计接单次数。验收按各批日期归月，每日拍摄条数汇入对应月份。</p>'+
+ '<div class="bar"><label>人员<select id="person">'+options(['全部人员',...staff.map(p=>p.name)],person||'全部人员')+'</select></label><span class="spacer"></span><button id="exportReport" class="primary">导出月报 CSV</button></div></div>'+
  '<div class="panel"><div class="report-meta"><strong>'+esc(month||'全部月份')+' · '+esc(person||'全员')+'</strong></div><table class="report"><thead><tr>'+columns.map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+
- report.map(row=>'<tr>'+row.map(x=>'<td>'+esc(typeof x==='number'?count(x):x)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>'+
- (month?'<details class="panel ops-flow"><summary>按月补录个人实际拍摄条数</summary><form id="monthlyOutput" class="bar"><label>人员<select name="name">'+options(staff.map(p=>p.name),person)+'</select></label><label>本月总条数<input name="total" type="number" min="0" step="1" placeholder="留空恢复每日汇总"></label><button class="primary">保存月度总数</button></form><p>填写月度总数后，月报采用该人员的月度总数。留空保存可恢复每日任务汇总。</p></details>':'')+
- '<h2 class="home-title">人效计算公式</h2><div class="panel formulas"><table><thead><tr><th>指标</th><th>计算公式</th><th>统计口径</th></tr></thead><tbody>'+
+ report.map(row=>'<tr>'+row.map(x=>'<td>'+esc(typeof x==='number'?count(x):x)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>')+
+ panel('monthlyBackfill','按月补录个人实际拍摄条数','<form id="monthlyOutput" class="bar"><label>人员<select name="name">'+options(staff.map(p=>p.name),person)+'</select></label><label>本月总条数<input name="total" type="number" min="0" step="1" placeholder="留空恢复每日汇总"></label><button class="primary">保存月度总数</button></form><p>填写月度总数后，月报采用该人员的月度总数。留空保存可恢复每日任务汇总。</p>',false)+
+ panel('reportFormulas','人效计算公式','<div class="formulas"><table><thead><tr><th>指标</th><th>计算公式</th><th>统计口径</th></tr></thead><tbody>'+
  [
   ['接单次数','本人参与任务的接单次数相加','按排班日期归月；同一人、同一任务可累计多次，以填写的实际接单次数为准。'],
   ['实际拍摄条数','每日实际拍摄条数相加','同一天优先使用个人填报总数，其余日期用任务条数汇总。有手工月度总数时采用月度总数。'],
@@ -980,14 +1005,29 @@ function people(){
   ['验收条数','本人参与的各批次验收条数之和','按每批验收日期归月；同一任务可多次追加。每批条数是该批实际条数，不再乘以验收次数。'],
   ['已交付任务数','统计本人参与且已记录首次交付和承诺时间的任务数','按首次交付日期归月。'],
   ['准时交付率','首次交付不晚于承诺时间的任务数 ÷ 已交付任务数 × 100%','按首次交付日期归月，没有已交付任务时显示「—」。']
- ].map(row=>'<tr>'+row.map(x=>'<td>'+esc(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+ ].map(row=>'<tr>'+row.map(x=>'<td>'+esc(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>',false);
+ main.querySelectorAll('[data-report-section], .management details').forEach(section=>{
+  const key=section.id;
+  if(key in collapsed)section.open=collapsed[key];
+  section.ontoggle=()=>{
+   if(!section.isConnected)return;
+   collapsed[key]=section.open;
+   try{localStorage.setItem(reportSectionsKey,JSON.stringify(collapsed))}catch{}
+  };
+ });
+ main.querySelectorAll('[data-report-jump]').forEach(link=>link.onclick=event=>{
+  event.preventDefault();
+  const section=document.getElementById(link.hash.slice(1));
+  section.open=true;
+  section.scrollIntoView({block:'start'});
+  section.querySelector('summary').focus({preventScroll:true});
+ });
  document.querySelector('#exportReport').onclick=()=>{
   const csv=[['统计月份',...columns],...report.map(row=>[month||'全部月份',...row])].map(row=>row.map(value=>'"'+String(value).replaceAll('"','""')+'"').join(',')).join('\r\n');
   const url=URL.createObjectURL(new Blob(['\ufeff',csv],{type:'text/csv;charset=utf-8'}));
   const a=document.createElement('a');a.href=url;a.download='中台个人人效月报-'+(month||'全部月份')+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  };
- document.querySelector('#month').onchange=e=>{month=e.target.value||today().slice(0,7);render()};
- document.querySelector('#outputDay').onchange=e=>{outputDay=e.target.value||today();month=outputDay.slice(0,7);render()};
+ document.querySelector('#outputDay').onchange=e=>{if(e.target.validity.valid&&e.target.value)outputDay=e.target.value;render()};
  renderOutputChart(outputRows);
  bindManagement(outputMonth);
  const dailyForm=document.querySelector('#dailyForm');
@@ -997,7 +1037,7 @@ function people(){
   for(const [name,value] of new FormData(dailyForm)){
    if(value==='')delete totals[name];else totals[name]=Number(value);
   }
-  try{localStorage.setItem(dailyKey,JSON.stringify(daily));month=outputDay.slice(0,7);render();document.querySelector('#dailyStatus').textContent='已保存 '+outputDay+' 的拍摄条数。'}catch{alert('无法保存每日条数，请检查浏览器存储。')}
+  try{localStorage.setItem(dailyKey,JSON.stringify(daily));render();document.querySelector('#dailyStatus').textContent='已保存 '+outputDay+' 的拍摄条数。'}catch{alert('无法保存每日条数，请检查浏览器存储。')}
  };
  const monthlyForm=document.querySelector('#monthlyOutput');
  if(monthlyForm){
@@ -1077,20 +1117,20 @@ function managementView(period,outputRows){
  const overdue=monthTasks.filter(t=>t.due&&!t.delivery&&t.due<dateTime());
  const missing=monthTasks.filter(t=>!recorded(t));
  const unknown=monthTasks.filter(t=>category(t)==='其他／待确认');
- return '<section class="panel management"><div class="report-meta"><h2>团队月度总览</h2><div class="bar"><label>统计月份<input id="managementMonth" type="month" value="'+esc(period)+'"></label><a href="#personalOutput">查看个人产出明细</a></div></div>'+
+ return '<section class="panel management"><div class="report-meta"><div class="bar"><a href="#personalOutput" data-report-jump>查看个人产出明细</a></div></div>'+
  '<div class="cards">'+card('本月排班任务',monthTasks.length)+card('逾期待交付',overdue.length)+card('待补任务实际条数',missing.length)+card('其他／待确认类型',unknown.length)+'</div>'+
  rings+'<div class="team-rings-note"><small>按基础组与创新组的组别产出汇总，每条任务按主拍归组。组别补录总数优先。</small></div>'+
  '<div class="dashboard-focus"><article><strong>交付跟进</strong><p>'+(overdue.length?'优先处理 '+overdue.length+' 条逾期任务。':'当月暂无逾期待交付任务。')+'</p></article><article><strong>数据补齐</strong><p>'+(missing.length||unknown.length?'待补产出 '+missing.length+' 项，类型待确认 '+unknown.length+' 项。':'当月排班没有待补条数或类型。')+'</p></article><article><strong>目标复盘</strong><p>'+(completion===null?'补齐两组目标和实际产出后，查看团队进度。':completion>=100?'团队已完成本月目标。':'距团队目标还差 '+count(targetTotal-knownTotal)+' 条。')+'</p></article></div>'+
- '<details><summary>月度目标与完成进度</summary><form id="manageGoals"><div class="chart-table-scroll"><table><thead><tr><th>组别／成员</th><th>口径</th><th>目标（条）</th><th>实际（条）</th><th>完成率</th><th>还差</th></tr></thead>'+
+ '<details id="monthlyGoals"><summary>月度目标与完成进度</summary><form id="manageGoals"><div class="chart-table-scroll"><table><thead><tr><th>组别／成员</th><th>口径</th><th>目标（条）</th><th>实际（条）</th><th>完成率</th><th>还差</th></tr></thead>'+
  goalGroups+'</table></div><p><small>组别默认按任务的摄影师归组，每个任务计一次。摄助担任主拍时，任务产出计入基础组。可补录组别实际总数，清空后恢复任务汇总。个人实际取个人月产出，协作任务可能归属多人。</small></p>'+
  '<label class="management-notes">月度复盘与改进事项<textarea name="notes" placeholder="例如：口播集中排景，明确运营确认节点">'+esc(config.notes)+'</textarea></label><div class="bar"><button class="primary">保存目标与复盘</button><span id="managementStatus" role="status"></span></div></form></details>'+
  '<details id="mixDetails"><summary>摄影师拍摄类型占比</summary><div class="bar"><label>摄影师<select id="mixPhotographer">'+options(allPhotographers,selected)+'</select></label><label>统计方式<select id="mixBasis"><option value="tasks" '+(mixBasis==='tasks'?'selected':'')+'>按任务数</option><option value="volume" '+(mixBasis==='volume'?'selected':'')+'>按实际条数</option></select></label></div>'+
  mix+'<p><small>按主拍和排班月份统计。按条数查看时，已填任务 '+own.filter(recorded).length+'／'+own.length+' 项。个人每日或月度总数缺少拍摄类型，统计占比使用任务明细。</small></p></details>'+
- '<details><summary>本月跟进事项</summary><p>逾期：'+(overdue.length?overdue.slice(0,8).map(t=>esc(t.title)).join('、'):'暂无')+'</p><p>补齐实际条数后可核对组别目标进度。类型待确认的任务可在工作安排里补分类，便于复盘拍摄结构。</p></details></section>';
+ '<details id="monthlyFollowup"><summary>本月跟进事项</summary><p>逾期：'+(overdue.length?overdue.slice(0,8).map(t=>esc(t.title)).join('、'):'暂无')+'</p><p>补齐实际条数后可核对组别目标进度。类型待确认的任务可在工作安排里补分类，便于复盘拍摄结构。</p></details></section>';
 }
 function bindManagement(period){
  document.querySelector('#managementMonth').onchange=e=>{
-  if(e.target.value){month=e.target.value;outputDay=month===today().slice(0,7)?today():month+'-01'}
+  if(e.target.value)month=e.target.value;
   render();
  };
  const form=document.querySelector('#manageGoals');
@@ -1131,18 +1171,28 @@ function renderOutputChart(rows){
   chart.querySelector('[aria-pressed="true"]')?.focus();
  });
 }
-function dailyOutput(daily){
+function teamActuals(period){
+ const history={
+  '2026-09':['16,771','—','—'],
+  '2026-10':['17,266','+495','+2.95%']
+ };
+ const values=history[period];
+ if(!values)return '<div class="empty">所选月份暂无已提供的历史团队汇总。</div>';
+ return '<table><thead><tr><th>月份</th><th>实际拍摄（条）</th><th>环比增量（条）</th><th>环比增幅</th></tr></thead><tbody><tr><td>'+
+  esc(period)+'</td>'+values.map(value=>'<td>'+value+'</td>').join('')+'</tr></tbody></table>';
+}
+function dailyOutput(daily,monthStart,monthEnd){
  const assignments=tasks.filter(t=>t.date===outputDay);
  const totals=daily[outputDay]||{};
- const people=staff.map(p=>({...p,assignments:assignments.filter(t=>participates(t,p.name))})).filter(p=>p.assignments.length||totals[p.name]!=null);
- return '<section class="panel daily-output" id="dailyOutput"><div class="report-meta"><div><h2>每日拍摄条数 · '+outputDay+'</h2><p>自动列出当天排班人员。按群里的汇报填写个人当天总数。</p></div></div>'+
+ const people=staff.map(p=>({...p,assignments:assignments.filter(t=>participates(t,p.name))}));
+ return '<div class="report-meta"><label class="daily-date">填报日期<input id="outputDay" type="date" required min="'+monthStart+'" max="'+monthEnd+'" value="'+outputDay+'"></label><p>全员均可填报。按群里的汇报填写个人当天总数。</p></div>'+
  (people.length?'<form id="dailyForm"><table><thead><tr><th>人员</th><th>岗位</th><th>当天安排</th><th>实际拍摄条数</th></tr></thead><tbody>'+
  people.map(p=>'<tr><td>'+esc(p.name)+'</td><td>'+esc(p.role)+'</td><td>'+assignmentTotal(p.assignments)+' 次</td><td><input aria-label="'+esc(p.name)+'当天实际拍摄条数" type="number" min="0" step="1" name="'+esc(p.name)+'" value="'+esc(totals[p.name])+'" placeholder="待填"></td></tr>').join('')+
- '</tbody></table><div class="report-meta"><button class="primary">保存当天条数</button><span id="dailyStatus" role="status"></span></div></form>':'<div class="empty">当天还没有已分配人员的排班。请先在「工作安排」选择并保存人员，或切换填报日期。</div>')+'</section>';
+ '</tbody></table><div class="report-meta"><button class="primary">保存当天条数</button><span id="dailyStatus" role="status"></span></div></form>':'<div class="empty">名册暂无人员。</div>');
 }
 function groupOutput(){
  const groups=[['拍摄组',16771,defaultRoster['基础摄影']],['创新组',19,defaultRoster['创新组']]];
- return '<section class="panel month-actuals"><div class="report-meta"><h2>原始组别人均产出</h2><p>按最初提供的分组产量和人员配置计算。</p></div><table><thead><tr><th>组别</th><th>视频产量</th><th>组内人数</th><th>人均产出</th></tr></thead><tbody>'+
+ return '<section class="panel month-actuals"><div class="report-meta"><p>历史参考，原记录的统计月份待确认。按最初提供的分组产量和人员配置计算。</p></div><table><thead><tr><th>组别</th><th>视频产量</th><th>组内人数</th><th>人均产出</th></tr></thead><tbody>'+
  groups.map(([label,output,names])=>'<tr><td>'+label+'</td><td>'+count(output)+' 条</td><td>'+names.length+' 人</td><td>'+count(output/names.length)+' 条／人</td></tr>').join('')+
  '</tbody></table><div class="report-meta"><small>人均产出＝组内视频产量 ÷ 组内名册人数。基础组按 3 名基础摄影计算，创新组按 3 名成员计算。模特与摄助为协作岗位，单人实绩仍需对应任务明细。</small></div></section>';
 }
@@ -1247,7 +1297,7 @@ function navigateTab(next){
   window.scrollTo({top:0,behavior:'instant'});
  }
 }
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>navigateTab(b.dataset.tab));
+document.querySelectorAll('nav button[data-tab]').forEach(b=>b.onclick=()=>navigateTab(b.dataset.tab));
 if(typeof window!=='undefined'){
  const route=()=>{const next=window.location.hash.slice(2);if(['home','schedule','rest','people','plan','admin'].includes(next)){tab=next;render();window.scrollTo({top:0,behavior:'instant'})}};
  window.addEventListener('popstate',route);
