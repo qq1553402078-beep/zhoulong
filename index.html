@@ -207,7 +207,9 @@ main:not(.home-page) h1 {
 .team-attention { margin:0 14px 8px; padding:9px 12px; border:1px solid var(--dash-border); border-radius:8px; }
 .team-attention ul { display:flex; flex-wrap:wrap; gap:6px 20px; padding:0; margin:6px 0; list-style:none; }
 .team-attention li small { color:#f3c58e; }
-.daily-task-report { padding:12px; margin-block:10px; border:1px solid var(--dash-border); border-radius:8px; }
+.daily-task-card { margin-block:10px; border:1px solid var(--dash-border); border-radius:8px; }
+.daily-task-card > summary { padding:12px; cursor:pointer; }
+.daily-task-report { padding:0 12px 12px; }
 .daily-task-report h4,.daily-task-report p { margin:0 0 6px; }
 .daily-task-report .bar { margin:10px 0; }
 .people-nav { display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:10px; }
@@ -1318,7 +1320,7 @@ function people(){
    row.hidden=dailyAssignedOnly&&(row.dataset.assigned==='false'||(chosen.length&&!chosen.includes(name)));
   }
   for(const form of main.querySelectorAll('[data-daily-task]')){
-   form.hidden=dailyAssignedOnly&&chosen.length>0&&!chosen.some(name=>participates(tasks.find(task=>task.id===form.dataset.dailyTask),name));
+   form.closest('.daily-task-card').hidden=dailyAssignedOnly&&chosen.length>0&&!chosen.some(name=>participates(tasks.find(task=>task.id===form.dataset.dailyTask),name));
   }
   document.querySelector('#dailyNoAssigned').hidden=!dailyAssignedOnly||[...rows].some(row=>!row.hidden);
  };
@@ -1347,6 +1349,7 @@ function people(){
    render();
    const saved=[...main.querySelectorAll('[data-daily-task]')].find(item=>item.dataset.dailyTask===current.id);
    saved.querySelector('[role="status"]').textContent='已保存任务填报。';
+   if(shotBatch!=='')saved.closest('details').querySelector('summary').focus({preventScroll:true});
   }
  });
  const dailyForm=document.querySelector('#dailyForm');
@@ -1603,14 +1606,17 @@ function dailyTaskReports(assignments){
  (assignments.length?assignments.map(task=>{
   const progress=Number(task.target)>0&&task.actual!=null&&task.actual!==''?count(100*Number(task.actual)/Number(task.target))+'%':'—';
   const crew=crewRoles.filter(([field])=>members(task[field]).length).map(([field,label])=>label+'：'+members(task[field]).join('、')).join(' · ');
-  return '<form class="daily-task-report" data-daily-task="'+esc(task.id)+'"><h4>'+esc(task.title||task.product||'拍摄任务')+'</h4>'+
+  const reported=task.dailyShotCount!=null&&task.dailyShotCount!=='';
+  const summary=reported?'已填报 · 当日 '+count(task.dailyShotCount)+' 条':'待填报';
+  return '<details class="daily-task-card"'+(reported?'':' open')+'><summary><strong>'+esc(task.title||task.product||'拍摄任务')+'</strong> · '+summary+' · 拍摄'+(shootingComplete(task)?'已完成':'未完成')+'</summary>'+
+   '<form class="daily-task-report" data-daily-task="'+esc(task.id)+'">'+
    '<p>'+esc(crew||'待安排人员')+'</p><p>计划 '+esc(task.target==null||task.target===''?'—':task.target)+' 条 · 条数完成度 '+progress+' · '+(shootingComplete(task)?'已完成':'未完成')+'</p>'+
    '<div class="bar"><label>任务下发量（条）<input type="number" min="1" step="1" name="target" value="'+esc(task.target)+'"></label><label>累计拍摄量（条）<input type="number" min="0" step="1" name="cumulative" value="'+esc(task.actual)+'" placeholder="可直接修正累计量"></label><label>当日拍摄量（条）<input type="number" min="0" step="1" name="shotBatch" value="'+esc(task.dailyShotCount)+'" placeholder="填写当天拍摄总数"></label>'+
    '<label>拍摄完成状态<select name="completion">'+[['auto','自动按数量判断'],['complete','已完成'],['incomplete','未完成']].map(([value,label])=>'<option value="'+value+'"'+((task.shootingCompletion||'auto')===value?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
    '<label>交付阶段<select name="status">'+options(task.status==='已验收'?statuses:statuses.slice(0,4),task.status||statuses[0])+'</select></label>'+
    '<label>首次交付时间<input type="datetime-local" name="delivery" value="'+esc(task.delivery)+'"></label></div>'+
    '<label>未完成原因<textarea name="reason" rows="2" maxlength="500" placeholder="填写影响进度的原因及下一步">'+esc(task.unfinishedReason)+'</textarea></label>'+
-   '<div class="bar"><button class="primary">保存任务填报</button><span role="status"></span></div></form>';
+   '<div class="bar"><button class="primary">保存任务填报</button><span role="status"></span></div></form></details>';
  }).join(''):'<p>当天暂无安排任务，可在下方填写个人条数。</p>')+'</div>';
 }
 function dailyOutput(daily,monthStart,monthEnd){
