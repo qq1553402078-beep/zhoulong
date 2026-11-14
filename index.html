@@ -150,8 +150,14 @@ main:not(.home-page) h1 {
   gap:clamp(12px,2.6vw,36px);
  }
 }
-.growth-roadmaps figure { margin:24px 0 40px; }
-.growth-roadmaps img { display:block; width:100%; height:auto; margin-bottom:8px; }
+.growth-roadmaps details { border-block:1px solid #ffffff2e; padding:10px 0; }
+.growth-roadmaps summary { cursor:pointer; padding:8px; }
+.growth-roadmaps details:not([open]) summary span:nth-child(2),
+.growth-roadmaps details[open] summary span:first-child { display:none; }
+.roadmap-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; padding:14px 0; }
+.roadmap-grid figure { margin:0; }
+.roadmap-grid img { display:block; width:100%; height:auto; margin-bottom:8px; }
+@media(max-width:650px){.roadmap-grid { grid-template-columns:1fr; gap:16px; }}
 .model-profile[data-profile="钱小蝶"] .model-portfolio-photos figure:first-child img { width:100%; height:auto; aspect-ratio:9/14; object-fit:cover; object-position:44% 69%; }
  .home-page > section,.home-page > .workspace-shortcuts { scroll-margin-top:110px; }
 .home-directory { display:flex; flex-wrap:wrap; align-items:center; gap:5px; padding:10px; margin:0 0 14px; border:1px solid #ffffff24; background:#171419; color:#eee3f4; }
@@ -406,7 +412,7 @@ function home(){
  '<section class="home-products">'+title('01',esc(settings.productsTitle),'OUR PRODUCTS')+'<div class="chips">'+products.filter(p=>p!=='其他').map(p=>'<span class="tag">'+esc(p)+'</span>').join('')+'</div></section>'+
  '<section id="services" class="service-section">'+title('02',esc(settings.shootingTitle),'WHAT WE CREATE')+'<p class="art-caption">'+esc(settings.artCaption)+'</p><div class="service-list">'+shooting.map(([name,detail],i)=>'<article class="service-item">'+shootingArt(i)+'<span class="service-number">'+String(i+1).padStart(2,'0')+'</span><h3>'+esc(name)+'</h3><p>'+esc(detail)+'</p><button type="button" class="service-mark" data-service="'+esc(name)+'" aria-label="查看'+esc(name)+'安排">↗</button></article>').join('')+'</div></section>'+
  '<section class="delivery-section">'+title('03',esc(settings.deliveryTitle),'OUR COMMITMENT')+'<p>'+esc(settings.shiftIntro)+'</p><div class="delivery-grid">'+section(settings.normalTitle,settings.normalText)+section(settings.urgentTitle,settings.urgentText)+'</div></section>'+
- '<section class="org-section">'+title('04',esc(settings.orgTitle),'THE PEOPLE')+'<span id="org-title" class="sr-only">中台组织架构</span>'+orgMap()+'</section>'+'<section class="growth-roadmaps"><h2>团队成长路线图</h2><figure><a href="./growth-roadmaps/model.png" target="_blank" rel="noopener"><img src="./growth-roadmaps/model.png" width="1152" height="864" loading="lazy" alt="模特成长路线图">查看模特路线图原图 ↗</a></figure><figure><a href="./growth-roadmaps/shooting.png" target="_blank" rel="noopener"><img src="./growth-roadmaps/shooting.png" width="1152" height="864" loading="lazy" alt="拍摄组成长路线图">查看拍摄组路线图原图 ↗</a></figure><figure><a href="./growth-roadmaps/creative.png" target="_blank" rel="noopener"><img src="./growth-roadmaps/creative.png" width="1152" height="864" loading="lazy" alt="创新组成长路线图">查看创新组路线图原图 ↗</a></figure></section>'+teamGallery()+modelPortfolio();
+ '<section class="org-section">'+title('04',esc(settings.orgTitle),'THE PEOPLE')+'<span id="org-title" class="sr-only">中台组织架构</span>'+orgMap()+'</section>'+'<section class="growth-roadmaps"><h2>团队成长路线图</h2><details><summary><span>查看三张路线图</span><span>收起路线图</span></summary><div class="roadmap-grid"><figure><a href="./growth-roadmaps/model.png" target="_blank" rel="noopener"><img src="./growth-roadmaps/model.png" width="1152" height="864" loading="lazy" alt="模特成长路线图">查看模特路线图原图 ↗</a></figure><figure><a href="./growth-roadmaps/shooting.png" target="_blank" rel="noopener"><img src="./growth-roadmaps/shooting.png" width="1152" height="864" loading="lazy" alt="拍摄组成长路线图">查看拍摄组路线图原图 ↗</a></figure><figure><a href="./growth-roadmaps/creative.png" target="_blank" rel="noopener"><img src="./growth-roadmaps/creative.png" width="1152" height="864" loading="lazy" alt="创新组成长路线图">查看创新组路线图原图 ↗</a></figure></div></details></section>'+teamGallery()+modelPortfolio();
  main.querySelectorAll('[data-home-section]').forEach(button=>button.onclick=()=>{
   const section=main.querySelector('.'+button.dataset.homeSection);
   if(!section)return;
