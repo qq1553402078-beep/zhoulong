@@ -195,6 +195,12 @@ main:not(.home-page) h1 {
  .rest-page .rest-scroll .rest-grid { --rest-name-width:76px; }
  .rest-page .rest-scroll .rest-grid :is(th,td):nth-child(2) { min-width:76px; }
 }
+.chart-group { margin-top:16px; padding-top:12px; border-top:1px solid var(--dash-border); }
+.chart-group h3 { margin:0 0 10px; font-size:15px; }
+.chart-person > summary { cursor:pointer; }
+.chart-person > summary strong { text-decoration:underline; text-underline-offset:3px; }
+.chart-person-detail { margin:8px 0; padding:8px 12px; border:1px solid var(--dash-border); border-radius:8px; }
+.chart-person-detail p { margin:4px 0; }
 </style><header><div class="site-brand"><span class="brand-symbol" aria-hidden="true">◈</span><strong id="siteTitle">中台拍摄工作台</strong></div><nav aria-label="工作区"><button data-tab="home">首页</button><button data-tab="schedule">工作安排</button><button data-tab="rest">休息表</button><button data-tab="people">个人人效</button><button data-tab="plan">产能规划</button><button data-tab="admin">管理后台</button></nav></header>
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
@@ -1070,7 +1076,15 @@ function people(){
  const weekStart=monday<monthStart?monthStart:monday;
  const weekEnd=sunday>monthEnd?monthEnd:sunday;
  const outputMonth=month;
- const outputRows=staff.map(p=>[p.name,p.role,production(p.name,outputDay,outputDay),production(p.name,weekStart,weekEnd),monthly[outputMonth]?.[p.name]??production(p.name,monthStart,monthEnd)]);
+ const estimateOctober=outputMonth==='2026-10';
+ const weekDays=Math.round((Date.parse(weekEnd)-Date.parse(weekStart))/86400000)+1;
+ const outputRows=staff.map(({name,role})=>{
+  const total=monthly[outputMonth]?.[name]??production(name,monthStart,monthEnd);
+  if(estimateOctober&&typeof total==='number')return [name,role,total/31,total*weekDays/31,total];
+  return [name,role,production(name,outputDay,outputDay),production(name,weekStart,weekEnd),total];
+ });
+ const outputRanges=[[outputDay,outputDay],[weekStart,weekEnd],[monthStart,monthEnd]];
+ const outputNote=estimateOctober?'10 月日、周产出为估算：月总条数 ÷ 31 × 对应天数，未写入每日实绩。':'周产出统计所选月份内的周一至周日。月度补录只覆盖月产出。';
  const outputCell=x=>esc(typeof x==='number'?count(x):x);
  const pct=(n,d)=>d?(100*n/d).toFixed(1)+'%':'—';
  const report=groups.map(p=>{
@@ -1085,7 +1099,7 @@ function people(){
  });
  main.innerHTML='<section class="dashboard-title"><div class="eyebrow">STUDIO INTELLIGENCE / 人效分析</div><label class="dashboard-month">统计月份<input id="managementMonth" type="month" required value="'+esc(month)+'"></label><h1>'+esc(settings.peopleTitle)+'</h1></section>'+panel('teamOverview','团队月度总览',managementView(outputMonth,outputRows))+
  panel('personalOutput','个人产出总览','<div class="report-meta"><div class="bar"><span>填报日期 '+esc(outputDay)+'</span><a href="#dailyOutput" data-report-jump>填写当天产出</a><a href="#monthlyBackfill" data-report-jump>填写月度条数</a></div><p>'+esc(outputDay)+' 当日 · '+weekStart+' 至 '+weekEnd+' 本周 · '+outputMonth+' 本月</p></div><div id="outputChart" class="output-chart"></div><table class="report"><thead><tr><th>姓名</th><th>岗位</th><th>日产出（条）</th><th>周产出（条）</th><th>月产出（条）</th></tr></thead><tbody>'+
- outputRows.map(row=>'<tr>'+row.map(x=>'<td>'+outputCell(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table><div class="report-meta"><small>周产出统计所选月份内的周一至周日。月度补录只覆盖月产出。</small></div>')+
+ outputRows.map(row=>'<tr>'+row.map(x=>'<td>'+outputCell(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table><div class="report-meta"><small>'+outputNote+'</small></div>')+
  panel('teamActuals','团队实际拍摄量',teamActuals(month),false)+
  panel('dailyOutput','每日拍摄条数 · '+outputDay,dailyOutput(daily,monthStart,monthEnd))+
  panel('monthlyBackfill','月度拍摄条数 · '+esc(month),'<div class="report-meta"><form id="monthlyOutput" class="bar"><label>人员<select name="name">'+options(staff.map(p=>p.name),person)+'</select></label><label>本月总条数<input name="total" type="number" min="0" step="1" placeholder="留空恢复每日汇总"></label><button class="primary">保存月度总数</button></form><span id="monthlyStatus" role="status"></span><p>填写月度总数后，月报采用该人员的月度总数。留空保存可恢复每日任务汇总。</p></div>',false)+
@@ -1125,7 +1139,7 @@ function people(){
   const a=document.createElement('a');a.href=url;a.download='中台个人人效月报-'+(month||'全部月份')+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  };
  document.querySelector('#outputDay').onchange=e=>{if(e.target.validity.valid&&e.target.value)outputDay=e.target.value;render()};
- renderOutputChart(outputRows);
+ renderOutputChart(outputRows,outputRanges,estimateOctober,outputNote);
  bindManagement(outputMonth);
  const dailyForm=document.querySelector('#dailyForm');
  if(dailyForm)dailyForm.onsubmit=e=>{
@@ -1255,16 +1269,63 @@ function bindManagement(period){
  document.querySelector('#mixPhotographer').onchange=e=>{mixPhotographer=e.target.value;render();document.querySelector('#mixDetails').open=true};
  document.querySelector('#mixBasis').onchange=e=>{mixBasis=e.target.value;render();document.querySelector('#mixDetails').open=true};
 }
-function renderOutputChart(rows){
+function outputGroup(role){
+ if(['基础摄影','摄影助理','拍剪助理','拍摄组','摄助'].includes(role))return '拍摄组';
+ if(role==='模特')return '模特组';
+ return role==='创新组'?'创新组':'其他岗位';
+}
+function outputBreakdown(name,entries){
+ const fields=[['lead','摄影师'],['model','模特'],['handModel','手模'],['assistant','摄助'],['retouch','修片']];
+ const ownTasks=entries.filter(t=>participates(t,name));
+ if(!ownTasks.length)return '<p>这个统计范围内暂无该人员的任务明细，无法从记录判断产出差异。</p>';
+ const types=new Map(), products=new Map(), partners=new Map();
+ for(const task of ownTasks){
+  const labels=members(task.type);
+  const category=labels.length?labels.sort().join('、'):'待确认类型';
+  types.set(category,(types.get(category)||0)+1);
+  const product=task.product||'待确认品类';
+  products.set(product,(products.get(product)||0)+1);
+  const crew=new Set(fields.flatMap(([field])=>members(task[field])));
+  crew.delete(name);
+  for(const partner of crew)partners.set(partner,(partners.get(partner)||0)+1);
+ }
+ const ranked=items=>[...items].sort((a,b)=>b[1]-a[1]);
+ const rolesTaken=fields.map(([field,label])=>[label,ownTasks.filter(task=>members(task[field]).includes(name)).length]).filter(([,n])=>n);
+ return '<p>参与 '+ownTasks.length+' 项任务，按任务数统计。</p>'+
+ '<p><strong>拍摄类型占比</strong>　'+ranked(types).map(([type,n])=>esc(type)+' '+n+' 项（'+count(100*n/ownTasks.length)+'%）').join(' · ')+'</p>'+
+ '<p><strong>主要拍摄品类</strong>　'+ranked(products).slice(0,5).map(([product,n])=>esc(product)+' '+n+' 项（'+count(100*n/ownTasks.length)+'%）').join(' · ')+'</p>'+
+ '<p><strong>担任角色</strong>　'+rolesTaken.map(([label,n])=>label+' '+n+' 项').join(' · ')+'<small>（同一任务可兼多个角色）</small></p>'+
+ '<p><strong>主要协作人员</strong>　'+(ranked(partners).slice(0,5).map(([partner,n])=>esc(partner)+' '+n+' 项').join(' · ')||'暂无搭档记录')+'</p>'+
+ '<p><small>任务占比反映工作构成。现有记录未包含完整工时或产出偏低的直接原因。</small></p>';
+}
+function renderOutputChart(rows,ranges,estimateOctober,note){
  const chart=document.querySelector('#outputChart');
  const periods=['日产出','周产出','月产出'];
- const values=rows.map(row=>[row[0],row[chartPeriod+2]]).filter(([,value])=>typeof value==='number').sort((a,b)=>b[1]-a[1]);
- const max=Math.max(1,...values.map(([,value])=>value));
+ const estimated=estimateOctober&&chartPeriod<2;
+ const [from,to]=ranges[estimated?2:chartPeriod];
+ const entries=tasks.filter(t=>t.date>=from&&t.date<=to);
+ const values=rows.map(row=>[row[0],row[1],row[chartPeriod+2]])
+  .filter(([name,,value])=>typeof value==='number'||entries.some(t=>participates(t,name)))
+  .sort((a,b)=>(typeof b[2]==='number'?b[2]:-1)-(typeof a[2]==='number'?a[2]:-1));
+ const groups=['拍摄组','模特组','创新组','其他岗位'];
  chart.innerHTML='<div class="chart-switch" role="group" aria-label="图表统计周期">'+periods.map((label,index)=>'<button type="button" data-chart-period="'+index+'" aria-pressed="'+(index===chartPeriod)+'">'+label+'</button>').join('')+'</div>'+
- (values.length?'<ul class="chart-list" aria-label="'+periods[chartPeriod]+'">'+values.map(([name,value])=>'<li class="chart-row"><strong>'+esc(name)+'</strong><div class="chart-track" aria-hidden="true"><div class="chart-bar" style="width:'+100*value/max+'%"></div></div><span class="chart-value">'+count(value)+' 条</span></li>').join('')+'</ul><div class="chart-caption">按已记录产出从高到低排列。完整名册见下表。</div>':'<p class="empty">所选周期暂无产出记录。填写当天条数后，图表会自动更新。</p>');
- chart.querySelectorAll?.('[data-chart-period]').forEach(button=>button.onclick=()=>{
+ '<p class="chart-caption">'+esc(estimated?note+' 姓名明细展示整月任务。':'点击姓名查看任务类型和协作情况。条形长度按组内最高值计算。')+'</p>'+
+ groups.map(group=>{
+  const people=values.filter(([,role])=>outputGroup(role)===group);
+  if(group==='其他岗位'&&!people.length)return '';
+  const max=Math.max(1,...people.map(([, ,value])=>typeof value==='number'?value:0));
+  return '<section class="chart-group"><h3>'+group+'</h3>'+
+   (people.length?'<ul class="chart-list">'+people.map(([name,,value])=>{
+    const hasValue=typeof value==='number';
+    return '<li><details class="chart-person"><summary class="chart-row"><strong>'+esc(name)+'</strong>'+
+     '<div class="chart-track" aria-hidden="true"><div class="chart-bar" style="width:'+(hasValue?100*value/max:0)+'%"></div></div>'+
+     '<span class="chart-value">'+(hasValue?(estimated?'约 ':'')+count(value)+' 条':'待记录')+'</span></summary>'+
+     '<div class="chart-person-detail">'+outputBreakdown(name,entries)+'</div></details></li>';
+   }).join('')+'</ul>':'<p class="empty">所选周期暂无产出或任务记录。</p>')+'</section>';
+ }).join('');
+ chart.querySelectorAll('[data-chart-period]').forEach(button=>button.onclick=()=>{
   chartPeriod=Number(button.dataset.chartPeriod);
-  renderOutputChart(rows);
+  renderOutputChart(rows,ranges,estimateOctober,note);
   chart.querySelector('[aria-pressed="true"]')?.focus();
  });
 }
