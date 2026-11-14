@@ -30,18 +30,9 @@ body:has(.people-page){background:#071326;color:#edf4ff}body:has(.people-page) h
 @media(prefers-reduced-motion:no-preference){
   .home-page .cover-text h1 { animation:darkroom-title 2400ms ease-out both; }
   .home-page .cover-text .eyebrow { animation:darkroom-print 1800ms ease-out 180ms both; }
-  .home-page .cover-photo img { animation:darkroom-breath 24s ease-in-out 600ms both; }
-  @supports(animation-timeline:view()){
-    .home-page .team-photo:not(:hover) img,.home-page .service-visual img {
-      animation:darkroom-develop ease-out both;
-      animation-timeline:view();
-      animation-range:entry 0% entry 85%;
-    }
-    .home-page .section-heading {
-      animation:darkroom-title linear both;
-      animation-timeline:view();
-      animation-range:entry 0% entry 90%;
-    }
+  .home-page .cover-photo img { animation:darkroom-breath 5s cubic-bezier(.22,.61,.36,1) both; }
+  .home-page .photo-exposed img {
+    animation:darkroom-develop 1450ms ease-out both;
   }
   @media(hover:hover){
     .home-page .team-photo img { transition:filter 420ms ease; }
@@ -49,11 +40,11 @@ body:has(.people-page){background:#071326;color:#edf4ff}body:has(.people-page) h
   }
   .home-page :is(button,a):active { box-shadow:inset 0 1px #ffffff88; }
 }
-@keyframes darkroom-title { from{opacity:.48} to{opacity:1} }
+@keyframes darkroom-title { from{opacity:.18} to{opacity:1} }
 @keyframes darkroom-print { from{opacity:.55;transform:translateX(3px)} to{opacity:1;transform:none} }
-@keyframes darkroom-breath { 0%,100%{opacity:1} 45%{opacity:.88} }
+@keyframes darkroom-breath { 0%{opacity:.23;filter:brightness(.52)} 52%{opacity:.82;filter:brightness(.88)} 100%{opacity:1;filter:none} }
 @keyframes darkroom-develop {
-  0%{filter:grayscale(.32) brightness(.68) contrast(.82) blur(1.4px)}
+  0%{filter:grayscale(.52) brightness(.42) contrast(.75) blur(2px)}
   78%{filter:grayscale(.08) brightness(.93) contrast(.96) blur(.55px)}
   100%{filter:none}
 }
@@ -233,6 +224,7 @@ function staffingSummary(date){
 
 function save(next){try{localStorage.setItem(key,JSON.stringify(next));tasks=next;return true}catch{alert('无法保存到浏览器，请检查存储权限或空间。');return false}}
 function render(){
+ main.dispatchEvent(new Event('studio-home-leave'));
  document.querySelector('#siteTitle').textContent=settings.title;
  document.title=settings.title;
  for(const button of document.querySelectorAll('nav button')){
@@ -269,6 +261,19 @@ function home(){
  '<section class="delivery-section">'+title('03',esc(settings.deliveryTitle),'OUR COMMITMENT')+'<p>'+esc(settings.shiftIntro)+'</p><div class="delivery-grid">'+section(settings.normalTitle,settings.normalText)+section(settings.urgentTitle,settings.urgentText)+'</div></section>'+
  '<section class="org-section">'+title('04',esc(settings.orgTitle),'THE PEOPLE')+'<span id="org-title" class="sr-only">中台组织架构</span>'+orgMap()+'</section>'+teamGallery();
  bindTeamGallery();
+ if(window.matchMedia('(prefers-reduced-motion: no-preference)').matches && 'IntersectionObserver' in window){
+  const photos=main.querySelectorAll('.team-photo,.service-visual');
+  const observer=new IntersectionObserver(entries=>{
+   for(const entry of entries){
+    if(!entry.isIntersecting)continue;
+    entry.target.classList.add('photo-exposed');
+    observer.unobserve(entry.target);
+   }
+  },{threshold:.12});
+  for(const photo of photos)observer.observe(photo);
+  main.addEventListener('studio-home-leave',()=>observer.disconnect(),{once:true});
+ }
+
  document.querySelector('#openSchedule').onclick=()=>navigateTab('schedule');
  document.querySelector('#openPeople').onclick=()=>navigateTab('people');
  document.querySelectorAll('[data-workspace]').forEach(button=>button.onclick=()=>{if(button.dataset.workspace==='schedule')day=today();navigateTab(button.dataset.workspace)});
