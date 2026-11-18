@@ -68,6 +68,9 @@
         viewer = { name: data.name, role: data.role, status: data.status };
         try { localStorage.setItem(VIEWER_KEY, JSON.stringify(viewer)); localStorage.setItem(NAME_KEY, data.name); } catch (e) {}
         mask.remove();
+        // 首次进入也要挂载悬浮按钮（否则手机第一次打开看不到 AI 助手/管理）
+        addAIButton();
+        addAdminLauncher();
         applyMode();
       }).catch(function () { msg.textContent = '网络异常，请重试'; btn.disabled = false; });
     };
