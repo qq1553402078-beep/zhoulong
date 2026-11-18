@@ -1567,6 +1567,8 @@ function managementView(period,outputRows,[from,to],daily){
  const monthTasks=tasks.filter(t=>t.date.startsWith(period));
  const periodTasks=monthTasks.filter(t=>t.date>=from&&t.date<=to);
  const recorded=t=>t.actual!=null&&t.actual!=='';
+ const shotOf=t=>t.dailyShotCount!=null&&t.dailyShotCount!==''?Number(t.dailyShotCount):Number(t.actual||0);
+ const recordedShot=t=>(t.dailyShotCount!=null&&t.dailyShotCount!=='')||(t.actual!=null&&t.actual!=='');
  const teamRows=[['拍摄组',monthTasks.filter(t=>roleNames.lead.includes(members(t.lead)[0])&&!roster['创新组'].includes(members(t.lead)[0]))]];
  const innovationTasks=monthTasks.filter(isInnovationTask);
  const innovationRange=innovationTasks.filter(t=>t.date>=from&&t.date<=to);
@@ -1586,8 +1588,8 @@ function managementView(period,outputRows,[from,to],daily){
  });
  const groupTargets=teamRows.map(([name])=>config.targets?.[name]??null);
  const rangeActuals=isMonth?groupActuals:teamRows.map(([,entries])=>{
-  const filled=entries.filter(t=>recorded(t)&&t.date>=from&&t.date<=to);
-  return filled.length?sum(filled,'actual'):null;
+  const filled=entries.filter(t=>recordedShot(t)&&t.date>=from&&t.date<=to);
+  return filled.length?filled.reduce((n,t)=>n+shotOf(t),0):null;
  });
  const rangeTotal=rangeActuals.some(value=>value!==null)?rangeActuals.reduce((total,value)=>total+(value??0),0):null;
  const knownTotal=groupActuals.some(value=>value!==null)?groupActuals.reduce((total,value)=>total+(value??0),0):null;
@@ -1619,10 +1621,12 @@ function managementView(period,outputRows,[from,to],daily){
  const shootingTasks=periodTasks.filter(task=>!isInnovationTask(task));
  const completedShooting=shootingTasks.filter(shootingComplete);
  const shootCategory=task=>{const type=(task.type||'').trim();return type.startsWith('产品展示')?'产品展示':type.startsWith('内料展示')?'内料展示':type.startsWith('口播')?'口播':'其他'};
- const shootingAmount=task=>Number(task.actual||task.dailyShotCount||0);
+ const shootingAmount=task=>isMonth?Number(task.actual||task.dailyShotCount||0):shotOf(task);
  const shootingTotal=shootingTasks.reduce((total,task)=>total+shootingAmount(task),0);
  const shootTypeDetail=['产品展示','内料展示','口播','其他'].map(kind=>{const items=shootingTasks.filter(task=>shootCategory(task)===kind);const amount=items.reduce((total,task)=>total+shootingAmount(task),0);const ratio=shootingTotal?100*amount/shootingTotal:0;return '<span class="shoot-type-tag" data-type="'+kind+'"><small>'+kind+'</small><strong>'+count(amount)+'</strong><em>条</em><b>'+count(ratio)+'%</b></span>'}).join('');
- const completedProjects=completedShooting.length?'<div class="completed-projects"><strong>已完成项目</strong>'+completedShooting.map(task=>'<span class="completed-project-tag">'+esc(task.product||task.title||'未命名项目')+'<b>'+shootingAmount(task)+' 条</b></span>').join('')+'</div>':'<div class="completed-projects"><strong>已完成项目</strong><span class="overview-empty">暂无</span></div>';
+ const completedGroups=new Map();
+ for(const task of completedShooting){const key=task.product||task.title||'未命名项目';completedGroups.set(key,(completedGroups.get(key)||0)+shootingAmount(task));}
+ const completedProjects=completedGroups.size?'<div class="completed-projects"><strong>已完成项目</strong>'+[...completedGroups].map(([name,amount])=>'<span class="completed-project-tag">'+esc(name)+'<b>'+count(amount)+' 条</b></span>').join('')+'</div>':'<div class="completed-projects"><strong>已完成项目</strong><span class="overview-empty">暂无</span></div>';
  const rings='<div class="overview-metrics">'+focusRings+metric('拍摄组项目与类型',shootValue,'<div class="shoot-type-breakdown">'+shootTypeDetail+'</div>'+completedProjects+'<p>个人已填报 '+reportNames.size+' 人 · <a href="#dailyOutput" data-report-jump>查看每日条数</a></p>',null,'')+
  metric('创新交付完成度',innovationRange.length?count(innovationFinished.length)+'<small> / '+count(innovationRange.length)+' 项</small>':'<span class="overview-empty">暂无任务</span>','<p>已完成 '+innovationFinished.length+' 项</p>'+innovationDetail,innovationRange.length?innovationRatio:null,'')+
  (isMonth?metric('团队月度目标完成率',completion===null?'<span class="overview-empty">待设目标</span>':count(completion)+'<small>%</small>',
