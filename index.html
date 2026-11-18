@@ -389,6 +389,20 @@ applySettings();
   settings.gallery=list;
   try{localStorage.setItem(settingsKey,JSON.stringify(settings));localStorage.setItem(MK,'1')}catch(e){}
 })();
+/* 2026-11-18 相册五次调整：把「一起，围坐」的旧聚餐照换成新聚餐照 */
+(function migrateGallery20261118v5(){
+  var MK='studio-gallery-migrate-20261118-v5';
+  var done=false; try{done=localStorage.getItem(MK)==='1'}catch(e){}
+  if(done) return;
+  if(!Array.isArray(settings.gallery)||!settings.gallery.length) return;
+  var list=settings.gallery.map(function(p){return {src:p.src,caption:p.caption}});
+  var changed=false;
+  for(var i=0;i<list.length;i++){
+    if(String(list[i].caption||'').indexOf('一起，围坐')>=0){list[i].src='./team-gallery/gallery-1118-reunion-2.jpg';changed=true;}
+  }
+  if(changed){settings.gallery=list;try{localStorage.setItem(settingsKey,JSON.stringify(settings))}catch(e){}}
+  try{localStorage.setItem(MK,'1')}catch(e){}
+})();
 const key='studio-ops-v1';
 let tasks=[];
 try{tasks=JSON.parse(localStorage.getItem(key)||'[]')}catch{}
