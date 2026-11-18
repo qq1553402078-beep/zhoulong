@@ -200,8 +200,9 @@
     if (document.querySelector('#ai-assistant-btn')) return;
     var btn = document.createElement('button');
     btn.id = 'ai-assistant-btn';
-    btn.textContent = 'AI 助手';
-    btn.style.cssText = 'position:fixed;right:18px;bottom:18px;z-index:8000;padding:11px 16px;border:0;border-radius:24px;background:linear-gradient(135deg,#8a6fd4,#5c98f4);color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px #0008';
+    btn.innerHTML = '✦ AI 助手';
+    btn.setAttribute('aria-label', '打开AI助手');
+    btn.style.cssText = 'position:fixed;left:18px;bottom:18px;z-index:8500;padding:13px 18px;border:2px solid #fff5;border-radius:26px;background:linear-gradient(135deg,#8a6fd4,#5c98f4);color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 28px #000b';
     btn.onclick = openAI;
     document.body.appendChild(btn);
   }
@@ -214,7 +215,7 @@
       '<div class="ai-input-row"><input id="ai-q" placeholder="输入问题…"><button id="ai-send">发送</button></div>';
     var style = document.createElement('style');
     style.textContent =
-      '#ai-box{position:fixed;right:18px;bottom:72px;z-index:8001;width:min(380px,calc(100vw - 36px));height:440px;background:#15131c;border:1px solid #3a3348;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 50px #000a}' +
+      '#ai-box{position:fixed;left:18px;bottom:72px;z-index:8001;width:min(380px,calc(100vw - 36px));height:440px;background:#15131c;border:1px solid #3a3348;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 50px #000a}' +
       '.ai-head{padding:12px 16px;background:#241f33;color:#e8e0f2;font-weight:700}' +
       '.ai-log{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}' +
       '.ai-msg{padding:9px 12px;border-radius:10px;font-size:13px;line-height:1.6;max-width:88%}' +
