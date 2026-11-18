@@ -248,7 +248,7 @@ main:not(.home-page) h1 {
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script>
 const defaultRoster={
- '基础摄影':['曹傲宇','陈丽娜','游苗'],'创新组':['杨建勋','勾应颖'],'拍剪助理':['刘意'],'摄影助理':['白炳锦','张亚涛'],'模特':['夏艺方','何雨馨','穆灿','张智','钱小蝶'],'修片':['何梓瑜']
+ '基础摄影':['曹傲宇','陈丽娜','游苗'],'创新组':['杨建勋','勾应颖','刘意'],'拍剪助理':[],'摄影助理':['白炳锦','张亚涛'],'模特':['夏艺方','何雨馨','穆灿','张智','钱小蝶'],'修片':['何梓瑜']
 };
 const settingsKey='studio-ops-settings-v1';
 const defaults={
@@ -281,12 +281,13 @@ let roster,products,types,staff,roleNames,restStaff,activeNames;
 function applySettings(){
  if(settings.shootingTitle==='承接的拍摄类型')settings.shootingTitle='拍摄类型';
  settings.roster={...defaultRoster,...settings.roster};
- if((settings.rosterRevision||0)<2){
+ if((settings.rosterRevision||0)<3){
   for(const role of Object.keys(settings.roster)){
-   if(role!=='拍剪助理')settings.roster[role]=settings.roster[role].filter(name=>name!=='刘意');
+   if(role!=='创新组')settings.roster[role]=settings.roster[role].filter(name=>name!=='刘意');
   }
-  settings.roster['拍剪助理']=[...new Set([...settings.roster['拍剪助理'],'刘意'])];
-  settings.rosterRevision=2;
+  settings.roster['创新组']=[...new Set([...settings.roster['创新组'],'刘意'])];
+  settings.rosterRevision=3;
+  try{localStorage.setItem(settingsKey,JSON.stringify(settings))}catch{}
  }
  ({roster,products,types}=settings);
  staff=Object.entries(roster).flatMap(([role,names])=>names.map(name=>({role,name})));
@@ -396,6 +397,9 @@ const newId=()=>globalThis.crypto?.randomUUID?.()||Date.now()+'-'+Math.random();
 const statuses=['待拍摄','拍摄中','后期中','已交付','已验收'];
 const innovationDeliverables=['脚本拆解','完整视频','拍摄方案','创新剪辑','其他创新交付'];
 const isInnovationTask=task=>members(task?.lead).some(name=>roster['创新组']?.includes(name));
+const dailyGroupKey='studio-daily-task-groups-v1';
+const defaultDailyGroups=['拍摄组','创新组','AI素材／生成'];
+let dailyGroups=(()=>{try{return [...new Set([...defaultDailyGroups,...(JSON.parse(localStorage.getItem(dailyGroupKey)||'[]')||[])])]}catch{return [...defaultDailyGroups]}})();
 let tab='home', day=tasks.some(t=>t.date===today())?today():(tasks.map(t=>t.date).filter(Boolean).sort().at(-1)||today()), month=day.slice(0,7), person='';
 let scheduleStatus='', scheduleQuery='';
 let savedTask=null;
@@ -1333,16 +1337,26 @@ function people(){
   dailyFilter.onchange();
  };
  dailyFilter.onchange();
+ const groupEditor=main.querySelector('#dailyGroupEditor');
+ if(groupEditor)groupEditor.onsubmit=event=>{
+  event.preventDefault();
+  const name=new FormData(groupEditor).get('group').trim();
+  if(!name)return;
+  if(dailyGroups.includes(name)){groupEditor.querySelector('input').setCustomValidity('分类已存在');groupEditor.querySelector('input').reportValidity();return}
+  dailyGroups=[...dailyGroups,name];
+  localStorage.setItem(dailyGroupKey,JSON.stringify(dailyGroups));
+  render();
+ };
  main.querySelectorAll('[data-daily-task]').forEach(form=>form.onsubmit=event=>{
   event.preventDefault();
   const current=tasks.find(task=>task.id===form.dataset.dailyTask&&task.date===outputDay);
   if(!current)return;
-  const {cumulative,shotBatch,target,completion,status,delivery,reason,innovationDeliverable,innovationNote}=Object.fromEntries(new FormData(form));
+  const {cumulative,shotBatch,target,completion,status,delivery,reason,innovationDeliverable,innovationNote,dailyGroup}=Object.fromEntries(new FormData(form));
   const innovation=isInnovationTask(current);
   const corrected=!innovation&&cumulative!==form.elements.cumulative.defaultValue;
   const base=corrected?(cumulative===''?'':Number(cumulative)):current.actual;
   const requiresDelivery=statuses.slice(3).includes(status);
-  const next={...current,actual:innovation?current.actual:base,dailyShotCount:innovation?current.dailyShotCount:(shotBatch===''?'':Number(shotBatch)),target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:completion,status,delivery:requiresDelivery?delivery:'',unfinishedReason:reason.trim(),innovationDeliverable:innovation?(innovationDeliverable||''):current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote};
+  const next={...current,dailyGroup:dailyGroup||current.dailyGroup||'',actual:innovation?current.actual:base,dailyShotCount:innovation?current.dailyShotCount:(shotBatch===''?'':Number(shotBatch)),target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:completion,status,delivery:requiresDelivery?delivery:'',unfinishedReason:reason.trim(),innovationDeliverable:innovation?(innovationDeliverable||''):current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote};
   const message=form.querySelector('[role="status"]');
   if(requiresDelivery&&!delivery){message.textContent='已选择交付状态，请填写首次交付时间。';return}
   if(delivery&&current.assigned&&delivery<current.assigned){message.textContent='交付时间需在运营下发时间之后。';return}
@@ -1607,9 +1621,12 @@ function shootingComplete(task){
 }
 function dailyTaskReports(assignments){
  const crewRoles=[['lead','摄影师'],['model','模特'],['handModel','手模'],['assistant','摄助'],['retouch','修片']];
- return '<div class="report-meta daily-task-reports"><h3>当天任务填报</h3>'+
- '<p>每个任务由主拍填一次，同组成员查看同一份记录。当日拍摄量计入参与人员产出，已有个人当天总数优先。累计拍摄量已包含当日拍摄量，两个数字分别保存。</p>'+
- (assignments.length?assignments.map(task=>{
+ const classify=task=>task.dailyGroup|| (isInnovationTask(task)?'创新组':/ai|人工智能|生成/i.test([task.type,task.title,task.product].join(' '))?'AI素材／生成':'拍摄组');
+ const groups=['拍摄组','创新组','AI素材／生成',...dailyGroups.filter(name=>!defaultDailyGroups.includes(name))];
+ const classified=groups.map(group=>[group,assignments.filter(task=>classify(task)===group)]).filter(([,items])=>items.length);
+ return '<div class="report-meta daily-task-reports"><h3>当天任务填报</h3><form id="dailyGroupEditor" class="daily-group-editor"><label>新增分类<input name="group" maxlength="30" placeholder="例如：后期剪辑"></label><button type="submit">添加分类</button><small>新增分类保存在本浏览器。</small></form>'+ 
+ '<p>每个任务由主拍填一次，同组成员查看同一份记录。累计拍摄量已包含当日拍摄量。</p>'+ 
+ (assignments.length?classified.map(([group,items])=>'<section class="daily-task-group"><h4>'+esc(group)+' <span>'+items.length+' 项</span></h4>'+items.map(task=>{
   const innovation=isInnovationTask(task);
   const progress=Number(task.target)>0&&task.actual!=null&&task.actual!==''?count(100*Number(task.actual)/Number(task.target))+'%':'—';
   const crew=crewRoles.filter(([field])=>members(task[field]).length).map(([field,label])=>label+'：'+members(task[field]).join('、')).join(' · ');
@@ -1618,16 +1635,16 @@ function dailyTaskReports(assignments){
   const summary=innovation?(task.innovationDeliverable||'待选创新交付')+' · '+(innovationDone?'已完成':'待完成'):(reported?'已填报 · 当日 '+count(task.dailyShotCount)+' 条':'待填报');
   const normalFields='<label>任务下发量（条）<input type="number" min="1" step="1" name="target" value="'+esc(task.target)+'"></label><label>累计拍摄量（条）<input type="number" min="0" step="1" name="cumulative" value="'+esc(task.actual)+'" placeholder="可直接修正累计量"></label><label>当日拍摄量（条）<input type="number" min="0" step="1" name="shotBatch" value="'+esc(task.dailyShotCount)+'" placeholder="填写当天拍摄总数"></label>';
   const innovationFields='<label>创新交付类型<select name="innovationDeliverable">'+options(['',...innovationDeliverables],task.innovationDeliverable||'')+'</select></label><label>交付说明<input name="innovationNote" maxlength="120" value="'+esc(task.innovationNote)+'" placeholder="例如：完成洗发水脚本拆解"></label>';
-  return '<details class="daily-task-card"'+((reported||innovationDone)?'':' open')+'><summary><strong>'+esc(task.title||task.product||'拍摄任务')+'</strong> · '+summary+' · '+(innovation?'创新交付':'拍摄'+(shootingComplete(task)?'已完成':'未完成'))+(task.unfinishedReason?' · 备注：'+esc(task.unfinishedReason.slice(0,28)):'')+'</summary>'+
+  return '<details class="daily-task-card"'+((reported||innovationDone)?'':' open')+'><summary><strong>'+esc(task.product||task.title||'拍摄任务')+'</strong> · '+summary+' · '+(innovation?'创新交付':'拍摄'+(shootingComplete(task)?'已完成':'未完成'))+(task.unfinishedReason?' · 备注：'+esc(task.unfinishedReason.slice(0,28)):'')+'</summary>'+
    '<form class="daily-task-report" data-daily-task="'+esc(task.id)+'">'+
    '<p>'+esc(crew||'待安排人员')+'</p><p>'+(innovation?'创新组按完成的脚本、完整视频等交付记录，不计入拍摄条数。':'计划 '+esc(task.target==null||task.target===''?'—':task.target)+' 条 · 条数完成度 '+progress+' · '+(shootingComplete(task)?'已完成':'未完成'))+'</p>'+
-   '<div class="bar">'+(innovation?innovationFields:normalFields)+
+   '<div class="bar"><label>填报分类<select name="dailyGroup">'+options(groups,group)+'</select></label>'+(innovation?innovationFields:normalFields)+
    '<label>拍摄完成状态<select name="completion">'+[['auto','自动按数量判断'],['complete','已完成'],['incomplete','未完成']].map(([value,label])=>'<option value="'+value+'"'+((task.shootingCompletion||'auto')===value?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
    '<label>交付阶段<select name="status">'+options(task.status==='已验收'?statuses:statuses.slice(0,4),task.status||statuses[0])+'</select></label>'+
    '<label>首次交付时间<input type="datetime-local" name="delivery" value="'+esc(task.delivery)+'"></label></div>'+
    '<label>备注／未完成原因<textarea name="reason" rows="2" maxlength="500" placeholder="填写拍摄类型、影响进度的原因及下一步">'+esc(task.unfinishedReason)+'</textarea></label>'+
    '<div class="bar"><button class="primary">保存任务填报</button><span role="status"></span></div></form></details>';
- }).join(''):'<p>当天暂无安排任务。</p>')+'</div>';
+ }).join('')+'</section>').join(''):'<p>当天暂无安排任务。</p>')+'</div>';
 }
 function dailyOutput(monthStart,monthEnd){
  const assignments=tasks.filter(t=>t.date===outputDay);
