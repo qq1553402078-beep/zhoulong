@@ -202,8 +202,14 @@ main:not(.home-page) h1 {
 .chart-person-detail { margin:8px 0; padding:8px 12px; border:1px solid var(--dash-border); border-radius:8px; }
 .chart-person-detail p { margin:4px 0; }
 
-.people-page .overview-rings { grid-template-columns:repeat(auto-fit,minmax(min(100%,285px),1fr)); margin-top:10px; }
-.people-page .overview-rings .team-ring { width:76px; }
+.people-page .overview-rings { grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:12px; gap:14px; }
+.people-page .overview-rings .team-ring-card { min-height:142px; padding:18px; gap:16px; }
+.people-page .overview-rings .team-ring { width:112px; }
+.people-page .overview-rings .team-ring strong { font-size:23px; }
+.people-page .overview-rings .team-ring-card h3 { font-size:19px; margin-bottom:7px; }
+.people-page .overview-rings .ring-details p { font-size:14px; margin:5px 0; }
+.daily-task-card summary { line-height:1.7; }
+@media(max-width:900px){.people-page .overview-rings{grid-template-columns:1fr}.people-page .overview-rings .team-ring-card{min-height:0}}
 .team-attention { margin:0 14px 8px; padding:9px 12px; border:1px solid var(--dash-border); border-radius:8px; }
 .team-attention ul { display:flex; flex-wrap:wrap; gap:6px 20px; padding:0; margin:6px 0; list-style:none; }
 .team-attention li small { color:#f3c58e; }
@@ -387,6 +393,8 @@ const count=n=>Number(n).toLocaleString('zh-CN',{maximumFractionDigits:2});
 const card=(name,v)=>'<div class="card">'+name+'<b>'+v+'</b></div>';
 const newId=()=>globalThis.crypto?.randomUUID?.()||Date.now()+'-'+Math.random();
 const statuses=['待拍摄','拍摄中','后期中','已交付','已验收'];
+const innovationDeliverables=['脚本拆解','完整视频','拍摄方案','创新剪辑','其他创新交付'];
+const isInnovationTask=task=>members(task?.lead).some(name=>roster['创新组']?.includes(name));
 let tab='home', day=tasks.some(t=>t.date===today())?today():(tasks.map(t=>t.date).filter(Boolean).sort().at(-1)||today()), month=day.slice(0,7), person='';
 let scheduleStatus='', scheduleQuery='';
 let savedTask=null;
@@ -611,10 +619,10 @@ function shootingArt(index){
 function weekRail(date){
  const current=today(), tomorrow=plusDay(current,1);
  const selected=date&&![current,tomorrow].includes(date)?date:'';
- const start=weekOf(date||current);
  const button=(d,name)=>'<button type="button" data-schedule-day="'+d+'" aria-pressed="'+(d===date)+'">'+name+' <strong>'+d.slice(5).replace('-','月')+'日</strong></button>';
- const more=Array.from({length:7},(_,i)=>plusDay(start,i)).filter(d=>![current,tomorrow,selected].includes(d));
- return '<div class="schedule-dates" aria-label="排班日期"><div class="date-today">'+button(current,'今天')+'</div>'+button(tomorrow,'明天')+(selected?button(selected,'当前查看'):'')+'<details><summary>更多日期</summary><div class="date-options">'+more.map(d=>button(d,'周'+'日一二三四五六'[new Date(d+'T00:00:00Z').getUTCDay()])).join('')+'</div></details></div>';
+ const around=Array.from({length:29},(_,i)=>plusDay(current,i-14)).filter(d=>![current,tomorrow,selected].includes(d));
+ const named=d=>'周'+'日一二三四五六'[new Date(d+'T00:00:00Z').getUTCDay()];
+ return '<div class="schedule-dates" aria-label="排班日期"><button type="button" data-schedule-day="'+plusDay(date||current,-7)+'">前 7 天</button><div class="date-today">'+button(current,'今天')+'</div>'+button(tomorrow,'明天')+(selected?button(selected,'当前查看'):'')+'<details><summary>更多日期与历史排班</summary><div class="date-options">'+around.map(d=>button(d,named(d))).join('')+'</div></details><button type="button" data-schedule-day="'+plusDay(date||current,7)+'">后 7 天</button></div>';
 }
 function labelledLines(text){
  return text.split(/\r?\n/).map(line=>{
@@ -1328,13 +1336,14 @@ function people(){
   event.preventDefault();
   const current=tasks.find(task=>task.id===form.dataset.dailyTask&&task.date===outputDay);
   if(!current)return;
-  const {cumulative,shotBatch,target,completion,status,delivery,reason}=Object.fromEntries(new FormData(form));
-  const corrected=cumulative!==form.elements.cumulative.defaultValue;
+  const {cumulative,shotBatch,target,completion,status,delivery,reason,innovationDeliverable,innovationNote}=Object.fromEntries(new FormData(form));
+  const innovation=isInnovationTask(current);
+  const corrected=!innovation&&cumulative!==form.elements.cumulative.defaultValue;
   const base=corrected?(cumulative===''?'':Number(cumulative)):current.actual;
-  const next={...current,actual:base,dailyShotCount:shotBatch===''?'':Number(shotBatch),target:target===''?'':Number(target),shootingCompletion:completion,status,delivery,unfinishedReason:reason.trim()};
+  const requiresDelivery=statuses.slice(3).includes(status);
+  const next={...current,actual:innovation?current.actual:base,dailyShotCount:innovation?current.dailyShotCount:(shotBatch===''?'':Number(shotBatch)),target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:completion,status,delivery:requiresDelivery?delivery:'',unfinishedReason:reason.trim(),innovationDeliverable:innovation?(innovationDeliverable||''):current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote};
   const message=form.querySelector('[role="status"]');
-  if(statuses.slice(3).includes(status)&&!delivery){message.textContent='请填写首次交付时间。';return}
-  if(delivery&&!statuses.slice(3).includes(status)){message.textContent='已填写交付时间，请选择已交付或已验收。';return}
+  if(requiresDelivery&&!delivery){message.textContent='已选择交付状态，请填写首次交付时间。';return}
   if(delivery&&current.assigned&&delivery<current.assigned){message.textContent='交付时间需在运营下发时间之后。';return}
   if((current.status==='已验收'||current.acceptanceBatches?.length)&&(next.status!==current.status||next.delivery!==current.delivery)){
    message.textContent='已有验收记录，请到工作安排修改交付状态和时间。';return;
@@ -1372,7 +1381,14 @@ function managementView(period,outputRows,[from,to],daily){
  const monthTasks=tasks.filter(t=>t.date.startsWith(period));
  const periodTasks=monthTasks.filter(t=>t.date>=from&&t.date<=to);
  const recorded=t=>t.actual!=null&&t.actual!=='';
- const teamRows=[['拍摄组',monthTasks.filter(t=>roleNames.lead.includes(members(t.lead)[0])&&!roster['创新组'].includes(members(t.lead)[0]))],['创新组',monthTasks.filter(t=>roster['创新组'].includes(members(t.lead)[0]))]];
+ const teamRows=[['拍摄组',monthTasks.filter(t=>roleNames.lead.includes(members(t.lead)[0])&&!roster['创新组'].includes(members(t.lead)[0]))]];
+ const innovationTasks=monthTasks.filter(isInnovationTask);
+ const innovationRange=innovationTasks.filter(t=>t.date>=from&&t.date<=to);
+ const innovationFinished=innovationRange.filter(t=>shootingComplete(t)||statuses.slice(3).includes(t.status));
+ const innovationBreakdown=innovationFinished.reduce((summary,task)=>{
+  const kind=innovationDeliverables.includes(task.innovationDeliverable)?task.innovationDeliverable:'其他创新交付';
+  summary[kind]=(summary[kind]||0)+1;return summary;
+ },{});
  const groupActuals=teamRows.map(([name,entries])=>{
   const available=entries.filter(recorded);
   return config.actuals?.[name]??(available.length?sum(available,'actual'):null);
@@ -1403,8 +1419,12 @@ function managementView(period,outputRows,[from,to],daily){
   '<p>已拍 <strong>'+captured.length+' / '+periodTasks.length+' 项</strong></p><p>拍摄中 '+periodTasks.filter(t=>t.status==='拍摄中'&&!captured.includes(t)).length+' 项 · 待拍 '+periodTasks.filter(t=>!captured.includes(t)&&t.status!=='拍摄中').length+' 项</p>')+
  progressRing('到期交付完成度',delivered.length,dueTasks.length,
   '<p>已交付 <strong>'+delivered.length+' / '+dueTasks.length+' 项</strong></p><p>待交付 '+(dueTasks.length-delivered.length)+' 项 · 逾期 '+late.length+' 项</p>');
- const rings='<div class="team-rings overview-rings">'+focusRings+ring(rangeTotal>0?green+' 0 '+baseShare+'%, '+gold+' '+baseShare+'% 100%':neutral+' 0 100%',rangeTotal===null?'—':count(rangeTotal),'已录任务条数',
- teamRows.map(([name],i)=>'<p><span class="ring-key" style="--key:'+(i===0?green:gold)+'"></span>'+name+' <strong>'+(rangeActuals[i]===null?'待填':count(rangeActuals[i])+' 条')+'</strong></p>').join('')+'<p>个人已填报 '+reportNames.size+' 人 · <a href="#dailyOutput" data-report-jump>查看每日条数</a></p>')+
+ const innovationRatio=innovationRange.length?100*innovationFinished.length/innovationRange.length:0;
+ const innovationDetail=Object.entries(innovationBreakdown).length?Object.entries(innovationBreakdown).map(([kind,total])=>'<p><span class="ring-key" style="--key:'+gold+'"></span>'+esc(kind)+' <strong>'+total+' 份</strong></p>').join(''):'<p>暂未记录已完成的脚本或视频交付</p>';
+ const rings='<div class="team-rings overview-rings">'+focusRings+ring(rangeTotal>0?green+' 0 '+baseShare+'%, '+gold+' '+baseShare+'% 100%':neutral+' 0 100%',rangeTotal===null?'—':count(rangeTotal),'今日拍摄条数',
+ '<p><span class="ring-key" style="--key:'+green+'"></span>拍摄组 <strong>'+(rangeActuals[0]===null?'待填':count(rangeActuals[0])+' 条')+'</strong></p><p>个人已填报 '+reportNames.size+' 人 · <a href="#dailyOutput" data-report-jump>查看每日条数</a></p>')+
+ ring(innovationRange.length?green+' 0 '+innovationRatio+'%, '+neutral+' '+innovationRatio+'% 100%':neutral+' 0 100%',innovationRange.length?count(innovationRatio)+'%':'—','创新交付完成度',
+ '<p>已完成 <strong>'+innovationFinished.length+' / '+innovationRange.length+' 项</strong></p>'+innovationDetail)+
  (isMonth?ring(completion===null?neutral+' 0 100%':green+' 0 '+Math.min(completion,100)+'%, '+neutral+' '+Math.min(completion,100)+'% 100%',completion===null?'—':count(completion)+'%','团队月度目标完成率',
  '<p>团队目标 <strong>'+(targetTotal===null?'待设齐':count(targetTotal)+' 条')+'</strong></p><p>'+(completion===null?'两组的目标和实际均齐全后计算。':'已完成 '+count(knownTotal)+' 条，距目标还差 '+count(Math.max(0,targetTotal-knownTotal))+' 条。')+'</p>'):'')+'</div>';
  const goals=(name,kind,actual,group=false,toggle='')=>{
@@ -1423,7 +1443,7 @@ function managementView(period,outputRows,[from,to],daily){
  const goalGroups=groupMembership.map(([name,names],index)=>{
   const open=expandedGoalGroups.has(index);
   const toggle='<button type="button" data-goal-group="'+index+'" aria-controls="goal-members-'+index+'" aria-expanded="'+open+'">'+esc(name)+' · '+names.length+' 人</button>';
-  const summary=index<teamRows.length?goals(name,'组别',groupActuals[index]??'—',true,toggle):'<tr class="goal-group"><td>'+toggle+'</td><td colspan="5">个人目标</td></tr>';
+  const summary=index<teamRows.length?goals(name,'组别',groupActuals[index]??'—',true,toggle):'<tr class="goal-group"><td>'+toggle+'</td><td colspan="5">创新组按脚本拆解、完整视频等交付项统计，不使用拍摄条数目标。</td></tr>';
   const members=outputRows.filter(([person])=>names.includes(person)).map(([person,role,,,actual])=>goals(person,role,actual)).join('');
   return '<tbody>'+summary+'</tbody><tbody class="goal-members" id="goal-members-'+index+'"'+(open?'':' hidden')+'>'+members+'</tbody>';
  }).join('');
@@ -1454,7 +1474,7 @@ function managementView(period,outputRows,[from,to],daily){
   '</ul>'+(attention.length>3?'<small>另有 '+(attention.length-3)+' 项</small> ':'')+'<button type="button" id="overviewSchedule">查看工作安排</button></div>':'';
 
  return '<section class="panel management"><div class="report-meta"><div class="bar chart-switch" role="group" aria-label="团队统计周期">'+teamPeriodLabels.map((text,i)=>'<button type="button" data-team-period="'+i+'" aria-pressed="'+(i===teamPeriod)+'">'+text+'</button>').join('')+'<span>'+esc(from===to?from:from+' 至 '+to)+'</span><label>查看日期<input id="teamOverviewDate" type="date" min="'+period+'-01" max="'+period+'-'+new Date(Date.UTC(Number(period.slice(0,4)),Number(period.slice(5)),0)).getUTCDate()+'" value="'+outputDay+'"></label><a href="#personalOutput" data-report-jump>查看个人产出明细</a></div></div>'+
- rings+preview+'<div class="team-rings-note"><small>'+label+'待补任务条数 '+missing.length+' 项 · 类型待确认 '+unknown.length+' 项。'+(isMonth?'组别月度补录优先。':'任务条数按主拍归组。拍摄完成以手动设置或计划条数达标为准。')+'</small></div>'+
+ rings+preview+'<div class="team-rings-note"><small>'+label+'待补任务条数 '+missing.length+' 项 · 类型待确认 '+unknown.length+' 项。拍摄组按条数汇总，创新组按脚本拆解、完整视频等交付项汇总。</small></div>'+
  '<details id="monthlyGoals"><summary>月度目标与完成进度</summary><form id="manageGoals"><div class="chart-table-scroll"><table><thead><tr><th>组别／成员</th><th>口径</th><th>目标（条）</th><th>实际（条）</th><th>完成率</th><th>还差</th></tr></thead>'+
  goalGroups+'</table></div><p><small>组别默认按任务的摄影师归组，每个任务计一次。摄助担任主拍时，任务产出计入基础组。可补录组别实际总数，清空后恢复任务汇总。个人实际取个人月产出，协作任务可能归属多人。</small></p>'+
  '<label class="management-notes">月度复盘与改进事项<textarea name="notes" placeholder="例如：口播集中排景，明确运营确认节点">'+esc(config.notes)+'</textarea></label><div class="bar"><button class="primary">保存目标与复盘</button><span id="managementStatus" role="status"></span></div></form></details>'+
@@ -1589,18 +1609,22 @@ function dailyTaskReports(assignments){
  return '<div class="report-meta daily-task-reports"><h3>当天任务填报</h3>'+
  '<p>每个任务由主拍填一次，同组成员查看同一份记录。当日拍摄量计入参与人员产出，已有个人当天总数优先。累计拍摄量已包含当日拍摄量，两个数字分别保存。</p>'+
  (assignments.length?assignments.map(task=>{
+  const innovation=isInnovationTask(task);
   const progress=Number(task.target)>0&&task.actual!=null&&task.actual!==''?count(100*Number(task.actual)/Number(task.target))+'%':'—';
   const crew=crewRoles.filter(([field])=>members(task[field]).length).map(([field,label])=>label+'：'+members(task[field]).join('、')).join(' · ');
   const reported=task.dailyShotCount!=null&&task.dailyShotCount!=='';
-  const summary=reported?'已填报 · 当日 '+count(task.dailyShotCount)+' 条':'待填报';
-  return '<details class="daily-task-card"'+(reported?'':' open')+'><summary><strong>'+esc(task.title||task.product||'拍摄任务')+'</strong> · '+summary+' · 拍摄'+(shootingComplete(task)?'已完成':'未完成')+'</summary>'+
+  const innovationDone=shootingComplete(task)||statuses.slice(3).includes(task.status);
+  const summary=innovation?(task.innovationDeliverable||'待选创新交付')+' · '+(innovationDone?'已完成':'待完成'):(reported?'已填报 · 当日 '+count(task.dailyShotCount)+' 条':'待填报');
+  const normalFields='<label>任务下发量（条）<input type="number" min="1" step="1" name="target" value="'+esc(task.target)+'"></label><label>累计拍摄量（条）<input type="number" min="0" step="1" name="cumulative" value="'+esc(task.actual)+'" placeholder="可直接修正累计量"></label><label>当日拍摄量（条）<input type="number" min="0" step="1" name="shotBatch" value="'+esc(task.dailyShotCount)+'" placeholder="填写当天拍摄总数"></label>';
+  const innovationFields='<label>创新交付类型<select name="innovationDeliverable">'+options(['',...innovationDeliverables],task.innovationDeliverable||'')+'</select></label><label>交付说明<input name="innovationNote" maxlength="120" value="'+esc(task.innovationNote)+'" placeholder="例如：完成洗发水脚本拆解"></label>';
+  return '<details class="daily-task-card"'+((reported||innovationDone)?'':' open')+'><summary><strong>'+esc(task.title||task.product||'拍摄任务')+'</strong> · '+summary+' · '+(innovation?'创新交付':'拍摄'+(shootingComplete(task)?'已完成':'未完成'))+(task.unfinishedReason?' · 备注：'+esc(task.unfinishedReason.slice(0,28)):'')+'</summary>'+
    '<form class="daily-task-report" data-daily-task="'+esc(task.id)+'">'+
-   '<p>'+esc(crew||'待安排人员')+'</p><p>计划 '+esc(task.target==null||task.target===''?'—':task.target)+' 条 · 条数完成度 '+progress+' · '+(shootingComplete(task)?'已完成':'未完成')+'</p>'+
-   '<div class="bar"><label>任务下发量（条）<input type="number" min="1" step="1" name="target" value="'+esc(task.target)+'"></label><label>累计拍摄量（条）<input type="number" min="0" step="1" name="cumulative" value="'+esc(task.actual)+'" placeholder="可直接修正累计量"></label><label>当日拍摄量（条）<input type="number" min="0" step="1" name="shotBatch" value="'+esc(task.dailyShotCount)+'" placeholder="填写当天拍摄总数"></label>'+
+   '<p>'+esc(crew||'待安排人员')+'</p><p>'+(innovation?'创新组按完成的脚本、完整视频等交付记录，不计入拍摄条数。':'计划 '+esc(task.target==null||task.target===''?'—':task.target)+' 条 · 条数完成度 '+progress+' · '+(shootingComplete(task)?'已完成':'未完成'))+'</p>'+
+   '<div class="bar">'+(innovation?innovationFields:normalFields)+
    '<label>拍摄完成状态<select name="completion">'+[['auto','自动按数量判断'],['complete','已完成'],['incomplete','未完成']].map(([value,label])=>'<option value="'+value+'"'+((task.shootingCompletion||'auto')===value?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
    '<label>交付阶段<select name="status">'+options(task.status==='已验收'?statuses:statuses.slice(0,4),task.status||statuses[0])+'</select></label>'+
    '<label>首次交付时间<input type="datetime-local" name="delivery" value="'+esc(task.delivery)+'"></label></div>'+
-   '<label>未完成原因<textarea name="reason" rows="2" maxlength="500" placeholder="填写影响进度的原因及下一步">'+esc(task.unfinishedReason)+'</textarea></label>'+
+   '<label>备注／未完成原因<textarea name="reason" rows="2" maxlength="500" placeholder="填写拍摄类型、影响进度的原因及下一步">'+esc(task.unfinishedReason)+'</textarea></label>'+
    '<div class="bar"><button class="primary">保存任务填报</button><span role="status"></span></div></form></details>';
  }).join(''):'<p>当天暂无安排任务。</p>')+'</div>';
 }
