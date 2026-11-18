@@ -211,6 +211,10 @@ main:not(.home-page) h1 {
 .people-page .overview-rings .team-ring-card h3 { font-size:19px;margin-bottom:7px; }
 .people-page .overview-rings .ring-details p { font-size:14px;margin:5px 0; }
 .people-page .daily-task-card summary { line-height:1.7; }
+.people-page .report-section > summary{position:relative;padding-left:20px;letter-spacing:.02em}
+.people-page .report-section > summary::before{content:'';position:absolute;left:0;top:50%;width:6px;height:22px;transform:translateY(-50%);border-radius:8px;background:#5b9fff}
+.people-page #dailyOutput > summary::before{background:#45d8c5}.people-page #monthlyBackfill > summary::before{background:#f2bf6b}.people-page #personalOutput > summary{color:#d4c2ff}.people-page #personalOutput > summary::before{background:#aa86f4}.people-page #personalReport > summary{color:#ffc6d9}.people-page #personalReport > summary::before{background:#ec7eaa}
+.daily-task-group{margin:14px 0;border:1px solid #2b496b;border-left:5px solid #5b9fff;border-radius:12px;overflow:hidden;background:#0d203a}.daily-task-group h4{display:flex;justify-content:space-between;align-items:center;margin:0;padding:10px 14px;color:#dbeaff;background:#132d4e;font-size:16px}.daily-task-group h4 span{padding:3px 9px;border-radius:999px;background:#285783;color:#e9f5ff;font-size:12px}.daily-task-group--shooting{border-left-color:#57a0ff}.daily-task-group--shooting h4{background:#12355f}.daily-task-group--innovation{border-left-color:#a988ff}.daily-task-group--innovation h4{background:#2e2353;color:#ebdfff}.daily-task-group--innovation h4 span{background:#6343a0;color:#fff}.daily-task-group--custom{border-left-color:#e99a58}.daily-task-group--custom h4{background:#48321d;color:#ffe6c7}.daily-task-group--custom h4 span{background:#9e6331;color:#fff}.daily-task-group .daily-task-card{margin:10px 12px;border-color:#31516f}.daily-task-group--innovation .daily-task-card{border-color:#674d9e}.daily-task-group--custom .daily-task-card{border-color:#8c623d}
 @media(max-width:900px){.people-page .overview-rings{grid-template-columns:1fr}.people-page .overview-rings .team-ring-card{min-height:0}}
 .team-attention { margin:0 14px 8px; padding:9px 12px; border:1px solid var(--dash-border); border-radius:8px; }
 .team-attention ul { display:flex; flex-wrap:wrap; gap:6px 20px; padding:0; margin:6px 0; list-style:none; }
@@ -396,11 +400,11 @@ const count=n=>Number(n).toLocaleString('zh-CN',{maximumFractionDigits:2});
 const card=(name,v)=>'<div class="card">'+name+'<b>'+v+'</b></div>';
 const newId=()=>globalThis.crypto?.randomUUID?.()||Date.now()+'-'+Math.random();
 const statuses=['待拍摄','拍摄中','后期中','已交付','已验收'];
-const innovationDeliverables=['脚本拆解','完整视频','拍摄方案','创新剪辑','其他创新交付'];
+const innovationDeliverables=['脚本拆解','AI素材／生成','完整视频','拍摄方案','创新剪辑','其他创新交付'];
 const isInnovationTask=task=>members(task?.lead).some(name=>roster['创新组']?.includes(name));
 const dailyGroupKey='studio-daily-task-groups-v1';
-const defaultDailyGroups=['拍摄组','创新组','AI素材／生成'];
-let dailyGroups=(()=>{try{return [...new Set([...defaultDailyGroups,...(JSON.parse(localStorage.getItem(dailyGroupKey)||'[]')||[])])]}catch{return [...defaultDailyGroups]}})();
+const defaultDailyGroups=['拍摄组','创新组'];
+let dailyGroups=(()=>{try{return [...new Set([...defaultDailyGroups,...(JSON.parse(localStorage.getItem(dailyGroupKey)||'[]')||[]).filter(name=>name!=='AI素材／生成')])]}catch{return [...defaultDailyGroups]}})();
 let tab='home', day=tasks.some(t=>t.date===today())?today():(tasks.map(t=>t.date).filter(Boolean).sort().at(-1)||today()), month=day.slice(0,7), person='';
 let scheduleStatus='', scheduleQuery='';
 let savedTask=null;
@@ -1357,7 +1361,8 @@ function people(){
   const corrected=!innovation&&cumulative!==form.elements.cumulative.defaultValue;
   const base=corrected?(cumulative===''?'':Number(cumulative)):current.actual;
   const requiresDelivery=statuses.slice(3).includes(status);
-  const next={...current,dailyGroup:dailyGroup||current.dailyGroup||'',actual:innovation?current.actual:base,dailyShotCount:innovation?current.dailyShotCount:(shotBatch===''?'':Number(shotBatch)),target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:completion,status,delivery:requiresDelivery?delivery:'',unfinishedReason:reason.trim(),innovationDeliverable:innovation?(innovationDeliverable||''):current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote};
+  const normalizedGroup=dailyGroup==='AI素材／生成'?'':dailyGroup;
+  const next={...current,dailyGroup:normalizedGroup||current.dailyGroup||'',actual:innovation?current.actual:base,dailyShotCount:innovation?current.dailyShotCount:(shotBatch===''?'':Number(shotBatch)),target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:completion,status,delivery:requiresDelivery?delivery:'',unfinishedReason:reason.trim(),innovationDeliverable:innovation?(innovationDeliverable||''):current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote};
   const message=form.querySelector('[role="status"]');
   if(requiresDelivery&&!delivery){message.textContent='已选择交付状态，请填写首次交付时间。';return}
   if(delivery&&current.assigned&&delivery<current.assigned){message.textContent='交付时间需在运营下发时间之后。';return}
@@ -1402,7 +1407,7 @@ function managementView(period,outputRows,[from,to],daily){
  const innovationRange=innovationTasks.filter(t=>t.date>=from&&t.date<=to);
  const innovationFinished=innovationRange.filter(t=>shootingComplete(t)||statuses.slice(3).includes(t.status));
  const innovationKind=task=>{
-  if(/ai|人工智能|生成/i.test([task.dailyGroup,task.type,task.title,task.product,task.innovationDeliverable].join(' ')))return 'AI素材／生成';
+  if(task.innovationDeliverable==='AI素材／生成')return 'AI素材／生成';
   if(task.innovationDeliverable==='脚本拆解')return '拆解脚本';
   if(['完整视频','创新剪辑'].includes(task.innovationDeliverable))return '剪辑视频';
   return '主拍素材';
@@ -1635,12 +1640,15 @@ function shootingComplete(task){
 }
 function dailyTaskReports(assignments){
  const crewRoles=[['lead','摄影师'],['model','模特'],['handModel','手模'],['assistant','摄助'],['retouch','修片']];
- const classify=task=>task.dailyGroup|| (isInnovationTask(task)?'创新组':/ai|人工智能|生成/i.test([task.type,task.title,task.product].join(' '))?'AI素材／生成':'拍摄组');
- const groups=['拍摄组','创新组','AI素材／生成',...dailyGroups.filter(name=>!defaultDailyGroups.includes(name))];
+ const classify=task=>{
+  const stored=task.dailyGroup==='AI素材／生成'?'':task.dailyGroup;
+  return stored||(isInnovationTask(task)?'创新组':'拍摄组');
+ };
+ const groups=['拍摄组','创新组',...dailyGroups.filter(name=>!defaultDailyGroups.includes(name)&&name!=='AI素材／生成')];
  const classified=groups.map(group=>[group,assignments.filter(task=>classify(task)===group)]).filter(([,items])=>items.length);
  return '<div class="report-meta daily-task-reports"><h3>当天任务填报</h3><form id="dailyGroupEditor" class="daily-group-editor"><label>新增分类<input name="group" maxlength="30" placeholder="例如：后期剪辑"></label><button type="submit">添加分类</button><small>新增分类保存在本浏览器。</small></form>'+ 
  '<p>每个任务由主拍填一次，同组成员查看同一份记录。累计拍摄量已包含当日拍摄量。</p>'+ 
- (assignments.length?classified.map(([group,items])=>'<section class="daily-task-group"><h4>'+esc(group)+' <span>'+items.length+' 项</span></h4>'+items.map(task=>{
+ (assignments.length?classified.map(([group,items])=>'<section class="daily-task-group daily-task-group--'+(group==='拍摄组'?'shooting':group==='创新组'?'innovation':'custom')+'"><h4>'+esc(group)+' <span>'+items.length+' 项</span></h4>'+items.map(task=>{
   const innovation=isInnovationTask(task);
   const progress=Number(task.target)>0&&task.actual!=null&&task.actual!==''?count(100*Number(task.actual)/Number(task.target))+'%':'—';
   const crew=crewRoles.filter(([field])=>members(task[field]).length).map(([field,label])=>label+'：'+members(task[field]).join('、')).join(' · ');
