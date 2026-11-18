@@ -210,44 +210,84 @@
     var box = document.createElement('div');
     box.id = 'ai-box';
     box.innerHTML =
-      '<div class="ai-head">AI 助手 <button id="ai-close" style="float:right;background:none;border:0;color:#fff;cursor:pointer;font-size:18px">×</button></div>' +
-      '<div id="ai-log" class="ai-log"><div class="ai-msg ai-sys">你好！我是工作台 AI 助手，可以帮你查询和总结。请问需要什么？</div></div>' +
+      '<div class="ai-head">✦ AI 助手 <span style="font-size:11px;color:#9b8fb0;font-weight:400">免费</span> <button id="ai-close" style="float:right;background:none;border:0;color:#fff;cursor:pointer;font-size:18px">×</button></div>' +
+      '<div class="ai-tabs"><button class="ai-tab active" data-mode="ask">问答建议</button><button class="ai-tab" data-mode="analyze">对标链接</button><button class="ai-tab" data-mode="image">AI 生图</button></div>' +
+      '<div id="ai-log" class="ai-log"><div class="ai-msg ai-sys" id="ai-welcome">你好！选一个功能：问答建议、粘贴对标链接分析搭建要点、或输入画面描述生成图片。全部免费。</div></div>' +
       '<div class="ai-input-row"><input id="ai-q" placeholder="输入问题…"><button id="ai-send">发送</button></div>';
     var style = document.createElement('style');
     style.textContent =
-      '#ai-box{position:fixed;left:18px;bottom:72px;z-index:8001;width:min(380px,calc(100vw - 36px));height:440px;background:#15131c;border:1px solid #3a3348;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 50px #000a}' +
+      '#ai-box{position:fixed;left:18px;bottom:72px;z-index:8001;width:min(420px,calc(100vw - 36px));height:min(560px,calc(100vh - 100px));background:#15131c;border:1px solid #3a3348;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 50px #000a}' +
       '.ai-head{padding:12px 16px;background:#241f33;color:#e8e0f2;font-weight:700}' +
+      '.ai-tabs{display:flex;border-bottom:1px solid #3a3348;background:#1b1826}' +
+      '.ai-tab{flex:1;padding:10px 4px;background:none;border:0;color:#9b8fb0;font-size:12px;cursor:pointer;border-bottom:2px solid transparent}' +
+      '.ai-tab.active{color:#d9c9ff;border-bottom-color:#8a6fd4;font-weight:700}' +
       '.ai-log{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}' +
-      '.ai-msg{padding:9px 12px;border-radius:10px;font-size:13px;line-height:1.6;max-width:88%}' +
+      '.ai-msg{padding:9px 12px;border-radius:10px;font-size:13px;line-height:1.6;max-width:90%;overflow-wrap:anywhere;white-space:pre-wrap}' +
       '.ai-sys{background:#241f33;color:#cfc6db;align-self:flex-start}' +
       '.ai-user{background:#3a2f5c;color:#fff;align-self:flex-end}' +
       '.ai-reply{background:#1c2733;color:#dce9fc;align-self:flex-start}' +
+      '.ai-img{background:#1c2733;padding:8px;border-radius:10px;align-self:flex-start;max-width:90%}' +
+      '.ai-img img{max-width:100%;border-radius:6px;display:block}' +
       '.ai-input-row{display:flex;gap:8px;padding:10px;border-top:1px solid #3a3348}' +
-      '.ai-input-row input{flex:1;padding:10px;border-radius:8px;border:1px solid #4a4258;background:#0e0c14;color:#fff;outline:none}' +
-      '.ai-input-row button{padding:10px 14px;border:0;border-radius:8px;background:#8a6fd4;color:#fff;cursor:pointer}';
+      '.ai-input-row input{flex:1;padding:10px;border-radius:8px;border:1px solid #4a4258;background:#0e0c14;color:#fff;outline:none;font-size:13px}' +
+      '.ai-input-row button{padding:10px 14px;border:0;border-radius:8px;background:#8a6fd4;color:#fff;cursor:pointer;font-weight:700}';
     document.head.appendChild(style);
     document.body.appendChild(box);
     document.getElementById('ai-close').onclick = function () { box.remove(); };
     var log = document.getElementById('ai-log');
     var q = document.getElementById('ai-q');
+    var mode = 'ask';
+    var welcome = {
+      ask: '你好！我是工作台 AI 助手，可以帮你查询、写文案、给拍摄建议。请问需要什么？',
+      analyze: '粘贴一个对标链接（https://…），我会读取页面内容，帮你拆解场景、列出搭建要点和拍摄建议。',
+      image: '输入画面描述（如：极简护肤品摆拍、大理石台面、柔和光线），我用 AI 免费生成一张参考图。每天免费约 200 张。'
+    };
+    var ph = { ask: '输入问题…', analyze: '粘贴对标链接 https://…', image: '描述你想要的画面…' };
+    document.querySelectorAll('.ai-tab').forEach(function (tab) {
+      tab.onclick = function () {
+        mode = tab.dataset.mode;
+        document.querySelectorAll('.ai-tab').forEach(function (t) { t.classList.toggle('active', t === tab); });
+        document.getElementById('ai-welcome').textContent = welcome[mode];
+        q.placeholder = ph[mode];
+        log.querySelectorAll('.ai-msg:not(#ai-welcome),.ai-img').forEach(function (n) { n.remove(); });
+        q.focus();
+      };
+    });
+    function sysMsg(t) { log.insertAdjacentHTML('beforeend', '<div class="ai-msg ai-sys">' + esc(t) + '</div>'); log.scrollTop = log.scrollHeight; }
     function send() {
       var text = (q.value || '').trim();
       if (!text) return;
       q.value = '';
       log.insertAdjacentHTML('beforeend', '<div class="ai-msg ai-user">' + esc(text) + '</div>');
       log.scrollTop = log.scrollHeight;
-      var ctx = {
-        tasks: (function () { try { return JSON.parse(localStorage.getItem('studio-ops-v1') || '[]').length; } catch (e) { return 0; } })(),
-        leader: (function () { try { return (JSON.parse(localStorage.getItem('studio-ops-settings-v1') || '{}').leader) || ''; } catch (e) { return ''; } })()
-      };
-      fetch(API + '/ai/ask', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: text, context: ctx })
+      var endpoint, payload;
+      if (mode === 'analyze') {
+        endpoint = '/ai/analyze'; payload = { url: text };
+      } else if (mode === 'image') {
+        endpoint = '/ai/image'; payload = { prompt: text };
+      } else {
+        var ctx = {
+          tasks: (function () { try { return JSON.parse(localStorage.getItem('studio-ops-v1') || '[]').length; } catch (e) { return 0; } })(),
+          leader: (function () { try { return (JSON.parse(localStorage.getItem('studio-ops-settings-v1') || '{}').leader) || ''; } catch (e) { return ''; } })()
+        };
+        endpoint = '/ai/ask'; payload = { question: text, context: ctx };
+      }
+      sysMsg('处理中…');
+      fetch(API + endpoint, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       }).then(function (r) { return r.json(); }).then(function (d) {
-        log.insertAdjacentHTML('beforeend', '<div class="ai-msg ai-reply">' + esc(d.answer || (d.error ? '出错了：' + d.error : '暂时无法回答')) + '</div>');
+        var t = log.querySelector('.ai-sys:last-child'); if (t) t.remove();
+        if (d.image) {
+          log.insertAdjacentHTML('beforeend', '<div class="ai-img"><img src="' + d.image + '" alt="AI生成图"><div style="font-size:11px;color:#9b8fb0;margin-top:6px">AI 生成参考图 · 免费</div></div>');
+        } else if (d.answer) {
+          log.insertAdjacentHTML('beforeend', '<div class="ai-msg ai-reply">' + esc(d.answer) + '</div>');
+        } else {
+          log.insertAdjacentHTML('beforeend', '<div class="ai-msg ai-reply">' + esc(d.error || '暂时无法处理') + '</div>');
+        }
         log.scrollTop = log.scrollHeight;
       }).catch(function () {
-        log.insertAdjacentHTML('beforeend', '<div class="ai-msg ai-reply">网络异常，请重试</div>');
+        var t = log.querySelector('.ai-sys:last-child'); if (t) t.remove();
+        sysMsg('网络异常，请重试');
       });
     }
     document.getElementById('ai-send').onclick = send;
