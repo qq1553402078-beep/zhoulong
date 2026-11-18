@@ -301,6 +301,35 @@
     });
     renderWelcome();
     function sysMsg(t) { log.insertAdjacentHTML('beforeend', '<div class="ai-msg ai-sys">' + esc(t) + '</div>'); log.scrollTop = log.scrollHeight; }
+    // 从网站真实数据构造人效摘要，杜绝 AI 凭空编人名
+    function realStats() {
+      var people = [];
+      try {
+        var settings = JSON.parse(localStorage.getItem('studio-ops-settings-v1') || '{}');
+        var roster = settings.roster || {};
+        Object.keys(roster).forEach(function (g) {
+          (Array.isArray(roster[g]) ? roster[g] : []).forEach(function (n) { if (n && people.indexOf(n) < 0) people.push(n); });
+        });
+      } catch (e) {}
+      var tasks = [];
+      try { tasks = JSON.parse(localStorage.getItem('studio-ops-v1') || '[]') || []; } catch (e) {}
+      var stat = {};
+      people.forEach(function (n) { stat[n] = { tasks: 0, shots: 0 }; });
+      var roleKeys = ['lead', 'assistant', 'model', 'retouch', 'handModel'];
+      tasks.forEach(function (t) {
+        var participants = {};
+        roleKeys.forEach(function (k) {
+          var v = t[k];
+          (Array.isArray(v) ? v : String(v || '').split('、')).forEach(function (n) { n = String(n).trim(); if (n) participants[n] = 1; });
+        });
+        var shot = (t.dailyShotCount != null && t.dailyShotCount !== '') ? Number(t.dailyShotCount) : Number(t.actual || 0);
+        if (!isFinite(shot)) shot = 0;
+        Object.keys(participants).forEach(function (n) { if (stat[n]) { stat[n].tasks++; stat[n].shots += shot; } });
+      });
+      var ranked = people.map(function (n) { return { name: n, tasks: stat[n].tasks, shots: stat[n].shots }; })
+        .sort(function (a, b) { return b.tasks - a.tasks; });
+      return { people: people, ranked: ranked, totalTasks: tasks.length };
+    }
     function send() {
       var text = (q.value || '').trim();
       if (!text) return;
@@ -314,9 +343,9 @@
         endpoint = '/ai/image'; payload = { prompt: text };
       } else {
         var ctx = {
-          tasks: (function () { try { return JSON.parse(localStorage.getItem('studio-ops-v1') || '[]').length; } catch (e) { return 0; } })(),
           leader: (function () { try { return (JSON.parse(localStorage.getItem('studio-ops-settings-v1') || '{}').leader) || ''; } catch (e) { return ''; } })(),
-          name: viewer && viewer.name ? viewer.name : (savedName || '')
+          name: viewer && viewer.name ? viewer.name : (savedName || ''),
+          stats: realStats()
         };
         endpoint = '/ai/ask'; payload = { question: text, context: ctx };
       }
