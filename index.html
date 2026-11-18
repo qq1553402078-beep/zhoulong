@@ -217,6 +217,7 @@ main:not(.home-page) h1 {
 .people-page #dailyOutput > summary::before{background:#45d8c5}.people-page #monthlyBackfill > summary::before{background:#f2bf6b}.people-page #personalOutput > summary{color:#d4c2ff}.people-page #personalOutput > summary::before{background:#aa86f4}.people-page #personalReport > summary{color:#ffc6d9}.people-page #personalReport > summary::before{background:#ec7eaa}
 .daily-task-group{margin:14px 0;border:1px solid #2b496b;border-left:5px solid #5b9fff;border-radius:12px;overflow:hidden;background:#0d203a}.daily-task-group h4{display:flex;justify-content:space-between;align-items:center;margin:0;padding:10px 14px;color:#dbeaff;background:#132d4e;font-size:16px}.daily-task-group h4 span{padding:3px 9px;border-radius:999px;background:#285783;color:#e9f5ff;font-size:12px}.daily-task-group--shooting{border-left-color:#57a0ff}.daily-task-group--shooting h4{background:#12355f}.daily-task-group--innovation{border-left-color:#a988ff}.daily-task-group--innovation h4{background:#2e2353;color:#ebdfff}.daily-task-group--innovation h4 span{background:#6343a0;color:#fff}.daily-task-group--custom{border-left-color:#e99a58}.daily-task-group--custom h4{background:#48321d;color:#ffe6c7}.daily-task-group--custom h4 span{background:#9e6331;color:#fff}.daily-task-group .daily-task-card{margin:10px 12px;border-color:#31516f}.daily-task-group--innovation .daily-task-card{border-color:#674d9e}.daily-task-group--custom .daily-task-card{border-color:#8c623d}
 .daily-task-card{border-left:4px solid #5c9fff}.daily-task-card--completed{border-left-color:#48d5a0}.daily-task-card--in-progress{border-left-color:#f1bc5f}.daily-task-card--pending{border-left-color:#ed8794}.daily-task-card summary{display:flex;align-items:center;flex-wrap:wrap;gap:7px 12px;padding:12px 14px;color:#dce9fb}.daily-task-card summary::marker{color:#80b8ff}.daily-summary-product{font-size:17px;color:#fff;font-weight:800}.daily-summary-crew{display:inline-flex;gap:6px;flex-wrap:wrap}.daily-summary-crew em{padding:3px 8px;border-radius:999px;background:#18375a;color:#bfe0ff;font-size:12px;font-style:normal;font-weight:700}.daily-summary-crew em:last-child{background:#3a2a5e;color:#dccaff}.daily-summary-state{padding:3px 8px;border-radius:999px;background:#423755;color:#ded2ff;font-size:12px;font-weight:750}.daily-task-card--completed .daily-summary-state{background:#164837;color:#a8f3cf}.daily-task-card--in-progress .daily-summary-state{background:#56411d;color:#ffe1a0}.daily-task-card--pending .daily-summary-state{background:#54232d;color:#ffc4cc}.daily-task-card .daily-task-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px;margin:0 14px 12px;padding:10px 12px;border-radius:9px;background:#0b1c32;color:#bdd0e8}.daily-task-card .daily-task-meta strong{color:#fff}.daily-task-card .daily-task-meta span:nth-child(2){color:#73daa8}.daily-task-card--in-progress .daily-task-meta span:nth-child(2){color:#ffd47d}.daily-task-card--pending .daily-task-meta span:nth-child(2){color:#ff9ca9}@media(max-width:720px){.daily-task-card .daily-task-meta{grid-template-columns:1fr}.daily-task-card summary{gap:6px 8px}}
+.innovation-deliverable-picker{display:flex;flex-direction:column;gap:7px;min-width:min(100%,360px);margin:0;padding:7px 9px;border:1px solid #7054aa;border-radius:8px;background:#191b37}.innovation-deliverable-picker legend{padding:0 4px;color:#decfff;font-size:13px;font-weight:800}.innovation-deliverable-picker legend small{color:#b09bdd;font-weight:600}.innovation-deliverable-picker>div{display:flex;flex-wrap:wrap;gap:6px}.innovation-deliverable-picker label{display:inline-flex;align-items:center;gap:5px;margin:0;padding:5px 7px;border:1px solid #514076;border-radius:999px;background:#2a2147;color:#ded1ff;font-size:12px;cursor:pointer}.innovation-deliverable-picker label:has(input:checked){border-color:#b291ff;background:#503983;color:#fff}.innovation-deliverable-picker input{width:auto;margin:0;accent-color:#b291ff}
 .daily-option-managers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0 14px}.daily-group-editor{padding:10px;border:1px solid #36587d;border-radius:10px;background:#102744}.daily-group-editor:nth-child(2){border-color:#66519d;background:#211b3c}.daily-group-editor label{display:flex;gap:8px;align-items:center;color:#bcd8f6;font-size:13px;font-weight:750}.daily-group-editor input{min-width:0;flex:1}.daily-group-editor button{margin-top:8px}.managed-option-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.managed-option-list span{display:inline-flex;align-items:center;gap:5px;padding:3px 5px 3px 8px;border-radius:999px;background:#1c456f;color:#d6ecff;font-size:12px}.daily-group-editor:nth-child(2) .managed-option-list span{background:#493778;color:#eadfff}.managed-option-list button{margin:0;padding:2px 6px;border-color:#698db2;background:#183550;color:#d8edff;font-size:11px}.daily-group-editor:nth-child(2) .managed-option-list button{border-color:#9977d5;background:#34235a;color:#ecddff}@media(max-width:720px){.daily-option-managers{grid-template-columns:1fr}.daily-group-editor label{align-items:stretch;flex-direction:column}}
 @media(max-width:900px){.people-page .overview-rings{grid-template-columns:1fr}.people-page .overview-rings .team-ring-card{min-height:0}}
 .team-attention { margin:0 14px 8px; padding:9px 12px; border:1px solid var(--dash-border); border-radius:8px; }
@@ -404,6 +405,7 @@ const card=(name,v)=>'<div class="card">'+name+'<b>'+v+'</b></div>';
 const newId=()=>globalThis.crypto?.randomUUID?.()||Date.now()+'-'+Math.random();
 const statuses=['待拍摄','拍摄中','后期中','已交付','已验收'];
 const defaultInnovationDeliverables=['脚本拆解','AI素材／生成','完整视频','拍摄方案','创新剪辑','其他创新交付'];
+const innovationTypeList=task=>Array.isArray(task?.innovationDeliverable)?task.innovationDeliverable.filter(Boolean):(task?.innovationDeliverable?[task.innovationDeliverable]:[]);
 const isInnovationTask=task=>members(task?.lead).some(name=>roster['创新组']?.includes(name));
 const dailyGroupKey='studio-daily-task-groups-v1';
 const defaultDailyGroups=['拍摄组','创新组'];
@@ -1399,13 +1401,15 @@ function people(){
   event.preventDefault();
   const current=tasks.find(task=>task.id===form.dataset.dailyTask&&task.date===outputDay);
   if(!current)return;
-  const {cumulative,shotBatch,target,completion,status,delivery,reason,innovationDeliverable,innovationNote,dailyGroup}=Object.fromEntries(new FormData(form));
+  const values=new FormData(form);
+  const {cumulative,shotBatch,target,completion,status,delivery,reason,innovationNote,dailyGroup}=Object.fromEntries(values);
+  const innovationDeliverable=values.getAll('innovationDeliverable').filter(Boolean);
   const innovation=isInnovationTask(current);
   const corrected=!innovation&&cumulative!==form.elements.cumulative.defaultValue;
   const base=corrected?(cumulative===''?'':Number(cumulative)):current.actual;
   const requiresDelivery=statuses.slice(3).includes(status);
   const normalizedGroup=dailyGroup==='AI素材／生成'?'':dailyGroup;
-  const next={...current,dailyGroup:normalizedGroup||current.dailyGroup||'',actual:innovation?current.actual:base,dailyShotCount:innovation?current.dailyShotCount:(shotBatch===''?'':Number(shotBatch)),target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:completion,status,delivery:requiresDelivery?delivery:'',unfinishedReason:reason.trim(),innovationDeliverable:innovation?(innovationDeliverable||''):current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote};
+  const next={...current,dailyGroup:normalizedGroup||current.dailyGroup||'',actual:innovation?current.actual:base,dailyShotCount:innovation?current.dailyShotCount:(shotBatch===''?'':Number(shotBatch)),target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:completion,status,delivery:requiresDelivery?delivery:'',unfinishedReason:reason.trim(),innovationDeliverable:innovation?innovationDeliverable:current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote};
   const message=form.querySelector('[role="status"]');
   if(requiresDelivery&&!delivery){message.textContent='已选择交付状态，请填写首次交付时间。';return}
   if(delivery&&current.assigned&&delivery<current.assigned){message.textContent='交付时间需在运营下发时间之后。';return}
@@ -1449,15 +1453,14 @@ function managementView(period,outputRows,[from,to],daily){
  const innovationTasks=monthTasks.filter(isInnovationTask);
  const innovationRange=innovationTasks.filter(t=>t.date>=from&&t.date<=to);
  const innovationFinished=innovationRange.filter(t=>shootingComplete(t)||statuses.slice(3).includes(t.status));
- const innovationKind=task=>{
-  if(task.innovationDeliverable==='AI素材／生成')return 'AI素材／生成';
-  if(task.innovationDeliverable==='脚本拆解')return '拆解脚本';
-  if(['完整视频','创新剪辑'].includes(task.innovationDeliverable))return '剪辑视频';
-  return '主拍素材';
+ const innovationKinds=task=>{
+  const kinds=innovationTypeList(task);
+  if(!kinds.length)return ['主拍素材'];
+  return [...new Set(kinds.map(kind=>kind==='AI素材／生成'?'AI素材／生成':kind==='脚本拆解'?'拆解脚本':['完整视频','创新剪辑'].includes(kind)?'剪辑视频':kind))];
  };
  const innovationAmount=task=>Number(task.actual||task.dailyShotCount||0);
  const innovationBreakdown=innovationFinished.reduce((summary,task)=>{
-  const kind=innovationKind(task);(summary[kind]??=[]).push(task);return summary;
+  for(const kind of innovationKinds(task))(summary[kind]??=[]).push(task);return summary;
  },{});
  const groupActuals=teamRows.map(([name,entries])=>{
   const available=entries.filter(recorded);
@@ -1712,13 +1715,14 @@ function dailyTaskReports(assignments){
   const crew=crewRoles.filter(([field])=>members(task[field]).length).map(([field,label])=>label+'：'+members(task[field]).join('、')).join(' · ');
   const reported=task.dailyShotCount!=null&&task.dailyShotCount!=='';
   const innovationDone=shootingComplete(task)||statuses.slice(3).includes(task.status);
-  const summary=innovation?(task.innovationDeliverable||'待选创新交付')+' · '+(innovationDone?'已完成':'待完成'):(reported?'已填报 · 当日 '+count(task.dailyShotCount)+' 条':'待填报');
+  const selectedDeliverables=innovationTypeList(task);
+  const summary=innovation?(selectedDeliverables.join('、')||'待选创新交付')+' · '+(innovationDone?'已完成':'待完成'):(reported?'已填报 · 当日 '+count(task.dailyShotCount)+' 条':'待填报');
   const cardState=innovation?(innovationDone?'completed':'pending'):(shootingComplete(task)?'completed':task.status==='拍摄中'?'in-progress':'pending');
   const leadName=members(task.lead).join('、')||'待分配';
   const modelName=members(task.model).join('、')||'待分配';
   const statusText=task.status||'待拍摄';
   const normalFields='<label>任务下发量（条）<input type="number" min="1" step="1" name="target" value="'+esc(task.target)+'"></label><label>累计拍摄量（条）<input type="number" min="0" step="1" name="cumulative" value="'+esc(task.actual)+'" placeholder="可直接修正累计量"></label><label>当日拍摄量（条）<input type="number" min="0" step="1" name="shotBatch" value="'+esc(task.dailyShotCount)+'" placeholder="填写当天拍摄总数"></label>';
-  const innovationFields='<label>创新交付类型<select name="innovationDeliverable">'+options(['',...innovationDeliverables],task.innovationDeliverable||'')+'</select></label><label>交付说明<input name="innovationNote" maxlength="120" value="'+esc(task.innovationNote)+'" placeholder="例如：完成洗发水脚本拆解"></label>';
+  const innovationFields='<fieldset class="innovation-deliverable-picker"><legend>创新交付类型 <small>可多选</small></legend><div>'+innovationDeliverables.map(kind=>'<label><input type="checkbox" name="innovationDeliverable" value="'+esc(kind)+'"'+(selectedDeliverables.includes(kind)?' checked':'')+'><span>'+esc(kind)+'</span></label>').join('')+'</div></fieldset><label>交付说明<input name="innovationNote" maxlength="120" value="'+esc(task.innovationNote)+'" placeholder="例如：完成洗发水脚本拆解 + AI 分镜"></label>';
   return '<details class="daily-task-card daily-task-card--'+cardState+'" data-daily-task-card="'+esc(task.id)+'"'+((reported||innovationDone)?'':' open')+'><summary><strong class="daily-summary-product">'+esc(task.product||task.title||'拍摄任务')+'</strong><span class="daily-summary-crew"><em>摄影师：'+esc(leadName)+'</em><em>模特：'+esc(modelName)+'</em></span><span class="daily-summary-state">'+esc(summary)+' · '+esc(statusText)+'</span></summary>'+
    '<form class="daily-task-report" data-daily-task="'+esc(task.id)+'">'+
    '<p class="daily-task-meta"><span><strong>协作成员</strong> '+esc(crew||'待安排人员')+'</span><span><strong>'+(innovation?'创新交付':'拍摄进度')+'</strong> '+(innovation?'创新组按脚本、AI 素材、完整视频等交付记录。':'计划 '+esc(task.target==null||task.target===''?'—':task.target)+' 条 · 条数完成度 '+progress+' · '+(shootingComplete(task)?'已完成':'未完成'))+'</span></p>'+
