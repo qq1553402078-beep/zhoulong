@@ -65,7 +65,8 @@
   control.after(status);
 
   let syncing = false;
-  let code = localStorage.getItem(codeKey) || '';
+  let code = localStorage.getItem(codeKey) || sessionStorage.getItem(codeKey) || '';
+  if (code) localStorage.setItem(codeKey, code);
   const request = async (method, body) => {
     const response = await fetch(endpoint, {
       method, body: body && JSON.stringify(body), signal: AbortSignal.timeout(10000),
