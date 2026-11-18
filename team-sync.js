@@ -5,7 +5,8 @@
     rest: 'studio-ops-rest-v1',
     daily: 'studio-ops-daily-output-v1',
     monthly: 'studio-ops-monthly-output-v1',
-    management: 'studio-ops-management-v1'
+    management: 'studio-ops-management-v1',
+    settings: 'studio-settings-v1'
   };
   const cacheKey = 'studio-team-sync-baseline-v1';
   const codeKey = 'studio-team-access-v1';
@@ -30,6 +31,8 @@
             records[JSON.stringify([scope, date, name])] = value;
           }
         }
+      } else if (scope === 'settings') {
+        records[JSON.stringify([scope, 'all'])] = data;
       } else {
         for (const [period, value] of Object.entries(data)) {
           records[JSON.stringify([scope, period])] = value;
@@ -41,11 +44,12 @@
 
   function apply(records) {
     const data = { tasks: [], rest: Object.create(null), daily: Object.create(null),
-      monthly: Object.create(null), management: Object.create(null) };
+      monthly: Object.create(null), management: Object.create(null), settings: Object.create(null) };
     for (const [index, value] of Object.entries(records)) {
       if (value === null) continue;
       const [scope, id, name] = JSON.parse(index);
       if (scope === 'tasks') data.tasks.push(value);
+      else if (scope === 'settings') data.settings = value;
       else if (scope === 'rest' || scope === 'daily' || scope === 'monthly') {
         (data[scope][id] ??= Object.create(null))[name] = value;
       } else if (Object.hasOwn(scopes, scope)) data[scope][id] = value;
