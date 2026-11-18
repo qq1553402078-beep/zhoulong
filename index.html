@@ -1731,6 +1731,23 @@ function rosterEditorRow(name='',role='基础摄影'){
  '<td><select name="staffStatus" aria-label="在职状态">'+options(['在职','离职'],inactive?'离职':'在职')+'</select></td>'+
  '<td>'+(name?'':'<button type="button" data-cancel-staff>取消新增</button>')+'</td></tr>';
 }
+async function compressSharedImage(file){
+ if(!/^image\/(jpeg|png|webp)$/i.test(file.type))throw Error('仅支持 JPG、PNG 或 WebP 图片。');
+ if(file.size>12*1024*1024)throw Error('单张原图请控制在 12 MB 以内。');
+ const bitmap=await createImageBitmap(file);
+ let longest=Math.max(bitmap.width,bitmap.height);
+ let scale=Math.min(1,1600/longest);
+ for(const quality of [.84,.76,.68]){
+  const width=Math.max(1,Math.round(bitmap.width*scale));
+  const height=Math.max(1,Math.round(bitmap.height*scale));
+  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+  canvas.getContext('2d').drawImage(bitmap,0,0,width,height);
+  const src=canvas.toDataURL('image/webp',quality);
+  if(src.length<=650000){bitmap.close?.();return {src,caption:file.name.replace(/\.[^.]+$/,'')};}
+  scale*=.8;
+ }
+ bitmap.close?.();throw Error('图片压缩后仍过大，请换一张更小的图片。');
+}
 function adminView(message=''){
  const field=(key,label,kind='text',value=settings[key])=>'<label'+(kind==='area'?' class="wide"':'')+'>'+label+
   (kind==='area'?'<textarea name="'+key+'">'+esc(value)+'</textarea>':'<input name="'+key+'" value="'+esc(value)+'" required>')+'</label>';
@@ -1752,9 +1769,10 @@ function adminView(message=''){
  ])+field('scheduleIntro','排班页介绍','area'))+
  panel('拍摄配图与团队相册',field('artCaption','拍摄配图说明')+
  field('artwork','拍摄配图地址（按类型介绍顺序，每行一张）','area',settings.artwork||artworkDefaults.join('\n'))+
+ '<label class="wide">直接添加拍摄配图<input type="file" name="artworkUpload" accept="image/jpeg,image/png,image/webp" multiple><small>可多选；图片会压缩后同步给所有已连接团队同步的设备。</small></label>'+
  field('galleryTitle','相册标题')+field('galleryIntro','相册介绍','area')+
  field('gallery','相册（每行填写 图片地址 | 说明，可删除或调整顺序）','area',getTeamPhotos().map(p=>p.src+' | '+p.caption).join('\n'))+
- '<p class="wide">图片可用 HTTPS 地址，或站内相对路径。清空相册内容可隐藏相册。</p>')+
+ '<label class="wide">直接添加团队相册照片<input type="file" name="galleryUpload" accept="image/jpeg,image/png,image/webp" multiple><small>可多选；说明默认使用文件名，保存后会同步给所有已连接团队同步的设备。</small></label><p class="wide">图片可用 HTTPS 地址、站内相对路径或直接选择文件。清空相册内容可隐藏相册。</p>')+
  panel('业务数据','<div class="bar wide"><button type="button" data-admin-route="schedule">编辑任务与交付</button><button type="button" data-admin-route="rest">编辑出勤与调休</button><button type="button" data-admin-route="people">编辑产出与目标</button></div>')+
  panel('组织架构与人员',field('leader','部门负责人')+field('specialty','专项分工','area')+
  field('mentors','带教关系（每行一组，例如 杨建勋：游苗、陈丽娜）','area'))+
@@ -1796,11 +1814,21 @@ function adminView(message=''){
   const lines=value=>[...new Set(String(value||'').split(/\r?\n/).map(item=>item.trim()).filter(Boolean))];
   const next={...settings};
   for(const [key,value] of fields)if(typeof value==='string'&&Object.hasOwn(defaults,key)&&!['photo','products','types','gallery'].includes(key))next[key]=value.trim();
-  const safeImage=src=>/^https:\/\/[^\s]+$/i.test(src)||/^\.\/[\w./%-]+$/i.test(src);
+  const safeImage=src=>/^https:\/\/[^\s]+$/i.test(src)||/^\.\/[\w./%-]+$/i.test(src)||/^data:image\/(jpeg|png|webp);base64,/i.test(src);
   next.gallery=String(fields.get('gallery')||'').split(/\r?\n/).filter(line=>line.trim()).map(line=>{
    const [src,...caption]=line.split('|');
    return {src:src.trim(),caption:caption.join('|').trim()};
   });
+  const artworkFiles=fields.getAll('artworkUpload').filter(file=>file?.size);
+  const galleryFiles=fields.getAll('galleryUpload').filter(file=>file?.size);
+  try{
+   const [newArtwork,newGallery]=await Promise.all([
+    Promise.all(artworkFiles.map(compressSharedImage)),
+    Promise.all(galleryFiles.map(compressSharedImage))
+   ]);
+   if(newArtwork.length)next.artwork=[...lines(next.artwork),...newArtwork.map(item=>item.src)].join('\n');
+   if(newGallery.length)next.gallery.push(...newGallery);
+  }catch(error){status.textContent=error.message||'图片读取失败，请重新选择。';return}
   if(next.gallery.some(p=>!safeImage(p.src))||next.artwork.split(/\r?\n/).some(src=>src.trim()&&!safeImage(src.trim()))){
    status.textContent='配图和相册地址请填写 HTTPS 地址或以 ./ 开头的站内路径。';return;
   }
@@ -1834,7 +1862,8 @@ function adminView(message=''){
   if(person&&!staff.some(p=>p.name===person))person='';
   document.querySelector('#siteTitle').textContent=settings.title;
   document.title=settings.title;
-  adminView('已保存，页面已应用新设置。');
+  window.dispatchEvent(new Event('focus'));
+  adminView('已保存，图片与设置正在同步给团队。');
  };
 }
 function navigateTab(next){
@@ -1859,4 +1888,4 @@ window.addEventListener('studio-team-refresh', () => {
  try{tasks=JSON.parse(localStorage.getItem(key)||'[]')}catch{}
  render();
 });
-</script><script src="team-sync.js?v=persistent-code-2" defer></script><script src="doubao-chat.js?v=bridge" defer></script></html>
+</script><script src="team-sync.js?v=shared-settings-3" defer></script><script src="doubao-chat.js?v=bridge" defer></script></html>
