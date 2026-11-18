@@ -332,6 +332,26 @@ applySettings();
   settings.gallery=list;
   try{localStorage.setItem(settingsKey,JSON.stringify(settings));localStorage.setItem(MK,'1')}catch(e){}
 })();
+/* 2026-11-18 相册二次调整：精选区重排（奶茶合影第4格、暖意里的同框填第5格、镜头背后的认真后移）+ 末尾追加2张 */
+(function migrateGallery20261118v2(){
+  var MK='studio-gallery-migrate-20261118-v2';
+  var done=false; try{done=localStorage.getItem(MK)==='1'}catch(e){}
+  if(done) return;
+  if(!Array.isArray(settings.gallery)||!settings.gallery.length) return;
+  var list=settings.gallery.map(function(p){return {src:p.src,caption:p.caption}});
+  var idx=function(kw){for(var i=0;i<list.length;i++){if(String(list[i].caption||'').indexOf(kw)>=0)return i}return -1};
+  var li=idx('镜头背后的认真'),L=li>=0?list.splice(li,1)[0]:null;
+  var wi=idx('暖意里的同框'),W=wi>=0?list.splice(wi,1)[0]:{src:'./team-gallery/nov18-warm-frame.jpg',caption:'暖意里的同框'};
+  var mi=idx('茶饮里的欢笑'); if(mi>=0)list.splice(mi,1);
+  list.splice(3,0,{src:'./team-gallery/gallery-1118-milktea.jpg',caption:'茶饮里的欢笑'});
+  list.splice(4,0,W);
+  if(L)list.splice(Math.min(8,list.length),0,L);
+  [['./team-gallery/gallery-1118-training.jpg','课堂里的并肩'],['./team-gallery/gallery-1118-casual.jpg','休闲日里的相聚']].forEach(function(x){
+    if(!list.some(function(p){return p.src===x[0]||p.caption===x[1]}))list.push({src:x[0],caption:x[1]});
+  });
+  settings.gallery=list;
+  try{localStorage.setItem(settingsKey,JSON.stringify(settings));localStorage.setItem(MK,'1')}catch(e){}
+})();
 const key='studio-ops-v1';
 let tasks=[];
 try{tasks=JSON.parse(localStorage.getItem(key)||'[]')}catch{}
@@ -662,7 +682,7 @@ function modelPortfolio(){
     }).join('')+'</div>':'<p class="model-pending">照片待补</p>')+'</article>';
   }).join('')+'</section>';
 }
-function defaultTeamPhotos(){return [{"src": "./team-gallery/01.jpg", "caption": "一起，向自由出发"}, {"src": "./team-gallery/new-0.jpg", "caption": "暖光里的默契"}, {"src": "./team-gallery/new-1.jpg", "caption": "把日常拍成风景"}, {"src": "./team-gallery/new-5.jpg", "caption": "镜头背后的认真"}, {"src": "./team-gallery/nov18-warm-frame.jpg", "caption": "暖意里的同框"}, {"src": "./team-gallery/new-2.jpg", "caption": "黑白之间 · 群像"}, {"src": "./team-gallery/new-3.jpg", "caption": "黑白之间 · 姿态"}, {"src": "./team-gallery/new-7.jpg", "caption": "一起奔赴新一年"}, {"src": "./team-gallery/new-4.jpg", "caption": "古巷里的伙伴"}, {"src": "./team-gallery/02.jpg", "caption": "日常里的默契"}, {"src": "./team-gallery/03.jpg", "caption": "古巷同行"}, {"src": "./team-gallery/04.jpg", "caption": "节日相聚"}, {"src": "./team-gallery/05.jpg", "caption": "在一起的日常"}, {"src": "./team-gallery/06.jpg", "caption": "围坐一桌"}, {"src": "./team-gallery/07.jpg", "caption": "分享甜蜜"}, {"src": "./team-gallery/08.jpg", "caption": "热闹的夜晚"}, {"src": "./team-gallery/09.jpg", "caption": "冬日同行"}, {"src": "./team-gallery/10.jpg", "caption": "镜头里的我们"}, {"src": "./team-gallery/11.jpg", "caption": "夜市小聚"}, {"src": "./team-gallery/12.jpg", "caption": "节日心意"}, {"src": "./team-gallery/new-6.jpg", "caption": "我们的默契"}, {"src": "./team-gallery/new-8.jpg", "caption": "创意封面实验"}, {"src": "./team-gallery/journal-add-01.jpg", "caption": "节日布景前的合影"}, {"src": "./team-gallery/journal-add-02.jpg", "caption": "一起布置现场"}, {"src": "./team-gallery/journal-add-03.jpg", "caption": "湖边夜拍"}, {"src": "./team-gallery/journal-add-04.jpg", "caption": "古巷拍摄现场"}, {"src": "./team-gallery/journal-add-05.jpg", "caption": "竹影下的拍摄"}, {"src": "./team-gallery/journal-add-06.jpg", "caption": "一起分享蛋糕"}, {"src": "./team-gallery/journal-add-07.jpg", "caption": "室内拍摄花絮"}, {"src": "./team-gallery/journal-add-08.jpg", "caption": "烟雾棚拍合影"}, {"src": "./team-gallery/journal-add-09.jpg", "caption": "节日礼物合影"}, {"src": "./team-gallery/journal-add-10.jpg", "caption": "古巷片场合影"}, {"src": "./team-gallery/journal-team-1.jpg", "caption": "树下合影"}, {"src": "./team-gallery/journal-team-2.jpg", "caption": "工作室合影"}, {"src": "./team-gallery/journal-team-3.jpg", "caption": "户外合影"}, {"src": "./team-gallery/nov18-sunset.jpg", "caption": "落日下的奔赴"}, {"src": "./team-gallery/nov18-gift.jpg", "caption": "礼赠里的心意"}, {"src": "./team-gallery/nov18-joy.jpg", "caption": "一起，乐享时光"}, {"src": "./team-gallery/nov18-snack.jpg", "caption": "把零食酿成欢喜"}, {"src": "./team-gallery/nov18-journey.jpg", "caption": "一起，奔赴新程"}, {"src": "./team-gallery/nov18-highlight.jpg", "caption": "喜悦里的高光"}];}
+function defaultTeamPhotos(){return [{"src": "./team-gallery/01.jpg", "caption": "一起，向自由出发"}, {"src": "./team-gallery/new-0.jpg", "caption": "暖光里的默契"}, {"src": "./team-gallery/new-1.jpg", "caption": "把日常拍成风景"}, {"src": "./team-gallery/gallery-1118-milktea.jpg", "caption": "茶饮里的欢笑"}, {"src": "./team-gallery/nov18-warm-frame.jpg", "caption": "暖意里的同框"}, {"src": "./team-gallery/new-2.jpg", "caption": "黑白之间 · 群像"}, {"src": "./team-gallery/new-3.jpg", "caption": "黑白之间 · 姿态"}, {"src": "./team-gallery/new-7.jpg", "caption": "一起奔赴新一年"}, {"src": "./team-gallery/new-5.jpg", "caption": "镜头背后的认真"}, {"src": "./team-gallery/new-4.jpg", "caption": "古巷里的伙伴"}, {"src": "./team-gallery/02.jpg", "caption": "日常里的默契"}, {"src": "./team-gallery/03.jpg", "caption": "古巷同行"}, {"src": "./team-gallery/04.jpg", "caption": "节日相聚"}, {"src": "./team-gallery/05.jpg", "caption": "在一起的日常"}, {"src": "./team-gallery/06.jpg", "caption": "围坐一桌"}, {"src": "./team-gallery/07.jpg", "caption": "分享甜蜜"}, {"src": "./team-gallery/08.jpg", "caption": "热闹的夜晚"}, {"src": "./team-gallery/09.jpg", "caption": "冬日同行"}, {"src": "./team-gallery/10.jpg", "caption": "镜头里的我们"}, {"src": "./team-gallery/11.jpg", "caption": "夜市小聚"}, {"src": "./team-gallery/12.jpg", "caption": "节日心意"}, {"src": "./team-gallery/new-6.jpg", "caption": "我们的默契"}, {"src": "./team-gallery/new-8.jpg", "caption": "创意封面实验"}, {"src": "./team-gallery/journal-add-01.jpg", "caption": "节日布景前的合影"}, {"src": "./team-gallery/journal-add-02.jpg", "caption": "一起布置现场"}, {"src": "./team-gallery/journal-add-03.jpg", "caption": "湖边夜拍"}, {"src": "./team-gallery/journal-add-04.jpg", "caption": "古巷拍摄现场"}, {"src": "./team-gallery/journal-add-05.jpg", "caption": "竹影下的拍摄"}, {"src": "./team-gallery/journal-add-06.jpg", "caption": "一起分享蛋糕"}, {"src": "./team-gallery/journal-add-07.jpg", "caption": "室内拍摄花絮"}, {"src": "./team-gallery/journal-add-08.jpg", "caption": "烟雾棚拍合影"}, {"src": "./team-gallery/journal-add-09.jpg", "caption": "节日礼物合影"}, {"src": "./team-gallery/journal-add-10.jpg", "caption": "古巷片场合影"}, {"src": "./team-gallery/journal-team-1.jpg", "caption": "树下合影"}, {"src": "./team-gallery/journal-team-2.jpg", "caption": "工作室合影"}, {"src": "./team-gallery/journal-team-3.jpg", "caption": "户外合影"}, {"src": "./team-gallery/nov18-sunset.jpg", "caption": "落日下的奔赴"}, {"src": "./team-gallery/nov18-gift.jpg", "caption": "礼赠里的心意"}, {"src": "./team-gallery/nov18-joy.jpg", "caption": "一起，乐享时光"}, {"src": "./team-gallery/nov18-snack.jpg", "caption": "把零食酿成欢喜"}, {"src": "./team-gallery/nov18-journey.jpg", "caption": "一起，奔赴新程"}, {"src": "./team-gallery/nov18-highlight.jpg", "caption": "喜悦里的高光"}, {"src": "./team-gallery/gallery-1118-training.jpg", "caption": "课堂里的并肩"}, {"src": "./team-gallery/gallery-1118-casual.jpg", "caption": "休闲日里的相聚"}];}
 function teamGallery(){
  const teamPhotos=getTeamPhotos();
  if(!teamPhotos.length)return '';
