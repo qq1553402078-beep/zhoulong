@@ -152,30 +152,6 @@
   }
 
   /* ---------- 管理后台面板（审批 + 访客） ---------- */
-  function adminPanelHTML() {
-    return '<div class="access-admin" style="border:1px solid #3a3348;border-radius:10px;padding:16px;margin-top:16px">' +
-      '<h3 style="color:#c9b3f5;margin:0 0 10px">权限与访问管理（管理员）</h3>' +
-      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">' +
-      '<input id="adminCodeInput" type="password" placeholder="输入管理员码" style="flex:1;min-width:160px;padding:9px;border-radius:7px;border:1px solid #4a4258;background:#0e0c14;color:#fff">' +
-      '<button id="adminLogin" style="padding:9px 16px;border:0;border-radius:7px;background:#8a6fd4;color:#fff;cursor:pointer">解锁</button>' +
-      '</div>' +
-      '<div id="adminArea" style="display:none"></div>' +
-      '</div>';
-  }
-  function injectAdminPanel() {
-    if (document.querySelector('.access-admin')) return;
-    var host = document.querySelector('#adminForm') || document.querySelector('main');
-    if (!host) return;
-    host.insertAdjacentHTML('beforeend', adminPanelHTML());
-    document.getElementById('adminLogin').onclick = function () {
-      var code = (document.getElementById('adminCodeInput').value || '').trim();
-      if (!code) { alert('请输入管理员码'); return; }
-      adminCode = code;
-      try { localStorage.setItem(ADMIN_CODE_KEY, code); } catch (e) {}
-      loadAdmin();
-    };
-    if (adminCode) { document.getElementById('adminCodeInput').value = adminCode; loadAdmin(); }
-  }
   function loadAdmin() {
     var area = document.getElementById('adminArea');
     if (!area) return;
@@ -291,12 +267,42 @@
     }).catch(function () { applyMode(); });
     applyMode();
     addAIButton();
-    // 管理后台页面时注入管理面板
-    var inject = setInterval(function () {
-      if (document.querySelector('[data-tab="admin"]') || document.querySelector('#adminForm')) {
-        injectAdminPanel(); clearInterval(inject);
-      }
-    }, 500);
+    addAdminLauncher();
+  }
+  // 右下角"管理"悬浮按钮：点击弹出审批面板（不受页面重渲染影响）
+  function addAdminLauncher() {
+    if (document.querySelector('#admin-launcher')) return;
+    var btn = document.createElement('button');
+    btn.id = 'admin-launcher';
+    btn.textContent = '管理';
+    btn.style.cssText = 'position:fixed;right:18px;bottom:130px;z-index:8000;padding:9px 14px;border:1px solid #c9b3f5;border-radius:20px;background:#241f33;color:#d9c9ff;font-size:13px;font-weight:700;cursor:pointer';
+    btn.onclick = openAdminModal;
+    document.body.appendChild(btn);
+  }
+  function openAdminModal() {
+    var old = document.querySelector('#admin-modal');
+    if (old) { old.remove(); return; }
+    var modal = document.createElement('div');
+    modal.id = 'admin-modal';
+    modal.innerHTML = '<div class="access-card" style="width:min(620px,100%);max-height:82vh;overflow:auto">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between">' +
+      '<h2 style="color:#f5f0fa;font-size:19px;margin:0">权限与访问管理</h2>' +
+      '<button id="admin-close" style="background:none;border:0;color:#aaa;cursor:pointer;font-size:22px">×</button></div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0">' +
+      '<input id="adminCodeInput" type="password" placeholder="输入管理员码" style="flex:1;min-width:160px;padding:9px;border-radius:7px;border:1px solid #4a4258;background:#0e0c14;color:#fff">' +
+      '<button id="adminLogin" style="padding:9px 16px;border:0;border-radius:7px;background:#8a6fd4;color:#fff;cursor:pointer">解锁</button></div>' +
+      '<div id="adminArea" style="display:none"></div></div>';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(6,8,14,.9);display:flex;align-items:center;justify-content:center;padding:20px';
+    document.body.appendChild(modal);
+    document.getElementById('admin-close').onclick = function () { modal.remove(); };
+    document.getElementById('adminLogin').onclick = function () {
+      var code = (document.getElementById('adminCodeInput').value || '').trim();
+      if (!code) { alert('请输入管理员码'); return; }
+      adminCode = code;
+      try { localStorage.setItem(ADMIN_CODE_KEY, code); } catch (e) {}
+      loadAdmin();
+    };
+    if (adminCode) { document.getElementById('adminCodeInput').value = adminCode; loadAdmin(); }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
