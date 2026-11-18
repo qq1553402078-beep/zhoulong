@@ -315,7 +315,8 @@
       }).then(function (r) { return r.json(); }).then(function (d) {
         var t = log.querySelector('.ai-sys:last-child'); if (t) t.remove();
         if (d.image) {
-          log.insertAdjacentHTML('beforeend', '<div class="ai-img"><img src="' + d.image + '" alt="AI生成图"><div style="font-size:11px;color:#9b8fb0;margin-top:6px">AI 生成参考图 · 免费</div></div>');
+          var promptLine = d.prompt ? '<div style="font-size:11px;color:#b9a7d6;margin-top:6px;line-height:1.5">✨ 实际用的画面词：<span style="color:#d9c9ff">' + esc(d.prompt) + '</span><br><span style="color:#7d748c">可复制去别的 AI 生图工具用</span></div>' : '';
+          log.insertAdjacentHTML('beforeend', '<div class="ai-img"><img src="' + d.image + '" alt="AI生成图"><div style="font-size:11px;color:#9b8fb0;margin-top:6px">中台小秘书生成 · 免费</div>' + promptLine + '</div>');
         } else if (d.answer) {
           log.insertAdjacentHTML('beforeend', '<div class="ai-msg ai-reply">' + esc(d.answer) + '</div>');
         } else {
