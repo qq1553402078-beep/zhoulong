@@ -65,7 +65,7 @@
   control.after(status);
 
   let syncing = false;
-  let code = sessionStorage.getItem(codeKey) || '';
+  let code = localStorage.getItem(codeKey) || '';
   const request = async (method, body) => {
     const response = await fetch(endpoint, {
       method, body: body && JSON.stringify(body), signal: AbortSignal.timeout(10000),
@@ -128,7 +128,7 @@
     const next = prompt('输入团队同步访问码', '');
     if (!next?.trim()) return;
     code = next.trim();
-    sessionStorage.setItem(codeKey, code);
+    localStorage.setItem(codeKey, code);
     status.textContent = '连接中…';
     sync();
   };
