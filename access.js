@@ -3,10 +3,13 @@
   'use strict';
   var API = 'https://zhoulong-studio-sync.pages.dev';
   var VIEWER_KEY = 'studio-viewer-v1';   // {name, role, status}
+  var NAME_KEY = 'studio-viewer-name-v1'; // 只记名字：保证只输一次
   var ADMIN_CODE_KEY = 'studio-admin-code-v1';
   var viewer = null;
   var adminCode = '';
+  var savedName = '';
   try { viewer = JSON.parse(localStorage.getItem(VIEWER_KEY) || 'null'); } catch (e) {}
+  try { savedName = localStorage.getItem(NAME_KEY) || ''; } catch (e) {}
   try { adminCode = localStorage.getItem(ADMIN_CODE_KEY) || ''; } catch (e) {}
 
   function esc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -63,7 +66,7 @@
       post('/access/visit', { name: name }).then(function (data) {
         if (!data || !data.name) { msg.textContent = '进入失败，请重试'; btn.disabled = false; return; }
         viewer = { name: data.name, role: data.role, status: data.status };
-        try { localStorage.setItem(VIEWER_KEY, JSON.stringify(viewer)); } catch (e) {}
+        try { localStorage.setItem(VIEWER_KEY, JSON.stringify(viewer)); localStorage.setItem(NAME_KEY, data.name); } catch (e) {}
         mask.remove();
         applyMode();
       }).catch(function () { msg.textContent = '网络异常，请重试'; btn.disabled = false; });
@@ -200,9 +203,12 @@
     if (document.querySelector('#ai-assistant-btn')) return;
     var btn = document.createElement('button');
     btn.id = 'ai-assistant-btn';
-    btn.innerHTML = '✦ AI 助手';
-    btn.setAttribute('aria-label', '打开AI助手');
-    btn.style.cssText = 'position:fixed;left:18px;bottom:18px;z-index:8500;padding:13px 18px;border:2px solid #fff5;border-radius:26px;background:linear-gradient(135deg,#8a6fd4,#5c98f4);color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 28px #000b';
+    btn.innerHTML = '✨ 中台小秘书';
+    btn.setAttribute('aria-label', '打开中台小秘书');
+    btn.style.cssText = 'position:fixed;right:18px;top:64px;z-index:8500;padding:13px 20px;border:2px solid #fff8;border-radius:26px;background:linear-gradient(135deg,#a76bf0,#e05fa8,#5c98f4);background-size:200% auto;color:#fff;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 30px #000c,0 0 22px #c56bff66;letter-spacing:.02em;animation:secGlow 3s linear infinite';
+    var st = document.createElement('style');
+    st.textContent = '@keyframes secGlow{0%{background-position:0% center}100%{background-position:200% center}}';
+    document.head.appendChild(st);
     btn.onclick = openAI;
     document.body.appendChild(btn);
   }
@@ -210,49 +216,79 @@
     var box = document.createElement('div');
     box.id = 'ai-box';
     box.innerHTML =
-      '<div class="ai-head">✦ AI 助手 <span style="font-size:11px;color:#9b8fb0;font-weight:400">免费</span> <button id="ai-close" style="float:right;background:none;border:0;color:#fff;cursor:pointer;font-size:18px">×</button></div>' +
-      '<div class="ai-tabs"><button class="ai-tab active" data-mode="ask">问答建议</button><button class="ai-tab" data-mode="analyze">对标链接</button><button class="ai-tab" data-mode="image">AI 生图</button></div>' +
-      '<div id="ai-log" class="ai-log"><div class="ai-msg ai-sys" id="ai-welcome">你好！选一个功能：问答建议、粘贴对标链接分析搭建要点、或输入画面描述生成图片。全部免费。</div></div>' +
-      '<div class="ai-input-row"><input id="ai-q" placeholder="输入问题…"><button id="ai-send">发送</button></div>';
+      '<div class="ai-head">✨ 中台小秘书 <span style="font-size:11px;color:#d8b8ff;font-weight:400">你的拍摄搭子 · 免费</span> <button id="ai-close" style="float:right;background:none;border:0;color:#fff;cursor:pointer;font-size:18px">×</button></div>' +
+      '<div class="ai-tabs"><button class="ai-tab active" data-mode="ask">随便聊聊</button><button class="ai-tab" data-mode="analyze">拆对标</button><button class="ai-tab" data-mode="image">生个图</button></div>' +
+      '<div id="ai-log" class="ai-log"><div class="ai-msg ai-sys" id="ai-welcome"></div></div>' +
+      '<div class="ai-input-row"><input id="ai-q" placeholder="问我点什么…"><button id="ai-send">发送</button></div>';
     var style = document.createElement('style');
     style.textContent =
-      '#ai-box{position:fixed;left:18px;bottom:72px;z-index:8001;width:min(420px,calc(100vw - 36px));height:min(560px,calc(100vh - 100px));background:#15131c;border:1px solid #3a3348;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 50px #000a}' +
-      '.ai-head{padding:12px 16px;background:#241f33;color:#e8e0f2;font-weight:700}' +
+      '#ai-box{position:fixed;right:18px;top:112px;z-index:8001;width:min(420px,calc(100vw - 36px));height:min(580px,calc(100vh - 140px));background:#15131c;border:1px solid #5a456e;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 60px #000c,0 0 30px #a76bf033}' +
+      '.ai-head{padding:12px 16px;background:linear-gradient(135deg,#3a2450,#242044);color:#f3eaff;font-weight:800}' +
       '.ai-tabs{display:flex;border-bottom:1px solid #3a3348;background:#1b1826}' +
       '.ai-tab{flex:1;padding:10px 4px;background:none;border:0;color:#9b8fb0;font-size:12px;cursor:pointer;border-bottom:2px solid transparent}' +
-      '.ai-tab.active{color:#d9c9ff;border-bottom-color:#8a6fd4;font-weight:700}' +
+      '.ai-tab.active{color:#e6d2ff;border-bottom-color:#a76bf0;font-weight:700}' +
       '.ai-log{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}' +
-      '.ai-msg{padding:9px 12px;border-radius:10px;font-size:13px;line-height:1.6;max-width:90%;overflow-wrap:anywhere;white-space:pre-wrap}' +
+      '.ai-msg{padding:9px 12px;border-radius:10px;font-size:13px;line-height:1.6;max-width:92%;overflow-wrap:anywhere;white-space:pre-wrap}' +
       '.ai-sys{background:#241f33;color:#cfc6db;align-self:flex-start}' +
       '.ai-user{background:#3a2f5c;color:#fff;align-self:flex-end}' +
       '.ai-reply{background:#1c2733;color:#dce9fc;align-self:flex-start}' +
+      '.ai-demo{display:inline-block;margin:5px 4px 0 0;padding:7px 11px;border:1px solid #6b4fa0;border-radius:18px;background:#2a2040;color:#dcc7ff;font-size:12px;cursor:pointer;transition:.15s}' +
+      '.ai-demo:hover{background:#3d2b5e;transform:translateY(-1px)}' +
       '.ai-img{background:#1c2733;padding:8px;border-radius:10px;align-self:flex-start;max-width:90%}' +
       '.ai-img img{max-width:100%;border-radius:6px;display:block}' +
       '.ai-input-row{display:flex;gap:8px;padding:10px;border-top:1px solid #3a3348}' +
       '.ai-input-row input{flex:1;padding:10px;border-radius:8px;border:1px solid #4a4258;background:#0e0c14;color:#fff;outline:none;font-size:13px}' +
-      '.ai-input-row button{padding:10px 14px;border:0;border-radius:8px;background:#8a6fd4;color:#fff;cursor:pointer;font-weight:700}';
+      '.ai-input-row button{padding:10px 14px;border:0;border-radius:8px;background:linear-gradient(135deg,#a76bf0,#e05fa8);color:#fff;cursor:pointer;font-weight:700}';
     document.head.appendChild(style);
     document.body.appendChild(box);
     document.getElementById('ai-close').onclick = function () { box.remove(); };
     var log = document.getElementById('ai-log');
     var q = document.getElementById('ai-q');
     var mode = 'ask';
-    var welcome = {
-      ask: '你好！我是工作台 AI 助手，可以帮你查询、写文案、给拍摄建议。请问需要什么？',
-      analyze: '粘贴一个对标链接（https://…），我会读取页面内容，帮你拆解场景、列出搭建要点和拍摄建议。',
-      image: '输入画面描述（如：极简护肤品摆拍、大理石台面、柔和光线），我用 AI 免费生成一张参考图。每天免费约 200 张。'
+    var demos = {
+      ask: [
+        '帮我写一段护肤品拍摄的运营要求，要精致带点高级感',
+        '今天团队谁拍得最多？帮我总结下人效',
+        '新品除臭贴有哪些拍摄角度和卖点可以挖掘？',
+        '给我起 5 个文艺风格的相册标题'
+      ],
+      analyze: ['贴个对标链接我帮你把它拆得明明白白，连灯光机位都不放过～'],
+      image: ['极简风护肤品摆拍、大理石台面、清晨柔光、高级质感']
     };
-    var ph = { ask: '输入问题…', analyze: '粘贴对标链接 https://…', image: '描述你想要的画面…' };
+    var ph = { ask: '问我点什么…', analyze: '粘贴对标链接 https://…', image: '描述你想要的画面…' };
+    function renderWelcome() {
+      var w = document.getElementById('ai-welcome');
+      var intro = {
+        ask: '嗨～我是中台小秘书 ✨ 别看我个子小，脑子里全是拍摄的活儿：写文案、拆数据、起标题、出点子，随叫随到 😉\n不知道从哪下手？点下面的例子试试水，或者直接把问题甩给我～',
+        analyze: '把对标链接丢给我，我帮你把它扒得底裤都不剩——场景、道具、灯光、机位、模特动作，一条龙拆给你看 👀',
+        image: '脑子里有画面却说不清？描述几句，我直接给你画出来 🎨 一天能免费出 200 张，随便造～'
+      }[mode];
+      w.textContent = intro;
+      if (demos[mode] && demos[mode].length) {
+        var wrap = document.createElement('div');
+        wrap.style.marginTop = '8px';
+        demos[mode].forEach(function (d) {
+          var b = document.createElement('button');
+          b.className = 'ai-demo';
+          b.textContent = d.length > 26 ? d.slice(0, 26) + '…' : d;
+          b.title = d;
+          b.onclick = function () { q.value = d; send(); };
+          wrap.appendChild(b);
+        });
+        w.appendChild(wrap);
+      }
+    }
     document.querySelectorAll('.ai-tab').forEach(function (tab) {
       tab.onclick = function () {
         mode = tab.dataset.mode;
         document.querySelectorAll('.ai-tab').forEach(function (t) { t.classList.toggle('active', t === tab); });
-        document.getElementById('ai-welcome').textContent = welcome[mode];
-        q.placeholder = ph[mode];
         log.querySelectorAll('.ai-msg:not(#ai-welcome),.ai-img').forEach(function (n) { n.remove(); });
+        renderWelcome();
+        q.placeholder = ph[mode];
         q.focus();
       };
     });
+    renderWelcome();
     function sysMsg(t) { log.insertAdjacentHTML('beforeend', '<div class="ai-msg ai-sys">' + esc(t) + '</div>'); log.scrollTop = log.scrollHeight; }
     function send() {
       var text = (q.value || '').trim();
@@ -268,11 +304,12 @@
       } else {
         var ctx = {
           tasks: (function () { try { return JSON.parse(localStorage.getItem('studio-ops-v1') || '[]').length; } catch (e) { return 0; } })(),
-          leader: (function () { try { return (JSON.parse(localStorage.getItem('studio-ops-settings-v1') || '{}').leader) || ''; } catch (e) { return ''; } })()
+          leader: (function () { try { return (JSON.parse(localStorage.getItem('studio-ops-settings-v1') || '{}').leader) || ''; } catch (e) { return ''; } })(),
+          name: viewer && viewer.name ? viewer.name : (savedName || '')
         };
         endpoint = '/ai/ask'; payload = { question: text, context: ctx };
       }
-      sysMsg('处理中…');
+      sysMsg('让我想想哈…马上就好 😉');
       fetch(API + endpoint, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       }).then(function (r) { return r.json(); }).then(function (d) {
@@ -287,7 +324,7 @@
         log.scrollTop = log.scrollHeight;
       }).catch(function () {
         var t = log.querySelector('.ai-sys:last-child'); if (t) t.remove();
-        sysMsg('网络异常，请重试');
+        sysMsg('哎呀网络打了个盹，再戳我一下嘛～');
       });
     }
     document.getElementById('ai-send').onclick = send;
@@ -297,16 +334,19 @@
 
   /* ---------- 启动 ---------- */
   function boot() {
-    if (!viewer) { showLogin(); return; }
-    // 登录后刷新一次权限状态（异步，不阻塞）
-    post('/access/visit', { name: viewer.name }).then(function (data) {
+    // 名字只输一次：本地有 viewer 或历史名字，都静默恢复，不再弹窗
+    var name = viewer && viewer.name ? viewer.name : (savedName || '');
+    if (!name) { showLogin(); return; }
+    // 用已记住的名字刷新权限状态（异步，不阻塞），不要求再次输入
+    post('/access/visit', { name: name }).then(function (data) {
       if (data && data.name) {
         viewer = { name: data.name, role: data.role, status: data.status };
-        try { localStorage.setItem(VIEWER_KEY, JSON.stringify(viewer)); } catch (e) {}
+        try { localStorage.setItem(VIEWER_KEY, JSON.stringify(viewer)); localStorage.setItem(NAME_KEY, data.name); } catch (e) {}
       }
       applyMode();
     }).catch(function () { applyMode(); });
-    applyMode();
+    // 先用本地缓存的 viewer 立即渲染，避免等待
+    if (viewer) applyMode();
     addAIButton();
     addAdminLauncher();
   }
