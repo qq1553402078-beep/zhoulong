@@ -217,6 +217,7 @@ main:not(.home-page) h1 {
 .people-page #dailyOutput > summary::before{background:#45d8c5}.people-page #monthlyBackfill > summary::before{background:#f2bf6b}.people-page #personalOutput > summary{color:#d4c2ff}.people-page #personalOutput > summary::before{background:#aa86f4}.people-page #personalReport > summary{color:#ffc6d9}.people-page #personalReport > summary::before{background:#ec7eaa}
 .daily-task-group{margin:14px 0;border:1px solid #2b496b;border-left:5px solid #5b9fff;border-radius:12px;overflow:hidden;background:#0d203a}.daily-task-group h4{display:flex;justify-content:space-between;align-items:center;margin:0;padding:10px 14px;color:#dbeaff;background:#132d4e;font-size:16px}.daily-task-group h4 span{padding:3px 9px;border-radius:999px;background:#285783;color:#e9f5ff;font-size:12px}.daily-task-group--shooting{border-left-color:#57a0ff}.daily-task-group--shooting h4{background:#12355f}.daily-task-group--innovation{border-left-color:#a988ff}.daily-task-group--innovation h4{background:#2e2353;color:#ebdfff}.daily-task-group--innovation h4 span{background:#6343a0;color:#fff}.daily-task-group--custom{border-left-color:#e99a58}.daily-task-group--custom h4{background:#48321d;color:#ffe6c7}.daily-task-group--custom h4 span{background:#9e6331;color:#fff}.daily-task-group .daily-task-card{margin:10px 12px;border-color:#31516f}.daily-task-group--innovation .daily-task-card{border-color:#674d9e}.daily-task-group--custom .daily-task-card{border-color:#8c623d}
 .daily-task-card{border-left:4px solid #5c9fff}.daily-task-card--completed{border-left-color:#48d5a0}.daily-task-card--in-progress{border-left-color:#f1bc5f}.daily-task-card--pending{border-left-color:#ed8794}.daily-task-card summary{display:flex;align-items:center;flex-wrap:wrap;gap:7px 12px;padding:12px 14px;color:#dce9fb}.daily-task-card summary::marker{color:#80b8ff}.daily-summary-product{font-size:17px;color:#fff;font-weight:800}.daily-summary-crew{display:inline-flex;gap:6px;flex-wrap:wrap}.daily-summary-crew em{padding:3px 8px;border-radius:999px;background:#18375a;color:#bfe0ff;font-size:12px;font-style:normal;font-weight:700}.daily-summary-crew em:last-child{background:#3a2a5e;color:#dccaff}.daily-summary-state{padding:3px 8px;border-radius:999px;background:#423755;color:#ded2ff;font-size:12px;font-weight:750}.daily-task-card--completed .daily-summary-state{background:#164837;color:#a8f3cf}.daily-task-card--in-progress .daily-summary-state{background:#56411d;color:#ffe1a0}.daily-task-card--pending .daily-summary-state{background:#54232d;color:#ffc4cc}.daily-task-card .daily-task-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px;margin:0 14px 12px;padding:10px 12px;border-radius:9px;background:#0b1c32;color:#bdd0e8}.daily-task-card .daily-task-meta strong{color:#fff}.daily-task-card .daily-task-meta span:nth-child(2){color:#73daa8}.daily-task-card--in-progress .daily-task-meta span:nth-child(2){color:#ffd47d}.daily-task-card--pending .daily-task-meta span:nth-child(2){color:#ff9ca9}@media(max-width:720px){.daily-task-card .daily-task-meta{grid-template-columns:1fr}.daily-task-card summary{gap:6px 8px}}
+.daily-option-managers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0 14px}.daily-group-editor{padding:10px;border:1px solid #36587d;border-radius:10px;background:#102744}.daily-group-editor:nth-child(2){border-color:#66519d;background:#211b3c}.daily-group-editor label{display:flex;gap:8px;align-items:center;color:#bcd8f6;font-size:13px;font-weight:750}.daily-group-editor input{min-width:0;flex:1}.daily-group-editor button{margin-top:8px}.managed-option-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.managed-option-list span{display:inline-flex;align-items:center;gap:5px;padding:3px 5px 3px 8px;border-radius:999px;background:#1c456f;color:#d6ecff;font-size:12px}.daily-group-editor:nth-child(2) .managed-option-list span{background:#493778;color:#eadfff}.managed-option-list button{margin:0;padding:2px 6px;border-color:#698db2;background:#183550;color:#d8edff;font-size:11px}.daily-group-editor:nth-child(2) .managed-option-list button{border-color:#9977d5;background:#34235a;color:#ecddff}@media(max-width:720px){.daily-option-managers{grid-template-columns:1fr}.daily-group-editor label{align-items:stretch;flex-direction:column}}
 @media(max-width:900px){.people-page .overview-rings{grid-template-columns:1fr}.people-page .overview-rings .team-ring-card{min-height:0}}
 .team-attention { margin:0 14px 8px; padding:9px 12px; border:1px solid var(--dash-border); border-radius:8px; }
 .team-attention ul { display:flex; flex-wrap:wrap; gap:6px 20px; padding:0; margin:6px 0; list-style:none; }
@@ -280,7 +281,7 @@ const defaults={
  scheduleTitle:'拍摄排班',scheduleIntro:'按运营工单排班，拍摄内容和运营要求可直接在表内修改。',
  restTitle:'中台休息表',peopleTitle:'中台人效与产出看板',
  navHome:'首页',navSchedule:'工作安排',navRest:'休息表',navPeople:'个人人效',navPlan:'产能规划',navAdmin:'管理后台',
- artwork:'',gallery:null,roster:defaultRoster,inactiveStaff:[]
+ artwork:'',gallery:null,roster:defaultRoster,inactiveStaff:[],dailyGroups:[],innovationDeliverableOptions:[]
 };
 let settings={...defaults};
 try{settings={...defaults,...JSON.parse(localStorage.getItem(settingsKey)||'{}')}}catch{}
@@ -402,11 +403,29 @@ const count=n=>Number(n).toLocaleString('zh-CN',{maximumFractionDigits:2});
 const card=(name,v)=>'<div class="card">'+name+'<b>'+v+'</b></div>';
 const newId=()=>globalThis.crypto?.randomUUID?.()||Date.now()+'-'+Math.random();
 const statuses=['待拍摄','拍摄中','后期中','已交付','已验收'];
-const innovationDeliverables=['脚本拆解','AI素材／生成','完整视频','拍摄方案','创新剪辑','其他创新交付'];
+const defaultInnovationDeliverables=['脚本拆解','AI素材／生成','完整视频','拍摄方案','创新剪辑','其他创新交付'];
 const isInnovationTask=task=>members(task?.lead).some(name=>roster['创新组']?.includes(name));
 const dailyGroupKey='studio-daily-task-groups-v1';
 const defaultDailyGroups=['拍摄组','创新组'];
-let dailyGroups=(()=>{try{return [...new Set([...defaultDailyGroups,...(JSON.parse(localStorage.getItem(dailyGroupKey)||'[]')||[]).filter(name=>name!=='AI素材／生成')])]}catch{return [...defaultDailyGroups]}})();
+let dailyGroups=[];
+let innovationDeliverables=[];
+function refreshManagedOptions(){
+ let legacy=[];
+ try{legacy=JSON.parse(localStorage.getItem(dailyGroupKey)||'[]')||[]}catch{}
+ const customGroups=Array.isArray(settings.dailyGroups)?settings.dailyGroups:[];
+ const customDeliverables=Array.isArray(settings.innovationDeliverableOptions)?settings.innovationDeliverableOptions:[];
+ dailyGroups=[...new Set([...defaultDailyGroups,...legacy,...customGroups].map(name=>String(name||'').trim()).filter(name=>name&&name!=='AI素材／生成'))];
+ innovationDeliverables=[...new Set([...defaultInnovationDeliverables,...customDeliverables].map(name=>String(name||'').trim()).filter(Boolean))];
+}
+refreshManagedOptions();
+function saveManagedOptions(){
+ settings={...settings,
+  dailyGroups:dailyGroups.filter(name=>!defaultDailyGroups.includes(name)),
+  innovationDeliverableOptions:innovationDeliverables.filter(name=>!defaultInnovationDeliverables.includes(name))
+ };
+ localStorage.setItem(settingsKey,JSON.stringify(settings));
+ window.dispatchEvent(new Event('focus'));
+}
 let tab='home', day=tasks.some(t=>t.date===today())?today():(tasks.map(t=>t.date).filter(Boolean).sort().at(-1)||today()), month=day.slice(0,7), person='';
 let scheduleStatus='', scheduleQuery='';
 let savedTask=null;
@@ -1352,8 +1371,30 @@ function people(){
   if(dailyGroups.includes(name)){groupEditor.querySelector('input').setCustomValidity('分类已存在');groupEditor.querySelector('input').reportValidity();return}
   dailyGroups=[...dailyGroups,name];
   localStorage.setItem(dailyGroupKey,JSON.stringify(dailyGroups));
+  saveManagedOptions();
   render();
  };
+ const deliverableEditor=main.querySelector('#innovationDeliverableEditor');
+ if(deliverableEditor)deliverableEditor.onsubmit=event=>{
+  event.preventDefault();
+  const name=new FormData(deliverableEditor).get('deliverable').trim();
+  if(!name)return;
+  if(innovationDeliverables.includes(name)){deliverableEditor.querySelector('input').setCustomValidity('类型已存在');deliverableEditor.querySelector('input').reportValidity();return}
+  innovationDeliverables=[...innovationDeliverables,name];
+  saveManagedOptions();
+  render();
+ };
+ main.querySelectorAll('[data-remove-daily-group]').forEach(button=>button.onclick=()=>{
+  dailyGroups=dailyGroups.filter(name=>name!==button.dataset.removeDailyGroup);
+  localStorage.setItem(dailyGroupKey,JSON.stringify(dailyGroups));
+  saveManagedOptions();
+  render();
+ });
+ main.querySelectorAll('[data-remove-innovation-deliverable]').forEach(button=>button.onclick=()=>{
+  innovationDeliverables=innovationDeliverables.filter(name=>name!==button.dataset.removeInnovationDeliverable);
+  saveManagedOptions();
+  render();
+ });
  main.querySelectorAll('[data-daily-task]').forEach(form=>form.onsubmit=event=>{
   event.preventDefault();
   const current=tasks.find(task=>task.id===form.dataset.dailyTask&&task.date===outputDay);
@@ -1660,7 +1701,10 @@ function dailyTaskReports(assignments){
  };
  const groups=['拍摄组','创新组',...dailyGroups.filter(name=>!defaultDailyGroups.includes(name)&&name!=='AI素材／生成')];
  const classified=groups.map(group=>[group,assignments.filter(task=>classify(task)===group)]).filter(([,items])=>items.length);
- return '<div class="report-meta daily-task-reports"><h3>当天任务填报</h3><form id="dailyGroupEditor" class="daily-group-editor"><label>新增分类<input name="group" maxlength="30" placeholder="例如：后期剪辑"></label><button type="submit">添加分类</button><small>新增分类保存在本浏览器。</small></form>'+ 
+ const removableGroups=dailyGroups.filter(name=>!defaultDailyGroups.includes(name));
+ const removableDeliverables=innovationDeliverables.filter(name=>!defaultInnovationDeliverables.includes(name));
+ const removable=(items,attribute,empty)=>items.length?'<div class="managed-option-list">'+items.map(name=>'<span>'+esc(name)+'<button type="button" '+attribute+'="'+esc(name)+'" aria-label="删除 '+esc(name)+'">删除</button></span>').join('')+'</div>':'<small>'+empty+'</small>';
+ return '<div class="report-meta daily-task-reports"><h3>当天任务填报</h3><div class="daily-option-managers"><form id="dailyGroupEditor" class="daily-group-editor"><label>新增填报分类<input name="group" maxlength="30" placeholder="例如：后期剪辑"></label><button type="submit">添加分类</button>'+removable(removableGroups,'data-remove-daily-group','暂无可删除的自定义填报分类。')+'</form><form id="innovationDeliverableEditor" class="daily-group-editor"><label>新增创新交付类型<input name="deliverable" maxlength="30" placeholder="例如：AI分镜"></label><button type="submit">添加类型</button>'+removable(removableDeliverables,'data-remove-innovation-deliverable','暂无可删除的自定义创新交付类型。')+'</form></div>'+ 
  '<p>每个任务由主拍填一次，同组成员查看同一份记录。累计拍摄量已包含当日拍摄量。</p>'+ 
  (assignments.length?classified.map(([group,items])=>'<section class="daily-task-group daily-task-group--'+(group==='拍摄组'?'shooting':group==='创新组'?'innovation':'custom')+'"><h4>'+esc(group)+' <span>'+items.length+' 项</span></h4>'+items.map(task=>{
   const innovation=isInnovationTask(task);
@@ -1886,6 +1930,7 @@ render();
 window.addEventListener('studio-team-refresh', () => {
  if(tab==='schedule')rememberDraftRows();
  try{tasks=JSON.parse(localStorage.getItem(key)||'[]')}catch{}
+ try{settings={...defaults,...JSON.parse(localStorage.getItem(settingsKey)||'{}')};applySettings();refreshManagedOptions()}catch{}
  render();
 });
 </script><script src="team-sync.js?v=shared-settings-3" defer></script><script src="doubao-chat.js?v=bridge" defer></script></html>
