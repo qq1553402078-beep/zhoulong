@@ -720,6 +720,8 @@ const dailySelectedNames=new Set();
 let teamPeriod=0;
 const teamPeriodLabels=['当日总览','当周总览','当月总览'];
 let mixPhotographer='',mixBasis='tasks';
+let mixPeriod=0; // 占比独立周期：0当日 1当周 2当月
+const mixPeriodLabels=['当日占比','当周占比','当月占比'];
 const expandedGoalGroups=new Set();
 const dailyKey='studio-ops-daily-output-v1';
 const managementKey='studio-ops-management-v1';
@@ -2121,8 +2123,16 @@ function managementView(period,outputRows,[from,to],daily){
   return '<tbody>'+summary+'</tbody><tbody class="goal-members" id="goal-members-'+index+'"'+(open?'':' hidden')+'>'+members+'</tbody>';
  }).join('');
  const allPhotographers=roleNames.lead;
- const selected=allPhotographers.includes(mixPhotographer)?mixPhotographer:(monthTasks.find(t=>allPhotographers.includes(t.lead))?.lead||allPhotographers[0]);
- const own=periodTasks.filter(t=>members(t.lead).includes(selected));
+ const selected=allPhotographers.includes(mixPhotographer)||mixPhotographer==='__all__'?mixPhotographer:(monthTasks.find(t=>allPhotographers.includes(t.lead))?.lead||allPhotographers[0]);
+ // 拍摄类型占比：独立的日/周/月范围
+ const mixMonday=(d=>{const x=new Date(d+'T00:00:00Z');const wd=(x.getUTCDay()+6)%7;x.setUTCDate(x.getUTCDate()-wd);return x.toISOString().slice(0,10)})(outputDay);
+ const [mixY,mixM]=period.split('-').map(Number);
+ const mixMonthEnd=new Date(Date.UTC(mixY,mixM,0)).toISOString().slice(0,10);
+ const mixRanges=[[outputDay,outputDay],[mixMonday,plusDay(mixMonday,6)],[period+'-01',mixMonthEnd]];
+ const [mixFrom,mixTo]=mixRanges[mixPeriod]||mixRanges[0];
+ const mixTasks=monthTasks.filter(t=>t.date>=mixFrom&&t.date<=mixTo);
+ const allScope=selected==='__all__';
+ const own=allScope?mixTasks:mixTasks.filter(t=>members(t.lead).includes(selected));
  const baseCategory=type=>type.startsWith('口播')?'口播':type.startsWith('产品使用')?'产品使用展示':type;
  const categories=[...new Set(['产品展示','内料展示','口播','意识流','产品使用展示',...types.map(baseCategory),'其他／待确认'])];
  const category=t=>{
@@ -2155,8 +2165,8 @@ const preview=!isMonth&&attention.length?'<div class="team-attention"><strong>�
  '<details id="monthlyGoals"><summary>月度目标与完成进度</summary><form id="manageGoals"><div class="chart-table-scroll"><table><thead><tr><th>组别／成员</th><th>口径</th><th>目标（条）</th><th>实际（条）</th><th>完成率</th><th>还差</th></tr></thead>'+
  goalGroups+'</table></div><p><small>组别默认按任务的摄影师归组，每个任务计一次。摄助担任主拍时，任务产出计入基础组。可补录组别实际总数，清空后恢复任务汇总。个人实际取个人月产出，协作任务可能归属多人。</small></p>'+
  '<label class="management-notes">月度复盘与改进事项<textarea name="notes" placeholder="例如：口播集中排景，明确运营确认节点">'+esc(config.notes)+'</textarea></label><div class="bar"><button class="primary">保存目标与复盘</button><span id="managementStatus" role="status"></span></div></form></details>'+
- '<details id="mixDetails"><summary>摄影师拍摄类型占比</summary><div class="bar"><label>摄影师<select id="mixPhotographer">'+options(allPhotographers,selected)+'</select></label><label>统计方式<select id="mixBasis"><option value="tasks" '+(mixBasis==='tasks'?'selected':'')+'>按任务数</option><option value="volume" '+(mixBasis==='volume'?'selected':'')+'>按实际条数</option></select></label></div>'+
- mix+'<p><small>按主拍和所选周期统计。按条数查看时，已填任务 '+own.filter(recorded).length+'／'+own.length+' 项。个人每日或月度总数缺少拍摄类型，统计占比使用任务明细。</small></p></details>'+
+ '<details id="mixDetails"><summary>拍摄类型占比（摄影师 / 模特）</summary><div class="bar chart-switch" role="group" aria-label="占比统计周期">'+mixPeriodLabels.map((t,i)=>'<button type="button" data-mix-period="'+i+'" aria-pressed="'+(i===mixPeriod)+'">'+t+'</button>').join('')+'<span>'+esc(mixFrom===mixTo?mixFrom:mixFrom+' 至 '+mixTo)+'</span></div><div class="bar"><label>人员<select id="mixPhotographer"><option value="__all__"'+(selected==='__all__'?' selected':'')+'>全部摄影师 + 模特</option>'+options(allPhotographers,selected)+'</select></label><label>统计方式<select id="mixBasis"><option value="tasks" '+(mixBasis==='tasks'?'selected':'')+'>按任务数</option><option value="volume" '+(mixBasis==='volume'?'selected':'')+'>按实际条数</option></select></label></div>'+
+ mix+'<p><small>'+(allScope?'统计全部摄影师与模特':'统计「'+esc(selected)+'」')+'的'+mixPeriodLabels[mixPeriod]+'任务。按条数查看时，已填任务 '+own.filter(recorded).length+'／'+own.length+' 项。统计占比使用任务明细里的拍摄类型。</small></p></details>'+
  '<details id="monthlyFollowup"><summary>'+label+'跟进事项</summary><p>未完成：'+(incompleteTasks.length?incompleteTasks.slice(0,8).map(t=>esc(t.product||t.title)+'（'+esc(t.unfinishedReason||'未填写原因')+'）').join('、'):'暂无')+'</p><p>补齐实际条数后可核对组别目标进度。类型待确认的任务可在工作安排里补分类，便于复盘拍摄结构。</p></details></section>';
 }
 function bindManagement(period){
@@ -2215,6 +2225,7 @@ function bindManagement(period){
  };
  document.querySelector('#mixPhotographer').onchange=e=>{mixPhotographer=e.target.value;render();document.querySelector('#mixDetails').open=true};
  document.querySelector('#mixBasis').onchange=e=>{mixBasis=e.target.value;render();document.querySelector('#mixDetails').open=true};
+ document.querySelectorAll('[data-mix-period]').forEach(b=>b.onclick=()=>{mixPeriod=Number(b.dataset.mixPeriod);render();document.querySelector('#mixDetails').open=true});
 }
 function outputGroup(role){
  if(['基础摄影','摄影助理','拍剪助理','拍摄组','摄助'].includes(role))return '拍摄组';
