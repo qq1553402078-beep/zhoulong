@@ -1936,7 +1936,8 @@ function dailyTaskReports(assignments){
   const normalFields='<label>任务下发量（条）<input type="number" min="1" step="1" name="target" value="'+esc(task.target)+'"></label><label>累计拍摄量（条）<input type="number" min="0" step="1" name="cumulative" value="'+esc(task.actual)+'" placeholder="可直接修正累计量"></label><label>当日拍摄量（条）<input type="number" min="0" step="1" name="shotBatch" value="'+esc(task.dailyShotCount)+'" placeholder="填写当天拍摄总数"></label>';
   // 创新组按成员分开填条数：每个协作成员一组输入框
   const shotCrew=members(task.lead).filter(n=>roster['创新组']?.includes(n));
-  const reportCrew=shotCrew.length?shotCrew:leadName;
+  // 必须是数组：无创新组成员时退回 lead 成员列表，再退回空数组（千万不能是字符串，否则 .map 报错导致整页渲染中断）
+  const reportCrew=shotCrew.length?shotCrew:(members(task.lead).length?members(task.lead):[]);
   const shotCountFields='<fieldset class="innovation-deliverable-picker"><legend>按成员分填条数 <small>各填各的</small></legend>'+reportCrew.map(person=>{
    const saved=shotCountsOf(task,person);
    return '<div class="member-shot-row" style="margin:6px 0;padding:8px;border:1px solid #ffffff14;border-radius:8px"><strong style="color:#c9b3f5;font-size:12px">👤 '+esc(person)+'</strong><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">'+innovationShotTypes.map(kind=>'<label style="font-size:12px">'+esc(kind)+' <input type="number" min="0" step="1" name="shotType:'+esc(person)+':'+esc(kind)+'" value="'+esc(saved[kind]??'')+'" placeholder="0" style="width:70px"> 条</label>').join('')+'</div></div>';
