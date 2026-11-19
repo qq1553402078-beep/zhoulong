@@ -1810,6 +1810,8 @@ function people(){
       const sub=Object.values(cnt(p)).reduce((a,b)=>a+(Number(b)||0),0);
       const subtotal=row.querySelector('[data-subtotal]');if(subtotal)subtotal.textContent=count(sub);
       const r=getR(p);const dv=row.querySelector('[data-deliverables]');if(dv)dv.textContent=(r.deliverables||[]).join('、')||'—';
+      const noteEl=row.querySelector('[data-summary-note]');if(noteEl)noteEl.textContent=r.note||'—';
+      const reasonEl=row.querySelector('[data-summary-reason]');if(reasonEl)reasonEl.textContent=r.reason||'—';
       const isDone=r.completion==='complete'||((!r.completion||r.completion==='auto')&&r.status&&statuses.slice(2).includes(r.status));
       const stEl=row.querySelector('[data-row-status]');if(stEl)stEl.innerHTML=isDone?'<span style="color:#7ee0b0">已完成</span>':'<span style="color:#e8b96b">待完成</span>';
      }
@@ -2201,6 +2203,8 @@ function dailyTaskReports(assignments){
     return '<tr data-summary-row="'+esc(person)+'"><td style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14"><strong>'+esc(person)+'</strong></td>'+innovationShotTypes.map((k,i)=>'<td data-type-cell="'+esc(k)+'"'+(!foldState.summary&&reportCrew.every(p=>!(Number(getMemberReport(p).counts[k])>0))?' data-fold-empty="1"':'')+' style="padding:4px 6px;border-bottom:1px solid #ffffff14">'+count(r.counts[k]||0)+'</td>').join('')+
      '<td data-subtotal style="padding:4px 6px;border-bottom:1px solid #ffffff14;color:#7ee0b0;font-weight:700">'+count(total)+'</td>'+
      '<td data-deliverables style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14;font-size:11px">'+esc(r.deliverables.join('、')||'—')+'</td>'+
+     '<td data-summary-note style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14;font-size:11px;max-width:180px;white-space:normal;overflow-wrap:anywhere">'+esc(r.note||'—')+'</td>'+
+     '<td data-summary-reason style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14;font-size:11px;max-width:180px;white-space:normal;overflow-wrap:anywhere">'+esc(r.reason||'—')+'</td>'+
      '<td style="padding:4px 6px;border-bottom:1px solid #ffffff14"><span data-row-status>'+(statusDone(r)?'<span style="color:#7ee0b0">已完成</span>':'<span style="color:#e8b96b">待完成</span>')+'</span></td></tr>';
    }).join('');
    const allCounts=innovationShotTypes.map(k=>reportCrew.reduce((s,p)=>s+(getMemberReport(p).counts[k]||0),0));
@@ -2212,8 +2216,8 @@ function dailyTaskReports(assignments){
     '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap"><strong data-summary-title style="color:#c9b3f5">📊 成员完成情况汇总（'+doneCount+'/'+reportCrew.length+' 已完成）</strong><span style="display:inline-flex;align-items:center;gap:8px"><span data-grand style="color:#7ee0b0;font-weight:800">合计 '+count(grandTotal)+' 条</span>'+foldBtnHTML('summary','')+'</span></div>'+
     '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:#9b8fb0">'+
     '<th style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14">成员</th>'+innovationShotTypes.map((k,i)=>'<th'+(!foldState.summary&&colHidden[i]?' data-fold-empty="1"':'')+' style="padding:4px 6px;border-bottom:1px solid #ffffff14">'+esc(k)+'</th>').join('')+
-    '<th style="padding:4px 6px;border-bottom:1px solid #ffffff14">小计</th><th style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14">交付类型</th><th style="padding:4px 6px;border-bottom:1px solid #ffffff14">状态</th></tr></thead><tbody>'+rows+
-    '<tr data-grand-row style="background:#ffffff08"><td style="text-align:left;padding:4px 6px"><strong>合计</strong></td>'+allCounts.map((v,i)=>'<td data-grand-type="'+i+'"'+(!foldState.summary&&colHidden[i]?' data-fold-empty="1"':'')+' style="padding:4px 6px;color:#dcc7ff;font-weight:700">'+count(v)+'</td>').join('')+'<td data-grand-total style="padding:4px 6px;color:#7ee0b0;font-weight:800">'+count(grandTotal)+'</td><td data-grand-types colspan="2" style="padding:4px 6px;font-size:11px;color:#9b8fb0">'+esc(allTypes.join('、')||'—')+'</td></tr>'+
+    '<th style="padding:4px 6px;border-bottom:1px solid #ffffff14">小计</th><th style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14">交付类型</th><th style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14">交付说明</th><th style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14">交付原因</th><th style="padding:4px 6px;border-bottom:1px solid #ffffff14">状态</th></tr></thead><tbody>'+rows+
+    '<tr data-grand-row style="background:#ffffff08"><td style="text-align:left;padding:4px 6px"><strong>合计</strong></td>'+allCounts.map((v,i)=>'<td data-grand-type="'+i+'"'+(!foldState.summary&&colHidden[i]?' data-fold-empty="1"':'')+' style="padding:4px 6px;color:#dcc7ff;font-weight:700">'+count(v)+'</td>').join('')+'<td data-grand-total style="padding:4px 6px;color:#7ee0b0;font-weight:800">'+count(grandTotal)+'</td><td data-grand-types colspan="4" style="padding:4px 6px;font-size:11px;color:#9b8fb0">'+esc(allTypes.join('、')||'—')+'</td></tr>'+
     '</tbody></table></div>';
   }
   // 统一填写（任务级）：只显示真实填写过的任务级分项，不从旧总数回退（否则清空后又冒出数字）
@@ -2230,8 +2234,8 @@ function dailyTaskReports(assignments){
     '<div style="margin-top:8px">'+
     '<div class="fold-wrap'+(foldState.deliverables?'':' is-folded')+'" data-fold-area="deliverables"><div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#9b8fb0;margin-bottom:4px">交付类型（可多选）'+foldBtnHTML('deliverables','')+'</div><div class="innovation-checks">'+deliverableCheckboxes('memberDeliverable:'+esc(person),r.deliverables,'dlv:member:'+esc(person))+'</div></div>'+
     '<div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#9b8fb0;margin:8px 0 4px">数量 <span style="color:#7ee0b0">小任务总数自动 = 各类型之和（当前 '+count(total)+' 条）</span>'+foldBtnHTML('shots','')+'</div><div class="fold-wrap'+(foldState.shots?'':' is-folded')+'" data-fold-area="shots"><div style="display:flex;flex-wrap:wrap;gap:8px">'+shotInputs('shotType:'+esc(person),r.counts,'member:'+person)+'</div></div>'+
-    '<label style="display:block;margin-top:8px;font-size:11px;color:#9b8fb0">交付说明<input name="memberNote:'+esc(person)+'" maxlength="200" value="'+esc(r.note)+'" placeholder="这个成员今天做了什么、交付了什么"></label>'+
-    '<label style="display:block;margin-top:6px;font-size:11px;color:#9b8fb0">交付原因／未完成原因<input name="memberReason:'+esc(person)+'" maxlength="200" value="'+esc(r.reason)+'" placeholder="为什么没完成、原因说明"></label>'+
+    '<label style="display:block;margin-top:8px;font-size:12px;color:#9b8fb0">交付说明<textarea name="memberNote:'+esc(person)+'" maxlength="300" rows="3" style="font-size:13px;line-height:1.5;resize:vertical" placeholder="这个成员今天做了什么、交付了什么">'+esc(r.note)+'</textarea></label>'+
+    '<label style="display:block;margin-top:6px;font-size:12px;color:#9b8fb0">交付原因／未完成原因<textarea name="memberReason:'+esc(person)+'" maxlength="300" rows="3" style="font-size:13px;line-height:1.5;resize:vertical" placeholder="为什么没完成、原因说明">'+esc(r.reason)+'</textarea></label>'+
     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">'+
     '<label style="font-size:11px;color:#9b8fb0">完成状态<select name="memberCompletion:'+esc(person)+'"><option value="auto"'+(r.completion==='auto'?' selected':'')+'>自动</option><option value="complete"'+(r.completion==='complete'?' selected':'')+'>已完成</option><option value="incomplete"'+(r.completion==='incomplete'?' selected':'')+'>未完成</option></select></label>'+
     '<label style="font-size:11px;color:#9b8fb0">交付阶段<select name="memberStatus:'+esc(person)+'">'+options(statuses,r.status||statuses[0])+'</select></label>'+
@@ -2594,11 +2598,43 @@ document.addEventListener('click',e=>{
   }
  }
 });
-window.addEventListener('studio-team-refresh', () => {
+let teamRefreshPending=false;
+function isEditingNow(){
+ const a=document.activeElement;
+ return !!(a&&a!==document.body&&a.matches&&a.matches('input,textarea,select,[contenteditable],[contenteditable="plaintext-only"]'));
+}
+function renderPreserving(){
+ const y=window.scrollY;
+ // 记录展开的 details：优先用 data 标识，否则用 summary 文本
+ const openKeys=[...main.querySelectorAll('details[open]')].map(d=>{
+  const key=d.dataset.dailyTaskCard||d.dataset.dailyTask||d.dataset.taskCard;
+  const sum=d.querySelector(':scope > summary')?.textContent?.trim()||'';
+  return {key,sum};
+ });
+ render();
+ try{window.scrollTo({top:y,behavior:'instant'})}catch{}
+ try{
+  main.querySelectorAll('details').forEach(d=>{
+   const key=d.dataset.dailyTaskCard||d.dataset.dailyTask||d.dataset.taskCard;
+   const sum=d.querySelector(':scope > summary')?.textContent?.trim()||'';
+   const match=openKeys.find(o=>(key&&o.key===key)||(!key&&o.sum&&sum&&o.sum.replace(/\s*\d+ 条/,'')===sum.replace(/\s*\d+ 条/,'')));
+   if(match)d.open=true;
+  });
+ }catch{}
+}
+function doTeamRefresh(){
  if(tab==='schedule')rememberDraftRows();
  try{tasks=JSON.parse(localStorage.getItem(key)||'[]')}catch{}
  try{settings={...defaults,...JSON.parse(localStorage.getItem(settingsKey)||'{}')};applySettings();refreshManagedOptions()}catch{}
- render();
+ // 正在输入时不重建 DOM，避免光标丢失/页面跳动/输入被打断；标记待刷新，失焦后补刷
+ if(isEditingNow()){teamRefreshPending=true;return}
+ renderPreserving();
+}
+window.addEventListener('studio-team-refresh',doTeamRefresh);
+// 编辑结束（失焦）后，若期间有团队更新，补一次刷新
+document.addEventListener('focusout',()=>{
+ if(!teamRefreshPending)return;
+ setTimeout(()=>{if(!isEditingNow()){teamRefreshPending=false;renderPreserving()}},150);
 });
 </script><script src="access.js?v=access-12" defer></script><script src="team-sync.js?v=shared-settings-4" defer></script>
 <script>

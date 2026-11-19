@@ -182,15 +182,13 @@
     if (!rows.length) return '';
     return `<div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>分镜脚本</b><span class="tc-muted">（点击可复制对标链接）</span></div>
     <table class="tc-table tc-storyboard"><thead><tr>
-      <th style="width:42px">序号</th><th style="text-align:left">拍摄内容</th><th style="text-align:left">拍摄需求</th><th style="text-align:left">对标分镜</th><th style="text-align:left">具体要求</th><th style="text-align:left">服装</th>
+      <th style="width:42px">序号</th><th style="text-align:left">拍摄内容</th><th style="text-align:left">拍摄需求</th><th style="text-align:left">对标分镜</th>
     </tr></thead><tbody>` +
       rows.map(s => `<tr>
         <td>${esc(s.seq || '')}</td>
         <td style="text-align:left">${esc(s.content || '')}</td>
         <td style="text-align:left">${esc(s.need || '')}</td>
         <td style="text-align:left">${s.link ? `<a class="tc-benchmark-link" href="${esc(s.link)}" target="_blank" rel="noopener noreferrer" title="点击跳转">${esc(s.link)}</a>` : '—'}</td>
-        <td style="text-align:left">${esc(s.detail || '')}</td>
-        <td style="text-align:left">${esc(s.outfit || '')}</td>
       </tr>`).join('') + '</tbody></table>';
   }
   /* 图2 样式：发布者信息卡（脚本标题/标签/原脚本/关联任务/收藏分享） */
@@ -337,8 +335,6 @@
       <input class="sb-content" value="${esc(s.content || '')}" placeholder="拍摄内容">
       <input class="sb-need" value="${esc(s.need || '')}" placeholder="拍摄需求">
       <input class="sb-link" value="${esc(s.link || '')}" placeholder="对标分镜链接">
-      <input class="sb-detail" value="${esc(s.detail || '')}" placeholder="具体要求">
-      <input class="sb-outfit" value="${esc(s.outfit || '')}" placeholder="服装">
       <button type="button" class="tc-sb-del tc-link" title="删除">×</button>
     </div>`;
   }
@@ -551,9 +547,8 @@
       if (!title) { status.textContent = '请填写任务名称'; return; }
       const storyboards = [...main.querySelectorAll('#tcStoryboards .tc-sb-row')].map(row => ({
         seq: row.querySelector('.sb-seq').value, content: row.querySelector('.sb-content').value,
-        need: row.querySelector('.sb-need').value, link: row.querySelector('.sb-link').value,
-        detail: row.querySelector('.sb-detail')?.value || '', outfit: row.querySelector('.sb-outfit')?.value || ''
-      })).filter(s => s.content || s.need || s.link || s.detail || s.outfit);
+        need: row.querySelector('.sb-need').value, link: row.querySelector('.sb-link').value
+      })).filter(s => s.content || s.need || s.link);
       const splitTags = v => String(v || '').split(/[、,，]/).map(s => s.trim()).filter(Boolean);
       const benchmarks = (fd.get('benchmarks') || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
       const editId = form.dataset.edit;
