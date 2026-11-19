@@ -1583,13 +1583,21 @@ function people(){
   const base=corrected?(cumulative===''?'':Number(cumulative)):current.actual;
   const requiresDelivery=statuses.slice(3).includes(status);
   const normalizedGroup=dailyGroup==='AI素材／生成'?'':dailyGroup;
-  // 创新组：按成员分填条数，写入 memberShotCounts；dailyShotCount=全员分项之和
+  // 创新组：支持「统一填写」(任务级) + 「按成员单独填写」(每人的条数与交付类型)
   let memberShotCounts=current.memberShotCounts;
+  let memberDeliverables=current.memberDeliverables;
   let shotCounts=current.shotCounts;
   let innovationShotTotal=current.dailyShotCount;
   if(innovation){
+   // 1) 统一填写的条数：unifiedShot:类型名
+   shotCounts={};
+   innovationShotTypes.forEach(kind=>{
+    const raw=values.get('unifiedShot:'+kind);
+    const n=raw===''||raw==null?0:Number(raw);
+    if(isFinite(n)&&n>0)shotCounts[kind]=n;
+   });
+   // 2) 每人的条数：shotType:成员名:类型名
    memberShotCounts={};
-   // 字段名格式：shotType:成员名:类型名
    for(const [key,raw] of values.entries()){
     if(!key.startsWith('shotType:'))continue;
     const parts=key.split(':');
@@ -1598,10 +1606,20 @@ function people(){
     const n=raw===''||raw==null?0:Number(raw);
     if(isFinite(n)&&n>0){(memberShotCounts[person]??={})[kind]=n;}
    }
-   const all=Object.values(memberShotCounts).reduce((s,o)=>s+Object.values(o).reduce((a,b)=>a+b,0),0);
-   innovationShotTotal=all>0?all:current.dailyShotCount;
+   // 3) 每人的交付类型：memberDeliverable:成员名（多选）
+   memberDeliverables={};
+   for(const [key,val] of values.entries()){
+    if(!key.startsWith('memberDeliverable:'))continue;
+    const person=key.slice('memberDeliverable:'.length);
+    if(!person||!val)continue;
+    (memberDeliverables[person]??=[]).push(val);
+   }
+   // 总数：优先用按人分填的和，否则用统一填写的和
+   const perSum=Object.values(memberShotCounts).reduce((s,o)=>s+Object.values(o).reduce((a,b)=>a+b,0),0);
+   const unifiedSum=Object.values(shotCounts).reduce((a,b)=>a+b,0);
+   innovationShotTotal=(perSum||unifiedSum)>0?(perSum||unifiedSum):current.dailyShotCount;
   }
-  const next={...current,dailyGroup:normalizedGroup||current.dailyGroup||'',actual:innovation?current.actual:base,dailyShotCount:innovation?innovationShotTotal:(shotBatch===''?'':Number(shotBatch)),target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:completion,status,delivery:requiresDelivery?delivery:'',unfinishedReason:reason.trim(),innovationDeliverable:innovation?innovationDeliverable:current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote,memberShotCounts:innovation?memberShotCounts:current.memberShotCounts,shotCounts:innovation?undefined:current.shotCounts};
+  const next={...current,dailyGroup:normalizedGroup||current.dailyGroup||'',actual:innovation?current.actual:base,dailyShotCount:innovation?innovationShotTotal:(shotBatch===''?'':Number(shotBatch)),target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:completion,status,delivery:requiresDelivery?delivery:'',unfinishedReason:reason.trim(),innovationDeliverable:innovation?innovationDeliverable:current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote,memberShotCounts:innovation?memberShotCounts:current.memberShotCounts,memberDeliverables:innovation?memberDeliverables:current.memberDeliverables,shotCounts:innovation?shotCounts:current.shotCounts};
   const message=form.querySelector('[role="status"]');
   if(requiresDelivery&&!delivery){message.textContent='已选择交付状态，请填写首次交付时间。';return}
   if(delivery&&current.assigned&&delivery<current.assigned){message.textContent='交付时间需在运营下发时间之后。';return}
@@ -1845,14 +1863,19 @@ function outputBreakdown(name,entries){
  }
  const ranked=items=>[...items].sort((a,b)=>b[1]-a[1]);
  const rolesTaken=fields.map(([field,label])=>[label,ownTasks.filter(task=>members(task[field]).includes(name)).length]).filter(([,n])=>n);
- // 创新组：按条数类型分项统计（分镜素材 / 创新视频 等）
+ // 创新组：按条数类型分项统计（分镜素材 / 创新视频 等）+ 个人交付类型
  const inInnovation=roster['创新组']?.includes(name);
  const shotByType=new Map();
+ const myDeliverables=new Map();
  if(inInnovation)ownTasks.forEach(task=>{
   const counts=shotCountsOf(task,name);
   Object.keys(counts).forEach(kind=>shotByType.set(kind,(shotByType.get(kind)||0)+counts[kind]));
+  // 该成员单独填的交付类型
+  const per=Array.isArray(task?.memberDeliverables?.[name])?task.memberDeliverables[name]:[];
+  per.forEach(kind=>myDeliverables.set(kind,(myDeliverables.get(kind)||0)+1));
  });
- const shotBreakdown=inInnovation?'<p><strong>创新产出分项</strong>　'+(shotByType.size?[...shotByType].map(([kind,n])=>esc(kind)+' '+count(n)+' 条').join(' · '):'<span class="overview-empty">未填报分项条数</span>')+'</p>':'';
+ const shotBreakdown=inInnovation?'<p><strong>创新产出分项</strong>　'+(shotByType.size?[...shotByType].map(([kind,n])=>esc(kind)+' '+count(n)+' 条').join(' · '):'<span class="overview-empty">未填报分项条数</span>')+'</p>'+
+  (myDeliverables.size?'<p><strong>我负责的交付类型</strong>　'+[...myDeliverables].map(([kind,n])=>esc(kind)+' '+n+' 项').join(' · ')+'</p>':''):'';
  return '<p>参与 '+ownTasks.length+' 项任务，按任务数统计。</p>'+shotBreakdown+
  '<p><strong>拍摄类型占比</strong>　'+ranked(types).map(([type,n])=>esc(type)+' '+n+' 项（'+count(100*n/ownTasks.length)+'%）').join(' · ')+'</p>'+
  '<p><strong>主要拍摄品类</strong>　'+ranked(products).slice(0,5).map(([product,n])=>esc(product)+' '+n+' 项（'+count(100*n/ownTasks.length)+'%）').join(' · ')+'</p>'+
@@ -1934,15 +1957,24 @@ function dailyTaskReports(assignments){
   const modelName=members(task.model).join('、')||'待分配';
   const statusText=task.status||'待拍摄';
   const normalFields='<label>任务下发量（条）<input type="number" min="1" step="1" name="target" value="'+esc(task.target)+'"></label><label>累计拍摄量（条）<input type="number" min="0" step="1" name="cumulative" value="'+esc(task.actual)+'" placeholder="可直接修正累计量"></label><label>当日拍摄量（条）<input type="number" min="0" step="1" name="shotBatch" value="'+esc(task.dailyShotCount)+'" placeholder="填写当天拍摄总数"></label>';
-  // 创新组按成员分开填条数：每个协作成员一组输入框
+  // 创新组：协作成员。必须是数组：无创新组成员时退回 lead 成员列表，再退回空数组（字符串会导致 .map 报错中断渲染）
   const shotCrew=members(task.lead).filter(n=>roster['创新组']?.includes(n));
-  // 必须是数组：无创新组成员时退回 lead 成员列表，再退回空数组（千万不能是字符串，否则 .map 报错导致整页渲染中断）
   const reportCrew=shotCrew.length?shotCrew:(members(task.lead).length?members(task.lead):[]);
-  const shotCountFields='<fieldset class="innovation-deliverable-picker"><legend>按成员分填条数 <small>各填各的</small></legend>'+reportCrew.map(person=>{
+  const deliverableCheckboxes=(namePrefix,chosen)=>innovationDeliverables.map(kind=>'<label><input type="checkbox" name="'+namePrefix+'" value="'+esc(kind)+'"'+((chosen||[]).includes(kind)?' checked':'')+'><span>'+esc(kind)+'</span></label>').join('');
+  const shotInputs=(namePrefix,saved)=>innovationShotTypes.map(kind=>'<label style="font-size:12px">'+esc(kind)+' <input type="number" min="0" step="1" name="'+namePrefix+':'+esc(kind)+'" value="'+esc(saved?.[kind]??'')+'" placeholder="0" style="width:70px"> 条</label>').join('');
+  // 统一填写（任务级）：想一次性填的人填这里
+  const unifiedShot=shotCountsOf(task);
+  const unifiedFields='<fieldset class="innovation-deliverable-picker"><legend>统一填写 <small>整条任务一起记</small></legend><div>'+deliverableCheckboxes('innovationDeliverable',selectedDeliverables)+'</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+shotInputs('unifiedShot',unifiedShot)+'</div></fieldset>';
+  // 按成员单独填写：点开名字展开，每人可填交付类型 + 分镜/视频条数
+  const memberFields=reportCrew.length?'<fieldset class="innovation-deliverable-picker"><legend>按成员单独填写 <small>点名字展开各填各的</small></legend>'+reportCrew.map(person=>{
    const saved=shotCountsOf(task,person);
-   return '<div class="member-shot-row" style="margin:6px 0;padding:8px;border:1px solid #ffffff14;border-radius:8px"><strong style="color:#c9b3f5;font-size:12px">👤 '+esc(person)+'</strong><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">'+innovationShotTypes.map(kind=>'<label style="font-size:12px">'+esc(kind)+' <input type="number" min="0" step="1" name="shotType:'+esc(person)+':'+esc(kind)+'" value="'+esc(saved[kind]??'')+'" placeholder="0" style="width:70px"> 条</label>').join('')+'</div></div>';
-  }).join('')+'</fieldset>';
-  const innovationFields='<fieldset class="innovation-deliverable-picker"><legend>创新交付类型 <small>可多选</small></legend><div>'+innovationDeliverables.map(kind=>'<label><input type="checkbox" name="innovationDeliverable" value="'+esc(kind)+'"'+(selectedDeliverables.includes(kind)?' checked':'')+'><span>'+esc(kind)+'</span></label>').join('')+'</div></fieldset>'+shotCountFields+'<label>交付说明<input name="innovationNote" maxlength="120" value="'+esc(task.innovationNote)+'" placeholder="例如：完成洗发水脚本拆解 + AI 分镜"></label>';
+   const perDeliverables=Array.isArray(task?.memberDeliverables?.[person])?task.memberDeliverables[person]:[];
+   const hasData=Object.keys(saved).length||perDeliverables.length;
+   return '<details class="member-report" style="margin:6px 0;border:1px solid #ffffff14;border-radius:8px;padding:6px 10px"><summary style="cursor:pointer;color:#c9b3f5;font-size:13px;font-weight:700">👤 '+esc(person)+(hasData?' <span style="color:#7ee0b0;font-size:11px">已填</span>':'')+'</summary>'+
+    '<div style="margin-top:8px"><div style="font-size:11px;color:#9b8fb0;margin-bottom:4px">交付类型（可多选）</div><div>'+deliverableCheckboxes('memberDeliverable:'+esc(person),perDeliverables)+'</div>'+
+    '<div style="font-size:11px;color:#9b8fb0;margin:8px 0 4px">条数（分镜素材 / 创新视频）</div><div style="display:flex;flex-wrap:wrap;gap:8px">'+shotInputs('shotType:'+esc(person),saved)+'</div></div></details>';
+  }).join('')+'</fieldset>':'';
+  const innovationFields=unifiedFields+memberFields+'<label>交付说明<input name="innovationNote" maxlength="120" value="'+esc(task.innovationNote)+'" placeholder="例如：完成洗发水脚本拆解 + AI 分镜"></label>';
   return '<details class="daily-task-card daily-task-card--'+cardState+'" data-daily-task-card="'+esc(task.id)+'"'+((reported||innovationDone)?'':' open')+'><summary><strong class="daily-summary-product">'+esc(task.product||task.title||'拍摄任务')+'</strong><span class="daily-summary-crew"><em>摄影师：'+esc(leadName)+'</em><em>模特：'+esc(modelName)+'</em></span><span class="daily-summary-state">'+esc(summary)+' · '+esc(statusText)+'</span></summary>'+
    '<form class="daily-task-report" data-daily-task="'+esc(task.id)+'">'+
    '<p class="daily-task-meta"><span><strong>协作成员</strong> '+esc(crew||'待安排人员')+'</span><span><strong>'+(innovation?'创新交付':'拍摄进度')+'</strong> '+(innovation?'创新组按脚本、AI 素材、完整视频等交付记录。':'计划 '+esc(task.target==null||task.target===''?'—':task.target)+' 条 · 条数完成度 '+progress+' · '+(shootingComplete(task)?'已完成':'未完成'))+'</span></p>'+
