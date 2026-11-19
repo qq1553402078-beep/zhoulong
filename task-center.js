@@ -225,6 +225,8 @@
 
   /* ---------- 中台视图 ---------- */
   let centerTab = 'pending';
+  let tplFormOpen = false; // 模板页：是否展开新建模板表单
+  let tplFormEditIndex = -1; // -1=新建，否则编辑该模板
   function renderCenter(main) {
     const allReqs = requests();
     const pending = allReqs.filter(r => !['已交付', '已终止'].includes(r.status)).length;
@@ -407,14 +409,43 @@
   /* ---------- 配置视图 ---------- */
   function templatesView() {
     const t = config().templates;
-    if (!t.length) return `<div class="panel" style="padding:18px"><h2>任务模板</h2><p class="tc-muted">暂无模板。在任务详情或新建任务时勾选「存为模板」即可创建；创建后可在这里一键套用下发。</p></div>`;
-    return `<div class="panel" style="padding:18px"><h2>任务模板</h2><p class="tc-muted">点「用此模板下发」即可带出模板内容，再改成新任务。</p>
-      <div class="tc-tpl-grid">${t.map((x, i) => `<div class="tc-tpl-card">
+    const head = `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div><h2 style="margin:0">任务模板</h2><p class="tc-muted" style="margin:4px 0">建好模板后，点「用此模板下发」即可一键带出内容。</p></div><button type="button" id="tcTplNew" class="tc-btn tc-primary">＋ 新建模板</button></div>`;
+    const form = tplFormOpen ? tplForm(tplFormEditIndex >= 0 ? t[tplFormEditIndex] : null) : '';
+    const list = t.length ? `<div class="tc-tpl-grid" style="margin-top:14px">${t.map((x, i) => `<div class="tc-tpl-card">
         <div class="tc-tpl-head"><b>${esc(x.name)}</b><span class="tc-tag">${esc(x.deliverType || '任务')}</span></div>
         <div class="tc-tpl-meta">${esc(x.scriptTitle || x.title || '')}${x.category ? ' · ' + esc(x.category) : ''}${x.target ? ' · 目标 ' + esc(x.target) + ' 条' : ''}</div>
-        ${(x.storyboards || []).length ? `<table class="tc-table tc-storyboard" style="margin:8px 0 0"><thead><tr><th>序号</th><th style="text-align:left">拍摄内容</th><th style="text-align:left">拍摄需求</th><th>对标分镜</th></tr></thead><tbody>${x.storyboards.map(s => `<tr><td>${esc(s.seq || '')}</td><td style="text-align:left">${esc(s.content || '')}</td><td style="text-align:left">${esc(s.need || '')}</td><td>${s.link ? `<a class="tc-linktag" href="${esc(s.link)}" target="_blank" rel="noopener">链接 ↗</a>` : '—'}</td></tr>`).join('')}</tbody></table>` : ''}
-        <div class="bar"><button type="button" data-use-template="${i}" class="tc-btn tc-primary">用此模板下发</button><button type="button" data-del-template="${i}" class="tc-btn tc-danger">删除</button></div>
-      </div>`).join('')}</div></div>`;
+        ${(x.storyboards || []).length ? `<table class="tc-table tc-storyboard" style="margin:8px 0 0"><thead><tr><th>序号</th><th style="text-align:left">拍摄内容</th><th style="text-align:left">拍摄需求</th><th>对标分镜</th></tr></thead><tbody>${x.storyboards.map(s => `<tr><td>${esc(s.seq || '')}</td><td style="text-align:left">${esc(s.content || '')}</td><td style="text-align:left">${esc(s.need || '')}</td><td>${s.link ? `<a class="tc-linktag" href="${esc(s.link)}" target="_blank" rel="noopener">链接 ↗</a>` : '—'}</td></tr>`).join('')}</tbody></table>` : '<p class="tc-muted" style="font-size:12px;margin:8px 0">（无分镜）</p>'}
+        <div class="bar"><button type="button" data-use-template="${i}" class="tc-btn tc-primary">用此模板下发</button><button type="button" data-edit-template="${i}" class="tc-btn">编辑</button><button type="button" data-del-template="${i}" class="tc-btn tc-danger">删除</button></div>
+      </div>`).join('')}</div>` : (tplFormOpen ? '' : '<p class="tc-muted" style="margin-top:14px">还没有模板，点右上角「＋ 新建模板」创建第一个。</p>');
+    return `<div class="panel" style="padding:18px">${head}${form}${list}</div>`;
+  }
+  function tplForm(tpl) {
+    const x = tpl || {};
+    const sb = (x.storyboards && x.storyboards.length) ? x.storyboards : [{ seq: 1, content: '', need: '', link: '' }];
+    return `<form id="tcTplForm" class="tc-tpl-form" data-index="${tplFormEditIndex}" style="margin-top:14px;padding:14px;border:1px solid #d8cfe8;border-radius:10px;background:#faf8ff">
+      <div class="tc-grid">
+        <label>模板名称 <input name="name" required value="${esc(x.name || '')}" placeholder="例如：玉米糊对标"></label>
+        <label>交付类型 <select name="deliverType">${opts(DELIVER, x.deliverType || DELIVER[0])}</select></label>
+        <label>脚本标题 <input name="scriptTitle" value="${esc(x.scriptTitle || '')}"></label>
+        <label>脚本标签 <select name="scriptKind">${opts(['脚本', '视频', '素材', '成片'], x.scriptKind || '脚本')}</select></label>
+        <label>品类标签 <input name="category" value="${esc(x.category || '')}" placeholder="例如：食品/山药葛根玉米粉"></label>
+        <label>目标条数 <input type="number" min="0" name="target" value="${esc(x.target || '')}"></label>
+      </div>
+      <label style="display:block;margin-top:10px">需求说明 <textarea name="brief" rows="2" style="width:100%">${esc(x.brief || '')}</textarea></label>
+      <label style="display:block;margin-top:8px">对标分镜链接（每行一个） <textarea name="benchmarks" rows="2" style="width:100%">${esc((x.benchmarks || []).join('\n'))}</textarea></label>
+      <div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>分镜脚本</b><button type="button" id="tcTplAddSb" class="tc-btn" style="margin-left:auto">＋ 添加分镜</button></div>
+      <div id="tcTplStoryboards">${sb.map((s, i) => tplSbRow(s, i)).join('')}</div>
+      <div class="bar"><button type="submit" class="tc-btn tc-primary">保存模板</button><button type="button" id="tcTplCancel" class="tc-btn">取消</button></div>
+    </form>`;
+  }
+  function tplSbRow(s, i) {
+    return `<div class="tc-sb-row" data-tplsb>
+      <input class="sb-seq" value="${esc(s.seq || i + 1)}" style="width:42px" placeholder="序号">
+      <input class="sb-content" value="${esc(s.content || '')}" placeholder="拍摄内容">
+      <input class="sb-need" value="${esc(s.need || '')}" placeholder="拍摄需求">
+      <input class="sb-link" value="${esc(s.link || '')}" placeholder="对标分镜链接">
+      <button type="button" class="tc-sb-del tc-link" title="删除分镜">×</button>
+    </div>`;
   }
   function benchmarksView() {
     const b = config().benchmarks;
@@ -691,6 +722,43 @@
       else { centerTab = 'detail'; centerDetailId = r.id; }
       render(document.querySelector('#main'));
     });
+    // 模板页：新建/取消/加行/保存/编辑
+    const tplNew = main.querySelector('#tcTplNew');
+    if (tplNew) tplNew.onclick = () => { tplFormOpen = true; tplFormEditIndex = -1; render(main); };
+    const tplCancel = main.querySelector('#tcTplCancel');
+    if (tplCancel) tplCancel.onclick = () => { tplFormOpen = false; tplFormEditIndex = -1; render(main); };
+    const tplAddSb = main.querySelector('#tcTplAddSb');
+    if (tplAddSb) tplAddSb.onclick = () => {
+      const box = main.querySelector('#tcTplStoryboards'); const i = box ? box.children.length : 0;
+      box?.insertAdjacentHTML('beforeend', `<div class="tc-sb-row" data-tplsb><input class="sb-seq" value="${i+1}" style="width:42px"><input class="sb-content" placeholder="拍摄内容"><input class="sb-need" placeholder="拍摄需求"><input class="sb-link" placeholder="对标分镜链接"><button type="button" class="tc-sb-del tc-link" title="删除分镜">×</button></div>`);
+      bindSbDel(main);
+    };
+    qa('[data-edit-template]').forEach(b => b.onclick = () => { tplFormOpen = true; tplFormEditIndex = Number(b.dataset.editTemplate); render(main); });
+    const tplFormEl = main.querySelector('#tcTplForm');
+    if (tplFormEl) {
+      if (main.querySelector('#tcTplStoryboards')) bindSbDel(main);
+      tplFormEl.onsubmit = ev => {
+        ev.preventDefault();
+        const fd = new FormData(tplFormEl);
+        const name = (fd.get('name') || '').trim(); if (!name) return;
+        const split = v => String(v || '').split(/[、,，]/).map(s => s.trim()).filter(Boolean);
+        const storyboards = [...main.querySelectorAll('#tcTplStoryboards [data-tplsb]')].map(row => ({
+          seq: row.querySelector('.sb-seq')?.value || '', content: row.querySelector('.sb-content')?.value || '',
+          need: row.querySelector('.sb-need')?.value || '', link: row.querySelector('.sb-link')?.value || ''
+        })).filter(s => s.content || s.need || s.link);
+        const tpl = {
+          name, deliverType: fd.get('deliverType'), scriptTitle: (fd.get('scriptTitle')||'').trim(),
+          scriptKind: fd.get('scriptKind'), category: (fd.get('category')||'').trim(), target: Number(fd.get('target'))||0,
+          brief: (fd.get('brief')||'').trim(), benchmarks: (fd.get('benchmarks')||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean), storyboards
+        };
+        const cfg = config();
+        const idx = Number(tplFormEl.dataset.index);
+        if (idx >= 0 && cfg.templates[idx]) cfg.templates[idx] = tpl; else cfg.templates.push(tpl);
+        saveConfig(cfg);
+        tplFormOpen = false; tplFormEditIndex = -1;
+        render(document.querySelector('#main'));
+      };
+    }
     qa('[data-copy-req]').forEach(b => b.onclick = () => {
       const r = requests().find(x => x.id === b.dataset.copyReq); if (!r) return;
       opsTab = 'new';
