@@ -538,6 +538,13 @@ const shotCountsOf=(task,name)=>{
  const legacy=Number(task?.dailyShotCount??task?.actual??0);
  return isFinite(legacy)&&legacy>0&&isInnovationTask(task)?{[innovationShotTypes[0]||defaultInnovationShotTypes[0]]:legacy}:{};
 };
+// 仅读取成员本人真实填报的分项条数，不回退到任务级/统一填写，避免把一条任务的数字复制给每个人
+const ownCountsOf=(task,name)=>{
+ const norm=raw=>{const out={};if(raw&&typeof raw==='object')Object.keys(raw).forEach(k=>{const n=Number(raw[k]);if(k&&isFinite(n)&&n>0)out[k]=n});return out;};
+ const fromReport=norm(task?.memberReports?.[name]?.counts);
+ if(Object.keys(fromReport).length)return fromReport;
+ return norm(task?.memberShotCounts?.[name]);
+};
 // 任务的分项条数合计（团队成员各自填报 + 任务级），用于团队总览
 const shotCountsTotalOf=task=>{
  const out={};
@@ -1647,10 +1654,10 @@ function people(){
      delivery:delivery||''
     };
    });
-   // 总数：优先用按人分填的和，否则用统一填写的和
+   // 总数：优先用按人分填的和，否则用统一填写的和；两者都清空就归 0（填 0 能真正清零，不再沿用旧值）
    const perSum=Object.values(memberShotCounts).reduce((s,o)=>s+Object.values(o).reduce((a,b)=>a+b,0),0);
    const unifiedSum=Object.values(shotCounts).reduce((a,b)=>a+b,0);
-   innovationShotTotal=(perSum||unifiedSum)>0?(perSum||unifiedSum):current.dailyShotCount;
+   innovationShotTotal=perSum||unifiedSum;
    nextMemberReports=memberReports;
   }
   const next={...current,dailyGroup:normalizedGroup||current.dailyGroup||'',actual:innovation?current.actual:base,dailyShotCount:innovation?innovationShotTotal:(shotBatch===''?'':Number(shotBatch)),target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:innovation?(current.shootingCompletion||'auto'):completion,status:innovation?(current.status||statuses[0]):status,delivery:innovation?(current.delivery||''):(requiresDelivery?delivery:''),unfinishedReason:(reason||'').trim(),innovationDeliverable:innovation?innovationDeliverable:current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote,memberShotCounts:innovation?memberShotCounts:current.memberShotCounts,memberDeliverables:innovation?memberDeliverables:current.memberDeliverables,memberReports:innovation?nextMemberReports:current.memberReports,shotCounts:innovation?shotCounts:current.shotCounts};
@@ -1695,8 +1702,11 @@ function people(){
   // 同步统计用的分人字段
   const memberShotCounts={...(current.memberShotCounts||{})}; memberShotCounts[person]=counts;
   const memberDeliverables={...(current.memberDeliverables||{})}; memberDeliverables[person]=deliverables;
-  const total=Object.values(counts).reduce((a,b)=>a+b,0);
-  const next={...current,memberReports,memberShotCounts,memberDeliverables,dailyShotCount:total||current.dailyShotCount};
+  // 总数按全员分项之和重算（填 0 后能真正清零，不会回退旧值，也不会因单人清空丢掉其他人）
+  const memberSum=Object.values(memberShotCounts).reduce((s,o)=>s+Object.values(o||{}).reduce((a,b)=>a+(Number(b)||0),0),0);
+  const unifiedSum=Object.values(current.shotCounts||{}).reduce((a,b)=>a+(Number(b)||0),0);
+  const dailyTotal=memberSum||unifiedSum;
+  const next={...current,memberReports,memberShotCounts,memberDeliverables,dailyShotCount:dailyTotal};
   const ok=save(tasks.map(t=>t.id===tid?next:t));
   const st=box.querySelector('[data-member-status]');
   if(st)st.textContent=ok?'✓ 已保存':'保存失败';
@@ -1974,7 +1984,7 @@ function outputBreakdown(name,entries){
  const shotByType=new Map();
  const myDeliverables=new Map();
  if(inInnovation)ownTasks.forEach(task=>{
-  const counts=shotCountsOf(task,name);
+  const counts=ownCountsOf(task,name);
   Object.keys(counts).forEach(kind=>shotByType.set(kind,(shotByType.get(kind)||0)+counts[kind]));
   // 该成员单独填的交付类型
   const per=Array.isArray(task?.memberDeliverables?.[name])?task.memberDeliverables[name]:[];
@@ -2078,7 +2088,7 @@ function dailyTaskReports(assignments){
    return {
     note:r.note||'', reason:r.reason||'', completion:r.completion||'auto', status:r.status||'', delivery:r.delivery||'',
     deliverables:Array.isArray(r.deliverables)?r.deliverables:(Array.isArray(task?.memberDeliverables?.[person])?task.memberDeliverables[person]:[]),
-    counts:shotCountsOf(task,person)
+    counts:ownCountsOf(task,person)
    };
   };
   const totalOf=counts=>Object.values(counts||{}).reduce((a,b)=>a+(Number(b)||0),0);
@@ -2105,8 +2115,8 @@ function dailyTaskReports(assignments){
     '<tr data-grand-row style="background:#ffffff08"><td style="text-align:left;padding:4px 6px"><strong>合计</strong></td>'+allCounts.map((v,i)=>'<td data-grand-type="'+i+'" style="padding:4px 6px;color:#dcc7ff;font-weight:700">'+count(v)+'</td>').join('')+'<td data-grand-total style="padding:4px 6px;color:#7ee0b0;font-weight:800">'+count(grandTotal)+'</td><td data-grand-types colspan="2" style="padding:4px 6px;font-size:11px;color:#9b8fb0">'+esc(allTypes.join('、')||'—')+'</td></tr>'+
     '</tbody></table></div>';
   }
-  // 统一填写（任务级）：想一次性填的人填这里
-  const unifiedShot=shotCountsOf(task);
+  // 统一填写（任务级）：只显示真实填写过的任务级分项，不从旧总数回退（否则清空后又冒出数字）
+  const unifiedShot=(()=>{const out={};const raw=task?.shotCounts;if(raw&&typeof raw==='object')Object.keys(raw).forEach(k=>{const n=Number(raw[k]);if(k&&isFinite(n)&&n>0)out[k]=n});return out})();
   const unifiedFields='<fieldset class="innovation-deliverable-picker"><legend>统一填写 <small>整条任务一起记</small></legend><div>'+deliverableCheckboxes('innovationDeliverable',selectedDeliverables)+'</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+shotInputs('unifiedShot',unifiedShot)+'</div></fieldset>';
   // 点开成员 = 一个完整独立小任务（数量/类型/说明/原因/状态/时间）
   const memberFields=reportCrew.length?'<fieldset class="innovation-deliverable-picker"><legend>👇 点开成员 = 单独小任务 <small>各填各的，返回看上方汇总</small></legend>'+reportCrew.map(person=>{
