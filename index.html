@@ -2178,12 +2178,14 @@ function managementView(period,outputRows,[from,to],daily){
  const mixTasks=tasks.filter(t=>t.date>=mixFrom&&t.date<=mixTo);
  const allScope=selected==='__all__';
  const own=allScope?mixTasks:mixTasks.filter(t=>participates(t,selected));
- const baseCategory=type=>type.startsWith('口播')?'口播':type.startsWith('产品使用')?'产品使用展示':type;
- const categories=[...new Set(['产品展示','内料展示','口播','意识流','产品使用展示',...types.map(baseCategory),'其他／待确认'])];
+ const baseCategory=type=>{const s=String(type||'');return s.startsWith('口播')?'口播':s.startsWith('产品使用')?'产品使用展示':s.startsWith('产品展示')?'产品展示':s.startsWith('内料')?'内料展示':s};
+ // 把全量任务里实际用到的拍摄类型也纳入图例，避免填了却因不在预设列表被判待确认
+ const usedTypeLabels=[...new Set(tasks.map(t=>{const ty=(t.type||'').trim();return ty?baseCategory(ty):''}).filter(Boolean))];
+ const categories=[...new Set(['产品展示','内料展示','口播','意识流','产品使用展示',...types.map(baseCategory),...usedTypeLabels,'其他／待确认'])];
  const category=t=>{
   const type=(t.type||'').trim();
-  const label=baseCategory(type);
-  return categories.includes(label)?label:'其他／待确认';
+  if(!type)return '其他／待确认'; // 只有真正没填拍摄类型才算待确认
+  return baseCategory(type); // 填了就按值归类（含自定义值，图例已动态纳入）
  };
  const basisRows=mixBasis==='volume'?own.filter(recorded):own;
  const total=mixBasis==='volume'?sum(basisRows,'actual'):basisRows.length;
