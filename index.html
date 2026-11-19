@@ -254,15 +254,21 @@ main:not(.home-page) h1 {
 .daily-task-report { padding:0 12px 12px; }
 .daily-task-report h4,.daily-task-report p { margin:0 0 6px; }
 .daily-task-report .bar { margin:10px 0; }
-.daily-breakdown { margin:8px 0; padding:10px 12px; background:#141b2c; border:1px solid #3a4a6b; border-radius:10px; }
-.daily-breakdown .bd-head { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:8px; }
-.daily-breakdown .bd-head strong { color:#c9b3f5; font-size:13px; }
-.daily-breakdown .bd-head span { color:#9b8fb0; font-size:11px; }
-.daily-breakdown .bd-head b { color:#7ee0b0; font-size:12px; margin-left:auto; }
+.daily-breakdown { margin:8px 0; background:#141b2c; border:1px solid #3a4a6b; border-radius:10px; overflow:hidden; }
+.daily-breakdown .bd-summary { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; padding:9px 12px; cursor:pointer; list-style:none; }
+.daily-breakdown .bd-summary::-webkit-details-marker { display:none; }
+.daily-breakdown[open] .bd-summary { border-bottom:1px solid #ffffff14; }
+.daily-breakdown .bd-caret { display:inline-block; color:#7ee0b0; font-size:14px; transition:transform .15s; }
+.daily-breakdown[open] .bd-caret { transform:rotate(90deg); }
+.daily-breakdown .bd-summary strong { color:#c9b3f5; font-size:13px; white-space:nowrap; }
+.daily-breakdown .bd-head-note { color:#f0b429; font-size:12px; flex:1 1 200px; overflow-wrap:anywhere; }
+.daily-breakdown .bd-summary b { color:#7ee0b0; font-size:12px; margin-left:auto; white-space:nowrap; }
+.daily-breakdown .bd-body { padding:10px 12px; }
 .daily-breakdown .bd-rows { display:flex; flex-direction:column; gap:6px; }
 .daily-breakdown .bd-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
-.daily-breakdown .bd-row .bd-type { flex:1 1 200px; min-width:140px; }
-.daily-breakdown .bd-row .bd-count { width:82px; flex:0 0 82px; }
+.daily-breakdown .bd-row .bd-category { flex:1 1 130px; min-width:110px; }
+.daily-breakdown .bd-row .bd-type { flex:1 1 180px; min-width:130px; }
+.daily-breakdown .bd-row .bd-count { width:70px; flex:0 0 70px; }
 .daily-breakdown .bd-row .bd-urgent { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:#f0b429; white-space:nowrap; }
 .daily-breakdown .bd-row .bd-urgent input { width:auto; }
 .daily-breakdown .bd-row .bd-del { border:0; background:transparent; color:#e08a8a; cursor:pointer; font-size:16px; line-height:1; padding:0 4px; }
@@ -277,6 +283,19 @@ main:not(.home-page) h1 {
 .daily-name-options input { width:auto; }
 .daily-task-card[hidden],#dailyStaffNames[hidden] { display:none; }
 .note-field { min-height:90px; max-height:220px; overflow:auto; background:#191722; }
+.rref { margin-top:6px; border:1px solid #ffffff1e; border-radius:7px; background:#ffffff08; }
+.rref > summary { cursor:pointer; list-style:none; padding:5px 8px; font-size:11px; color:#9db4d8; }
+.rref > summary::-webkit-details-marker { display:none; }
+.rref > summary::before { content:'▸ '; color:#e0bd70; }
+.rref[open] > summary::before { content:'▾ '; }
+.rref-count { color:#e0bd70; font-weight:700; }
+.rref-body { padding:4px 8px 8px; max-height:200px; overflow:auto; }
+.rref-item { padding:6px 0; border-bottom:1px solid #ffffff12; }
+.rref-meta { font-size:11px; color:#c9b3f5; margin-bottom:3px; }
+.rref-text { font-size:12px; color:#cdd8e8; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.5; }
+.rref-copy { margin-top:4px; padding:2px 9px; border:1px solid #6d7fa5; background:transparent; color:#bcd0f5; border-radius:6px; cursor:pointer; font-size:11px; }
+.rref-copy:hover { background:#6d7fa533; }
+.rref-tip { margin:6px 0 0; color:#7d8ba8; font-size:10px; line-height:1.4; }
 .note-field:empty::before { content:attr(data-placeholder); color:#b5a9bd; pointer-events:none; }
 .note-actions { display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin:5px 0; }
 .note-actions button { padding:4px 8px; }
@@ -509,6 +528,23 @@ function markedNotes(notes,marks){
  }
  return html+esc(value.slice(cursor));
 }
+// 运营要求参考：同一摄影师前 1–2 天的运营要求，默认折叠，可复制
+function recentNotesRef(task){
+ if(!task||!task.date)return '';
+ const leads=members(task.lead).filter(Boolean);
+ if(!leads.length)return '';
+ const d=new Date(task.date+'T00:00:00');
+ if(isNaN(d.getTime()))return '';
+ const targets=[1,2].map(n=>{const x=new Date(d);x.setDate(x.getDate()-n);return x.toISOString().slice(0,10)});
+ const refs=tasks.filter(t=>t.id!==task.id&&targets.includes(t.date)&&members(t.lead).some(n=>leads.includes(n))&&(t.notes||'').trim())
+  .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+ if(!refs.length)return '';
+ const body=refs.map(t=>{
+  const day=t.date, who=members(t.lead).join('、');
+  return '<div class="rref-item"><div class="rref-meta"><b>'+esc(day)+'</b> · '+esc(who)+(t.product?' · '+esc(t.product):'')+'</div><div class="rref-text">'+esc((t.notes||'').trim())+'</div><button type="button" class="rref-copy" data-copy-notes="'+esc(t.id)+'">复制这段</button></div>';
+ }).join('');
+ return '<details class="rref"><summary>📋 参考前两天运营要求 <span class="rref-count">'+refs.length+' 条</span></summary><div class="rref-body">'+body+'<p class="rref-tip">点「复制这段」可粘贴到上方运营要求里，相似需求改一改就能用。</p></div></details>';
+}
 function notesEditor(task,formId){
  const marks=typeof task.noteMarks==='string'?readNoteMarks(task.noteMarks):task.noteMarks||{};
  return '<div class="notes-editor"><div class="note-preview note-field" contenteditable="plaintext-only" role="textbox" aria-multiline="true" aria-label="运营要求" data-placeholder="填写数量、脚本、道具、参考和核心拍摄要求">'+markedNotes(task.notes,marks)+'</div>'+
@@ -516,7 +552,7 @@ function notesEditor(task,formId){
  '<input type="hidden" name="noteMarks" form="'+formId+'" value="'+esc(JSON.stringify(marks))+'">'+
  '<div class="note-actions" aria-label="运营要求重点标注"><button type="button" data-note-style="bold">加粗</button>'+
  Object.entries(noteColors).map(([id,label])=>'<button type="button" class="note-color-'+id+'" data-note-style="'+id+'">'+label+'</button>').join('')+
-  '<button type="button" data-note-style="clear">清除标注</button><small role="status"></small></div></div>';
+  '<button type="button" data-note-style="clear">清除标注</button><small role="status"></small></div>'+recentNotesRef(task)+'</div>';
 }
 function readReferenceNames(task,fields){
  const urls=fields.getAll('referenceUrl').map(value=>value.trim());
@@ -969,7 +1005,21 @@ function schedule(){
     refresh();
    };
   });
+  // 参考前两天运营要求：复制该段文字到剪贴板
+  editor.querySelectorAll('[data-copy-notes]').forEach(button=>{
+   button.onclick=()=>{
+    const src=tasks.find(t=>t.id===button.dataset.copyNotes);
+    const text=((src&&src.notes)||'').trim(); if(!text)return;
+    const done=()=>{const old=button.textContent;button.textContent='✓ 已复制';setTimeout(()=>button.textContent=old,1200)};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+    else fallbackCopy(text,done);
+   };
+  });
  });
+ function fallbackCopy(text,cb){
+  const ta=document.createElement('textarea');ta.value=text;ta.style.cssText='position:fixed;left:-9999px';document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');cb&&cb()}catch{}finally{ta.remove()}
+ }
  document.querySelectorAll('[data-reference-add]').forEach(button=>button.onclick=()=>{
   const rows=button.previousElementSibling;
   rows.insertAdjacentHTML('beforeend',referenceEditorRow(button.dataset.referenceAdd));
@@ -1681,10 +1731,11 @@ function people(){
   const {cumulative,shotBatch,target,completion,status,delivery,reason,innovationNote,dailyGroup}=Object.fromEntries(values);
   // 当日拍摄明细（普通组）：逐行读取类型/条数/加急，合计作为当日拍摄量
   const dailyBreakdown=[...form.querySelectorAll('.daily-breakdown .bd-row')].map(row=>({
+   category:(row.querySelector('.bd-category')?.value||'').trim(),
    type:(row.querySelector('.bd-type')?.value||'').trim(),
    count:row.querySelector('.bd-count')?.value??'',
    urgent:!!row.querySelector('.bd-urgent input')?.checked
-  })).filter(x=>x.type||String(x.count).trim()!=='');
+  })).filter(x=>x.category||x.type||String(x.count).trim()!=='');
   const bdTotal=dailyBreakdown.reduce((s,x)=>s+(Number(x.count)||0),0);
   const innovationDeliverable=values.getAll('innovationDeliverable').filter(Boolean);
   const innovation=isInnovationTask(current);
@@ -2197,10 +2248,16 @@ function dailyTaskReports(assignments){
   const innovation=isInnovationTask(task);
   // 当日拍摄明细：一天里同一任务可能拍多种类型（含临时加急），逐行登记，合计=当日拍摄量
   const shotTypeOptions=[...new Set([...(Array.isArray(settings.types)?settings.types:[]),...(Array.isArray(settings.products)?settings.products:[])])];
-  const breakdownRow=(b)=>'<div class="bd-row"><input class="bd-type" list="bdTypeOpts" value="'+esc(b&&b.type||'')+'" placeholder="拍摄类型（如 口播 / 除臭贴痛点展示）"><input class="bd-count" type="number" min="0" step="1" value="'+esc(b&&b.count!=null?b.count:'')+'" placeholder="条数"><label class="bd-urgent"><input type="checkbox"'+(b&&b.urgent?' checked':'')+'>加急</label><button type="button" class="bd-del" title="删除此行">×</button></div>';
+  const productOptions=Array.isArray(settings.products)?settings.products:[];
+  const breakdownRow=(b)=>'<div class="bd-row"><input class="bd-category" list="bdProductOpts" value="'+esc(b&&b.category||'')+'" placeholder="品类（如 秘与洗液）"><input class="bd-type" list="bdTypeOpts" value="'+esc(b&&b.type||'')+'" placeholder="拍摄类型（如 口播 / 除臭贴痛点展示）"><input class="bd-count" type="number" min="0" step="1" value="'+esc(b&&b.count!=null?b.count:'')+'" placeholder="条数"><label class="bd-urgent"><input type="checkbox"'+(b&&b.urgent?' checked':'')+'>加急</label><button type="button" class="bd-del" title="删除此行">×</button></div>';
   const bdList=Array.isArray(task.dailyBreakdown)?task.dailyBreakdown:[];
   const bdSum=bdList.reduce((s,b)=>s+(Number(b&&b.count)||0),0);
-  const bdPreview=bdList.filter(b=>b&&((b.type||'').trim()||b.count!=='')).map(b=>(b.urgent?'⚡':'')+esc(b.type||'未命名')+' '+count(Number(b.count)||0)+'条').join('、');
+  const bdPreview=bdList.filter(b=>b&&((b.type||'').trim()||(b.category||'').trim()||b.count!=='')).map(b=>{
+   const cat=(b.category||'').trim(),typ=(b.type||'').trim();
+   return (b.urgent?'⚡':'')+(cat?esc(cat)+(typ?'·':'') :'')+(typ?esc(typ):(cat?'':'未命名'))+' '+count(Number(b.count)||0)+'条';
+  }).join('、');
+  const urgentBd=bdList.filter(b=>b&&b.urgent&&((b.type||'').trim()||(b.category||'').trim()));
+  const bdHeadNote=bdPreview?bdPreview+(urgentBd.length?'':'') :'点右侧箭头展开，按行登记各品类/类型的条数';
   const progress=Number(task.target)>0&&task.actual!=null&&task.actual!==''?count(100*Number(task.actual)/Number(task.target))+'%':'—';
   const crew=crewRoles.filter(([field])=>members(task[field]).length).map(([field,label])=>label+'：'+members(task[field]).join('、')).join(' · ');
   const reported=task.dailyShotCount!=null&&task.dailyShotCount!=='';
@@ -2213,7 +2270,7 @@ function dailyTaskReports(assignments){
   const statusText=task.status||'待拍摄';
   const normalFields='<label>任务下发量（条）<input type="number" min="1" step="1" name="target" value="'+esc(task.target)+'"></label><label>累计拍摄量（条）<input type="number" min="0" step="1" name="cumulative" value="'+esc(task.actual)+'" placeholder="可直接修正累计量"></label><label>当日拍摄量（条）<input type="number" min="0" step="1" name="shotBatch" value="'+esc(task.dailyShotCount)+'" placeholder="填写当天拍摄总数"></label>';
   // 当日拍摄明细区（仅普通组）：逐行登记各类型条数，合计自动作为当日拍摄量
-  const breakdownFields='<div class="daily-breakdown"><datalist id="bdTypeOpts">'+shotTypeOptions.map(t=>'<option value="'+esc(t)+'">').join('')+'</datalist><div class="bd-head"><strong>当日拍摄明细</strong><span>按类型逐行登记条数；临时加急的另起一行并勾「加急」</span><b data-bd-total>'+(bdSum>0?'合计 '+bdSum+' 条 → 当日拍摄量':'')+'</b></div><div class="bd-rows">'+(bdList.length?bdList.map(breakdownRow).join(''):breakdownRow({}))+'</div><button type="button" class="bd-add">＋ 添加一种类型</button><p class="bd-tip">各类型条数之和会自动作为「当日拍摄量」，无需再手填总数。</p></div>';
+  const breakdownFields='<details class="daily-breakdown"><summary class="bd-summary"><span class="bd-caret">▸</span><strong>当日拍摄明细</strong><span class="bd-head-note">'+bdHeadNote+'</span><b data-bd-total>'+(bdSum>0?'合计 '+bdSum+' 条 → 当日拍摄量':'')+'</b></summary><div class="bd-body"><datalist id="bdProductOpts">'+productOptions.map(t=>'<option value="'+esc(t)+'">').join('')+'</datalist><datalist id="bdTypeOpts">'+shotTypeOptions.map(t=>'<option value="'+esc(t)+'">').join('')+'</datalist><div class="bd-rows">'+(bdList.length?bdList.map(breakdownRow).join(''):breakdownRow({}))+'</div><button type="button" class="bd-add">＋ 添加一种类型</button><p class="bd-tip">各类型条数之和会自动作为「当日拍摄量」，无需再手填总数。品类填「哪个产品」，类型填「拍了什么」。</p></div></details>';
   // 创新组：协作成员。必须是数组：无创新组成员时退回 lead 成员列表，再退回空数组（字符串会导致 .map 报错中断渲染）
   const shotCrew=members(task.lead).filter(n=>roster['创新组']?.includes(n));
   const reportCrew=shotCrew.length?shotCrew:(members(task.lead).length?members(task.lead):[]);
@@ -2746,12 +2803,24 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   var sum=0;box.querySelectorAll('.bd-count').forEach(function(i){sum+=Number(i.value)||0});
   var el=box.querySelector('[data-bd-total]');
   if(el)el.textContent=sum>0?('合计 '+sum+' 条 → 当日拍摄量'):'';
+  var note=box.querySelector('.bd-head-note');
+  if(note){
+   var parts=[];
+   box.querySelectorAll('.bd-row').forEach(function(row){
+    var cat=(row.querySelector('.bd-category')?.value||'').trim();
+    var typ=(row.querySelector('.bd-type')?.value||'').trim();
+    var cnt=row.querySelector('.bd-count')?.value||'';
+    var urgent=!!row.querySelector('.bd-urgent input')?.checked;
+    if(cat||typ||String(cnt).trim()!=='')parts.push((urgent?'⚡':'')+(cat?cat+(typ?'·':''):'')+(typ||(cat?'':'未命名'))+' '+cnt+'条');
+   });
+   note.textContent=parts.length?parts.join('、'):'点右侧箭头展开，按行登记各品类/类型的条数';
+  }
  };
  document.addEventListener('input',function(e){
-  if(e.target.classList&&e.target.classList.contains('bd-count'))bdUpdate(e.target.closest('.daily-breakdown'));
+  if(e.target.classList&&(e.target.classList.contains('bd-count')||e.target.classList.contains('bd-type')||e.target.classList.contains('bd-category')))bdUpdate(e.target.closest('.daily-breakdown'));
  });
  document.addEventListener('change',function(e){
-  if(e.target.classList&&e.target.classList.contains('bd-count'))bdUpdate(e.target.closest('.daily-breakdown'));
+  if(e.target.classList&&(e.target.classList.contains('bd-count')||e.target.classList.contains('bd-type')||e.target.classList.contains('bd-category')||e.target.classList.contains('bd-urgent')))bdUpdate(e.target.closest('.daily-breakdown'));
  });
  document.addEventListener('click',function(e){
   var t=e.target;
