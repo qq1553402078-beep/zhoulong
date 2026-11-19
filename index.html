@@ -2106,21 +2106,26 @@ function dailyTaskReports(assignments){
   // 创新组：协作成员。必须是数组：无创新组成员时退回 lead 成员列表，再退回空数组（字符串会导致 .map 报错中断渲染）
   const shotCrew=members(task.lead).filter(n=>roster['创新组']?.includes(n));
   const reportCrew=shotCrew.length?shotCrew:(members(task.lead).length?members(task.lead):[]);
-  const deliverableCheckboxes=(namePrefix,chosen)=>innovationDeliverables.map(kind=>'<label'+((chosen||[]).includes(kind)?'':' data-fold-empty="1"')+'><input type="checkbox" name="'+namePrefix+'" value="'+esc(kind)+'"'+((chosen||[]).includes(kind)?' checked':'')+'><span>'+esc(kind)+'</span></label>').join('');
+  // 交付类型：改为「＋添加类型」下拉选择；全部渲染，未勾选的打折叠标记，从下拉勾选后显示
+  const deliverableCheckboxes=(namePrefix,chosen,scope)=>{
+   const picked=new Set(chosen||[]);
+   const chips=innovationDeliverables.map(kind=>'<label data-dlv-chip data-kind="'+esc(kind)+'"'+(picked.has(kind)?'':' data-fold-empty="1"')+'><input type="checkbox" name="'+namePrefix+'" value="'+esc(kind)+'"'+(picked.has(kind)?' checked':'')+'><span>'+esc(kind)+'</span></label>').join('');
+   const addable=innovationDeliverables.filter(k=>!picked.has(k));
+   const selector=addable.length?'<select class="dlv-add-select" data-scope="'+esc(scope)+'" style="width:auto;min-width:120px;padding:5px 8px;font-size:12px"><option value="">＋ 添加类型</option>'+addable.map(k=>'<option value="'+esc(k)+'">'+esc(k)+'</option>').join('')+'</select>':'';
+   return '<span class="dlv-wrap" data-dlv-scope="'+esc(scope)+'" style="display:inline-flex;flex-wrap:wrap;gap:8px;align-items:center">'+chips+selector+'</span>';
+  };
   const foldBtnHTML=(area,label)=>'<button type="button" class="fold-toggle" data-fold-toggle="'+area+'" aria-pressed="'+(foldState[area]?'true':'false')+'">'+(foldState[area]?'折叠':'铺开')+label+'</button>';
   // 数量输入框：默认只显示分镜素材/创新视频；已保存过值或用户主动添加的类型也显示，其余收进「＋添加类型」下拉
-  const baseShotTypes=['分镜素材','创新视频'];
   const shotChosenFor=scope=>shotInputChosen[scope]||new Set();
   const shotInputs=(namePrefix,saved,scope)=>{
    const chosen=shotChosenFor(scope);
-   // 全部渲染；折叠态隐藏「非基础、无数量、且未主动添加」的类型
+   // 全部渲染；折叠态隐藏「无数量、且未主动添加」的类型（含分镜素材/创新视频，全部靠下拉选）
    const boxes=innovationShotTypes.map(kind=>{
-    const basic=baseShotTypes.includes(kind);
     const hasVal=saved&&Number(saved[kind])>0;
-    const hide=!basic&&!hasVal&&!chosen.has(kind);
-    return '<span class="chip-shot"'+(hide?' data-fold-empty="1"':'')+' style="display:inline-flex;align-items:center;gap:4px;background:#ffffff10;border:1px solid #ffffff2e;border-radius:16px;padding:5px 9px;font-size:12px">'+esc(kind)+' <input type="number" min="0" step="1" name="'+namePrefix+':'+esc(kind)+'" value="'+esc(saved?.[kind]??'')+'" placeholder="0" style="width:58px"> 条'+(basic?'':' <button type="button" data-remove-shot="'+esc(kind)+'" data-scope="'+esc(scope)+'" title="移除此类型" style="border:0;background:transparent;color:#c9b3f5;cursor:pointer;font-size:14px;line-height:1;padding:0 2px">×</button>')+'</span>';
+    const hide=!hasVal&&!chosen.has(kind);
+    return '<span class="chip-shot" data-kind="'+esc(kind)+'"'+(hide?' data-fold-empty="1"':'')+' style="display:inline-flex;align-items:center;gap:4px;background:#ffffff10;border:1px solid #ffffff2e;border-radius:16px;padding:5px 9px;font-size:12px">'+esc(kind)+' <input type="number" min="0" step="1" name="'+namePrefix+':'+esc(kind)+'" value="'+esc(saved?.[kind]??'')+'" placeholder="0" style="width:58px"> 条 <button type="button" data-remove-shot="'+esc(kind)+'" data-scope="'+esc(scope)+'" title="移除此类型" style="border:0;background:transparent;color:#c9b3f5;cursor:pointer;font-size:14px;line-height:1;padding:0 2px">×</button></span>';
    }).join('');
-   const addable=innovationShotTypes.filter(k=>!baseShotTypes.includes(k)&&!(saved&&Number(saved[k])>0)&&!chosen.has(k));
+   const addable=innovationShotTypes.filter(k=>!(saved&&Number(saved[k])>0)&&!chosen.has(k));
    const selector=addable.length?'<select class="shot-add-select" data-scope="'+esc(scope)+'" data-prefix="'+esc(namePrefix)+'" style="width:auto;min-width:120px;padding:5px 8px;font-size:12px"><option value="">＋ 添加类型</option>'+addable.map(k=>'<option value="'+esc(k)+'">'+esc(k)+'</option>').join('')+'</select>':'';
    return '<span class="shot-inputs">'+boxes+selector+'</span>';
   };
@@ -2160,7 +2165,7 @@ function dailyTaskReports(assignments){
   }
   // 统一填写（任务级）：只显示真实填写过的任务级分项，不从旧总数回退（否则清空后又冒出数字）
   const unifiedShot=(()=>{const out={};const raw=task?.shotCounts;if(raw&&typeof raw==='object')Object.keys(raw).forEach(k=>{const n=Number(raw[k]);if(k&&isFinite(n)&&n>0)out[k]=n});return out})();
-  const unifiedDeliverables=deliverableCheckboxes('innovationDeliverable',selectedDeliverables);
+  const unifiedDeliverables=deliverableCheckboxes('innovationDeliverable',selectedDeliverables,'dlv:unified');
   const unifiedDelivery='<div class="fold-wrap'+(foldState.deliverables?'':' is-folded')+'" data-fold-area="deliverables"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;color:#9b8fb0;font-size:11px">交付类型（可多选）'+foldBtnHTML('deliverables','')+'</div><div class="innovation-checks">'+unifiedDeliverables+'</div></div>';
   const unifiedFields='<fieldset class="innovation-deliverable-picker"><legend>统一填写 <small>整条任务一起记</small></legend>'+unifiedDelivery+'<div style="display:flex;align-items:center;gap:8px;margin:8px 0 4px;color:#9b8fb0;font-size:11px">数量'+foldBtnHTML('shots','')+'</div><div class="fold-wrap'+(foldState.shots?'':' is-folded')+'" data-fold-area="shots"><div style="display:flex;flex-wrap:wrap;gap:8px">'+shotInputs('unifiedShot',unifiedShot,'unified')+'</div></div></fieldset>';
   // 点开成员 = 一个完整独立小任务（数量/类型/说明/原因/状态/时间）
@@ -2168,7 +2173,7 @@ function dailyTaskReports(assignments){
    const r=getMemberReport(person),total=totalOf(r.counts);
    return '<details class="member-report" style="margin:6px 0;border:1px solid #ffffff14;border-radius:8px;padding:6px 10px"><summary style="cursor:pointer;color:#c9b3f5;font-size:13px;font-weight:700">👤 '+esc(person)+(total>0||r.deliverables.length||r.note?' <span style="color:#7ee0b0;font-size:11px">已填 '+count(total)+' 条</span>':'')+'</summary>'+
     '<div style="margin-top:8px">'+
-    '<div class="fold-wrap'+(foldState.deliverables?'':' is-folded')+'" data-fold-area="deliverables"><div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#9b8fb0;margin-bottom:4px">交付类型（可多选）'+foldBtnHTML('deliverables','')+'</div><div class="innovation-checks">'+deliverableCheckboxes('memberDeliverable:'+esc(person),r.deliverables)+'</div></div>'+
+    '<div class="fold-wrap'+(foldState.deliverables?'':' is-folded')+'" data-fold-area="deliverables"><div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#9b8fb0;margin-bottom:4px">交付类型（可多选）'+foldBtnHTML('deliverables','')+'</div><div class="innovation-checks">'+deliverableCheckboxes('memberDeliverable:'+esc(person),'dlv:member:'+esc(person),r.deliverables)+'</div></div>'+
     '<div style="display:flex;align-items:center;gap:8px;font-size:11px;color:#9b8fb0;margin:8px 0 4px">数量 <span style="color:#7ee0b0">小任务总数自动 = 各类型之和（当前 '+count(total)+' 条）</span>'+foldBtnHTML('shots','')+'</div><div class="fold-wrap'+(foldState.shots?'':' is-folded')+'" data-fold-area="shots"><div style="display:flex;flex-wrap:wrap;gap:8px">'+shotInputs('shotType:'+esc(person),r.counts,'member:'+person)+'</div></div>'+
     '<label style="display:block;margin-top:8px;font-size:11px;color:#9b8fb0">交付说明<input name="memberNote:'+esc(person)+'" maxlength="200" value="'+esc(r.note)+'" placeholder="这个成员今天做了什么、交付了什么"></label>'+
     '<label style="display:block;margin-top:6px;font-size:11px;color:#9b8fb0">交付原因／未完成原因<input name="memberReason:'+esc(person)+'" maxlength="200" value="'+esc(r.reason)+'" placeholder="为什么没完成、原因说明"></label>'+
@@ -2392,21 +2397,51 @@ render();
 // 数量类型：下拉添加 / 移除（事件委托 + 局部 DOM 操作，不整页刷新，保留已填内容与展开状态）
 const shotBaseTypes=['分镜素材','创新视频'];
 document.addEventListener('change',e=>{
+ // 数量类型下拉：显示对应隐藏 chip
  const sel=e.target.closest?.('.shot-add-select');
- if(!sel)return;
- const kind=sel.value,scope=sel.dataset.scope;
- if(!kind||!scope)return;
- (shotInputChosen[scope]??=new Set()).add(kind);
- // 对应类型已渲染为隐藏 chip，直接取消其折叠标记即可显示，避免重复新建
- const wrap=sel.closest('.shot-inputs');
- const chip=[...(wrap?.querySelectorAll('.chip-shot')||[])].find(c=>{
-  const inp=c.querySelector('input[type=number]');return inp&&inp.name.endsWith(':'+kind);
- });
- if(chip)chip.removeAttribute('data-fold-empty');
- sel.value='';
- const opt=sel.querySelector('option[value="'+CSS.escape(kind)+'"]');
- if(opt)opt.remove();
- if(!sel.querySelector('option[value]:not([value=""])'))sel.style.display='none';
+ if(sel){
+  const kind=sel.value,scope=sel.dataset.scope;
+  if(kind&&scope){
+   (shotInputChosen[scope]??=new Set()).add(kind);
+   const wrap=sel.closest('.shot-inputs');
+   const chip=[...(wrap?.querySelectorAll('.chip-shot')||[])].find(c=>c.dataset.kind===kind);
+   if(chip)chip.removeAttribute('data-fold-empty');
+   const opt=sel.querySelector('option[value="'+CSS.escape(kind)+'"]');if(opt)opt.remove();
+   sel.value='';
+   if(!sel.querySelector('option[value]:not([value=""])'))sel.style.display='none';
+  }
+  return;
+ }
+ // 交付类型下拉：勾选对应 checkbox 并显示
+ const dsel=e.target.closest?.('.dlv-add-select');
+ if(dsel){
+  const kind=dsel.value,scope=dsel.dataset.scope;
+  if(kind&&scope){
+   const wrap=dsel.closest('.dlv-wrap');
+   const chip=[...(wrap?.querySelectorAll('[data-dlv-chip]')||[])].find(c=>c.dataset.kind===kind);
+   if(chip){const cb=chip.querySelector('input[type=checkbox]');if(cb)cb.checked=true;chip.removeAttribute('data-fold-empty')}
+   const opt=dsel.querySelector('option[value="'+CSS.escape(kind)+'"]');if(opt)opt.remove();
+   dsel.value='';
+   if(!dsel.querySelector('option[value]:not([value=""])'))dsel.style.display='none';
+  }
+ }
+ // 交付类型 checkbox 被手动取消勾选时：重新打折叠标记并把该项加回下拉
+ const cb=e.target.closest?.('[data-dlv-chip] input[type=checkbox]');
+ if(cb&&!cb.checked){
+  const chip=cb.closest('[data-dlv-chip]');const kind=chip?.dataset.kind;
+  if(chip)chip.setAttribute('data-fold-empty','1');
+  const wrap=chip?.closest('.dlv-wrap');
+  if(wrap&&kind){
+   let dsel=wrap.querySelector('.dlv-add-select');
+   if(!dsel){
+    dsel=document.createElement('select');dsel.className='dlv-add-select';dsel.dataset.scope=wrap.dataset.dlvScope||'';
+    dsel.style.cssText='width:auto;min-width:120px;padding:5px 8px;font-size:12px';
+    dsel.innerHTML='<option value="">＋ 添加类型</option>';wrap.appendChild(dsel);
+   }
+   dsel.style.display='';
+   if(![...dsel.options].some(o=>o.value===kind)){const opt=document.createElement('option');opt.value=kind;opt.textContent=kind;dsel.appendChild(opt)}
+  }
+ }
 });
 document.addEventListener('click',e=>{
  const fb=e.target.closest?.('[data-fold-toggle]');
