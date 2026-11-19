@@ -1645,7 +1645,7 @@ function people(){
    innovationShotTotal=(perSum||unifiedSum)>0?(perSum||unifiedSum):current.dailyShotCount;
    nextMemberReports=memberReports;
   }
-  const next={...current,dailyGroup:normalizedGroup||current.dailyGroup||'',actual:innovation?current.actual:base,dailyShotCount:innovation?innovationShotTotal:(shotBatch===''?'':Number(shotBatch)),target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:completion,status,delivery:requiresDelivery?delivery:'',unfinishedReason:(reason||'').trim(),innovationDeliverable:innovation?innovationDeliverable:current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote,memberShotCounts:innovation?memberShotCounts:current.memberShotCounts,memberDeliverables:innovation?memberDeliverables:current.memberDeliverables,memberReports:innovation?nextMemberReports:current.memberReports,shotCounts:innovation?shotCounts:current.shotCounts};
+  const next={...current,dailyGroup:normalizedGroup||current.dailyGroup||'',actual:innovation?current.actual:base,dailyShotCount:innovation?innovationShotTotal:(shotBatch===''?'':Number(shotBatch)),target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:innovation?(current.shootingCompletion||'auto'):completion,status:innovation?(current.status||statuses[0]):status,delivery:innovation?(current.delivery||''):(requiresDelivery?delivery:''),unfinishedReason:(reason||'').trim(),innovationDeliverable:innovation?innovationDeliverable:current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote,memberShotCounts:innovation?memberShotCounts:current.memberShotCounts,memberDeliverables:innovation?memberDeliverables:current.memberDeliverables,memberReports:innovation?nextMemberReports:current.memberReports,shotCounts:innovation?shotCounts:current.shotCounts};
   const message=form.querySelector('[role="status"]');
   if(requiresDelivery&&!delivery){message.textContent='已选择交付状态，请填写首次交付时间。';return}
   if(delivery&&current.assigned&&delivery<current.assigned){message.textContent='交付时间需在运营下发时间之后。';return}
@@ -1657,6 +1657,78 @@ function people(){
    const saved=[...main.querySelectorAll('[data-daily-task]')].find(item=>item.dataset.dailyTask===current.id);
    saved.querySelector('[role="status"]').textContent='已保存任务填报。';
    if(shotBatch!=='')saved.closest('details').querySelector('summary').focus({preventScroll:true});
+  }
+ });
+ // 成员独立保存：只保存该成员的小任务，不影响其他人/任务级字段
+ main.querySelectorAll('[data-save-member]').forEach(btn=>btn.onclick=function(){
+  const [tid,person]=this.dataset.saveMember.split('|');
+  const current=tasks.find(t=>t.id===tid&&t.date===outputDay);
+  if(!current){return}
+  const box=this.closest('details.member-report');
+  if(!box){return}
+  const get=(name)=>{const el=box.querySelector('[name="'+name.replace(/"/g,'\\"')+'"]');return el?el.value:''};
+  const counts={};
+  innovationShotTypes.forEach(kind=>{
+   const raw=get('shotType:'+person+':'+kind);
+   const n=raw===''||raw==null?0:Number(raw);
+   if(isFinite(n)&&n>0)counts[kind]=n;
+  });
+  const deliverables=Array.from(box.querySelectorAll('input[name="memberDeliverable:'+person.replace(/"/g,'\\"')+'"]:checked')).map(el=>el.value);
+  const report={
+   deliverables, counts,
+   note:String(get('memberNote:'+person)||'').trim(),
+   reason:String(get('memberReason:'+person)||'').trim(),
+   completion:get('memberCompletion:'+person)||'auto',
+   status:get('memberStatus:'+person)||'',
+   delivery:get('memberDelivery:'+person)||''
+  };
+  const memberReports={...(current.memberReports||{})};
+  memberReports[person]=report;
+  // 同步统计用的分人字段
+  const memberShotCounts={...(current.memberShotCounts||{})}; memberShotCounts[person]=counts;
+  const memberDeliverables={...(current.memberDeliverables||{})}; memberDeliverables[person]=deliverables;
+  const total=Object.values(counts).reduce((a,b)=>a+b,0);
+  const next={...current,memberReports,memberShotCounts,memberDeliverables,dailyShotCount:total||current.dailyShotCount};
+  const ok=save(tasks.map(t=>t.id===tid?next:t));
+  const st=box.querySelector('[data-member-status]');
+  if(st)st.textContent=ok?'✓ 已保存':'保存失败';
+  if(ok){
+   // 局部刷新该卡片的汇总表，不整页重渲染（保持展开状态和滚动位置）
+   const card=this.closest('[data-daily-task-card]');
+   const summary=card&&card.querySelector('.member-summary');
+   if(summary&&innovation){
+    const crew=(function(){const s=members(current.lead).filter(n=>roster['创新组']?.includes(n));return s.length?s:(members(current.lead).length?members(current.lead):[])})();
+    const getR=p=>(next.memberReports&&next.memberReports[p])||{};
+    const cnt=p=>getR(p).counts||{};
+    const allC=innovationShotTypes.map(k=>crew.reduce((a,p)=>a+(cnt(p)[k]||0),0));
+    const grand=allC.reduce((a,b)=>a+b,0);
+    const done=crew.filter(p=>{const r=getR(p);return r.completion==='complete'||((!r.completion||r.completion==='auto')&&r.status&&statuses.slice(2).includes(r.status))}).length;
+    const grandEl=summary.querySelector('[data-grand]');
+    if(grandEl)grandEl.textContent='合计 '+count(grand)+' 条';
+    const titleEl=summary.querySelector('[data-summary-title]');
+    if(titleEl)titleEl.textContent='📊 成员完成情况汇总（'+done+'/'+crew.length+' 已完成）';
+    // 逐行更新各类型/小计/交付类型/状态
+    crew.forEach(p=>{
+     const row=summary.querySelector('[data-summary-row="'+CSS.escape(p)+'"]');
+     if(row){
+      innovationShotTypes.forEach((k,i)=>{const cell=row.querySelector('[data-type-cell="'+CSS.escape(k)+'"]');if(cell)cell.textContent=count(cnt(p)[k]||0)});
+      const sub=Object.values(cnt(p)).reduce((a,b)=>a+(Number(b)||0),0);
+      const subtotal=row.querySelector('[data-subtotal]');if(subtotal)subtotal.textContent=count(sub);
+      const r=getR(p);const dv=row.querySelector('[data-deliverables]');if(dv)dv.textContent=(r.deliverables||[]).join('、')||'—';
+      const isDone=r.completion==='complete'||((!r.completion||r.completion==='auto')&&r.status&&statuses.slice(2).includes(r.status));
+      const stEl=row.querySelector('[data-row-status]');if(stEl)stEl.innerHTML=isDone?'<span style="color:#7ee0b0">已完成</span>':'<span style="color:#e8b96b">待完成</span>';
+     }
+    });
+    // 合计行
+    const gRow=summary.querySelector('[data-grand-row]');
+    if(gRow){
+     innovationShotTypes.forEach((k,i)=>{const cell=gRow.querySelector('[data-grand-type="'+i+'"]');if(cell)cell.textContent=count(allC[i]||0)});
+     const gt=gRow.querySelector('[data-grand-total]');if(gt)gt.textContent=count(grand);
+     const allTypes=[...new Set(crew.flatMap(p=>getR(p).deliverables||[]))];
+     const gts=gRow.querySelector('[data-grand-types]');if(gts)gts.textContent=allTypes.join('、')||'—';
+    }
+   }
+   setTimeout(()=>{if(st)st.textContent=''},2500);
   }
  });
  const monthlyForm=document.querySelector('#monthlyOutput');
@@ -1970,7 +2042,11 @@ function dailyTaskReports(assignments){
  const removable=(items,attribute,empty)=>items.length?'<div class="managed-option-list">'+items.map(name=>'<span>'+esc(name)+'<button type="button" '+attribute+'="'+esc(name)+'" aria-label="删除 '+esc(name)+'">删除</button></span>').join('')+'</div>':'<small>'+empty+'</small>';
  return '<div class="report-meta daily-task-reports"><h3>当天任务填报</h3><div class="daily-option-managers"><form id="dailyGroupEditor" class="daily-group-editor"><label>新增填报分类<input name="group" maxlength="30" placeholder="例如：后期剪辑"></label><button type="submit">添加分类</button>'+removable(removableGroups,'data-remove-daily-group','暂无可删除的自定义填报分类。')+'</form><form id="innovationDeliverableEditor" class="daily-group-editor"><label>新增创新交付类型<input name="deliverable" maxlength="30" placeholder="例如：AI分镜"></label><button type="submit">添加类型</button>'+removable(removableDeliverables,'data-remove-innovation-deliverable','暂无可删除的自定义创新交付类型。')+'</form><form id="innovationShotTypeEditor" class="daily-group-editor"><label>新增条数类型<input name="shotType" maxlength="30" placeholder="例如：广告成片"></label><button type="submit">添加</button>'+removable(removableShotTypes,'data-remove-innovation-shot-type','暂无可删除的自定义条数类型。')+'</form></div>'+ 
  '<p>每个任务由主拍填一次，同组成员查看同一份记录。累计拍摄量已包含当日拍摄量。</p>'+ 
- (assignments.length?classified.map(([group,items])=>'<section class="daily-task-group daily-task-group--'+(group==='拍摄组'?'shooting':group==='创新组'?'innovation':'custom')+'"><h4>'+esc(group)+' <span>'+items.length+' 项</span></h4>'+items.map(task=>{
+ (assignments.length?classified.map(([group,items])=>{
+  const groupCls=group==='拍摄组'?'shooting':group==='创新组'?'innovation':'custom';
+  const groupIcon=group==='创新组'?'✨':group==='拍摄组'?'📷':'📋';
+  const groupStyle=group==='创新组'?'background:linear-gradient(90deg,#4a2d78,#2d1f52);border-left:4px solid #b06bff;color:#f0e2ff;padding:10px 14px;border-radius:10px;font-size:16px;box-shadow:0 4px 18px #a76bf033':'';
+  return '<section class="daily-task-group daily-task-group--'+groupCls+'"><h4 style="'+groupStyle+'">'+groupIcon+' '+esc(group)+(group==='创新组'?' · 创新交付':'')+' <span style="opacity:.8;font-size:13px">'+items.length+' 项</span></h4>'+items.map(task=>{
   const innovation=isInnovationTask(task);
   const progress=Number(task.target)>0&&task.actual!=null&&task.actual!==''?count(100*Number(task.actual)/Number(task.target))+'%':'—';
   const crew=crewRoles.filter(([field])=>members(task[field]).length).map(([field,label])=>label+'：'+members(task[field]).join('、')).join(' · ');
@@ -2004,21 +2080,21 @@ function dailyTaskReports(assignments){
   if(innovation&&reportCrew.length){
    const rows=reportCrew.map(person=>{
     const r=getMemberReport(person),total=totalOf(r.counts);
-    return '<tr><td style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14"><strong>'+esc(person)+'</strong></td>'+innovationShotTypes.map(k=>'<td style="padding:4px 6px;border-bottom:1px solid #ffffff14">'+count(r.counts[k]||0)+'</td>').join('')+
-     '<td style="padding:4px 6px;border-bottom:1px solid #ffffff14;color:#7ee0b0;font-weight:700">'+count(total)+'</td>'+
-     '<td style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14;font-size:11px">'+esc(r.deliverables.join('、')||'—')+'</td>'+
-     '<td style="padding:4px 6px;border-bottom:1px solid #ffffff14">'+(statusDone(r)?'<span style="color:#7ee0b0">已完成</span>':'<span style="color:#e8b96b">待完成</span>')+'</td></tr>';
+    return '<tr data-summary-row="'+esc(person)+'"><td style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14"><strong>'+esc(person)+'</strong></td>'+innovationShotTypes.map(k=>'<td data-type-cell="'+esc(k)+'" style="padding:4px 6px;border-bottom:1px solid #ffffff14">'+count(r.counts[k]||0)+'</td>').join('')+
+     '<td data-subtotal style="padding:4px 6px;border-bottom:1px solid #ffffff14;color:#7ee0b0;font-weight:700">'+count(total)+'</td>'+
+     '<td data-deliverables style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14;font-size:11px">'+esc(r.deliverables.join('、')||'—')+'</td>'+
+     '<td style="padding:4px 6px;border-bottom:1px solid #ffffff14"><span data-row-status>'+(statusDone(r)?'<span style="color:#7ee0b0">已完成</span>':'<span style="color:#e8b96b">待完成</span>')+'</span></td></tr>';
    }).join('');
    const allCounts=innovationShotTypes.map(k=>reportCrew.reduce((s,p)=>s+(getMemberReport(p).counts[k]||0),0));
    const grandTotal=allCounts.reduce((a,b)=>a+b,0);
    const allTypes=[...new Set(reportCrew.flatMap(p=>getMemberReport(p).deliverables))];
    const doneCount=reportCrew.filter(p=>statusDone(getMemberReport(p))).length;
    summaryHTML='<div class="member-summary" style="margin:8px 0;padding:10px 12px;border:1px solid #5a456e;border-radius:10px;background:#1a1524">'+
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="color:#c9b3f5">📊 成员完成情况汇总（'+doneCount+'/'+reportCrew.length+' 已完成）</strong><span style="color:#7ee0b0;font-weight:800">合计 '+count(grandTotal)+' 条</span></div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong data-summary-title style="color:#c9b3f5">📊 成员完成情况汇总（'+doneCount+'/'+reportCrew.length+' 已完成）</strong><span data-grand style="color:#7ee0b0;font-weight:800">合计 '+count(grandTotal)+' 条</span></div>'+
     '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:#9b8fb0">'+
     '<th style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14">成员</th>'+innovationShotTypes.map(k=>'<th style="padding:4px 6px;border-bottom:1px solid #ffffff14">'+esc(k)+'</th>').join('')+
     '<th style="padding:4px 6px;border-bottom:1px solid #ffffff14">小计</th><th style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14">交付类型</th><th style="padding:4px 6px;border-bottom:1px solid #ffffff14">状态</th></tr></thead><tbody>'+rows+
-    '<tr style="background:#ffffff08"><td style="text-align:left;padding:4px 6px"><strong>合计</strong></td>'+allCounts.map(v=>'<td style="padding:4px 6px;color:#dcc7ff;font-weight:700">'+count(v)+'</td>').join('')+'<td style="padding:4px 6px;color:#7ee0b0;font-weight:800">'+count(grandTotal)+'</td><td colspan="2" style="padding:4px 6px;font-size:11px;color:#9b8fb0">'+esc(allTypes.join('、')||'—')+'</td></tr>'+
+    '<tr data-grand-row style="background:#ffffff08"><td style="text-align:left;padding:4px 6px"><strong>合计</strong></td>'+allCounts.map((v,i)=>'<td data-grand-type="'+i+'" style="padding:4px 6px;color:#dcc7ff;font-weight:700">'+count(v)+'</td>').join('')+'<td data-grand-total style="padding:4px 6px;color:#7ee0b0;font-weight:800">'+count(grandTotal)+'</td><td data-grand-types colspan="2" style="padding:4px 6px;font-size:11px;color:#9b8fb0">'+esc(allTypes.join('、')||'—')+'</td></tr>'+
     '</tbody></table></div>';
   }
   // 统一填写（任务级）：想一次性填的人填这里
@@ -2037,19 +2113,19 @@ function dailyTaskReports(assignments){
     '<label style="font-size:11px;color:#9b8fb0">完成状态<select name="memberCompletion:'+esc(person)+'"><option value="auto"'+(r.completion==='auto'?' selected':'')+'>自动</option><option value="complete"'+(r.completion==='complete'?' selected':'')+'>已完成</option><option value="incomplete"'+(r.completion==='incomplete'?' selected':'')+'>未完成</option></select></label>'+
     '<label style="font-size:11px;color:#9b8fb0">交付阶段<select name="memberStatus:'+esc(person)+'">'+options(statuses,r.status||statuses[0])+'</select></label>'+
     '<label style="font-size:11px;color:#9b8fb0">交付时间<input type="datetime-local" name="memberDelivery:'+esc(person)+'" value="'+esc(r.delivery)+'"></label>'+
-    '</div></div></details>';
+    '</div><div style="margin-top:10px;text-align:right"><button type="button" class="member-save-btn" data-save-member="'+esc(task.id)+'|'+esc(person)+'" style="padding:7px 14px;border:0;border-radius:7px;background:linear-gradient(135deg,#8a6fd4,#5c98f4);color:#fff;font-size:12px;font-weight:700;cursor:pointer">💾 保存 '+esc(person)+' 的数据</button><span data-member-status style="font-size:11px;color:#7ee0b0;margin-left:8px"></span></div></div></details>';
   }).join('')+'</fieldset>':'';
   const innovationFields=summaryHTML+unifiedFields+memberFields;
   return '<details class="daily-task-card daily-task-card--'+cardState+'" data-daily-task-card="'+esc(task.id)+'"'+((reported||innovationDone)?'':' open')+'><summary><strong class="daily-summary-product">'+esc(task.product||task.title||'拍摄任务')+'</strong><span class="daily-summary-crew"><em>摄影师：'+esc(leadName)+'</em><em>模特：'+esc(modelName)+'</em></span><span class="daily-summary-state">'+esc(summary)+' · '+esc(statusText)+'</span></summary>'+
    '<form class="daily-task-report" data-daily-task="'+esc(task.id)+'">'+
    '<p class="daily-task-meta"><span><strong>协作成员</strong> '+esc(crew||'待安排人员')+'</span><span><strong>'+(innovation?'创新交付':'拍摄进度')+'</strong> '+(innovation?'创新组按脚本、AI 素材、完整视频等交付记录。':'计划 '+esc(task.target==null||task.target===''?'—':task.target)+' 条 · 条数完成度 '+progress+' · '+(shootingComplete(task)?'已完成':'未完成'))+'</span></p>'+
    '<div class="bar"><label>填报分类<select name="dailyGroup">'+options(groups,group)+'</select></label>'+(innovation?innovationFields:normalFields)+
-   '<label>拍摄完成状态<select name="completion">'+[['auto','自动按数量判断'],['complete','已完成'],['incomplete','未完成']].map(([value,label])=>'<option value="'+value+'"'+((task.shootingCompletion||'auto')===value?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
+   (innovation?'':'<label>拍摄完成状态<select name="completion">'+[['auto','自动按数量判断'],['complete','已完成'],['incomplete','未完成']].map(([value,label])=>'<option value="'+value+'"'+((task.shootingCompletion||'auto')===value?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
    '<label>交付阶段<select name="status">'+options(task.status==='已验收'?statuses:statuses.slice(0,4),task.status||statuses[0])+'</select></label>'+
-   '<label>首次交付时间<input type="datetime-local" name="delivery" value="'+esc(task.delivery)+'"></label></div>'+
-   '<label>备注／未完成原因<textarea name="reason" rows="2" maxlength="500" placeholder="填写拍摄类型、影响进度的原因及下一步">'+esc(task.unfinishedReason)+'</textarea></label>'+
-   '<div class="bar"><button class="primary">保存任务填报</button><span role="status"></span></div></form></details>';
- }).join('')+'</section>').join(''):'<p>当天暂无安排任务。</p>')+'</div>';
+   '<label>首次交付时间<input type="datetime-local" name="delivery" value="'+esc(task.delivery)+'"></label>')+'</div>'+
+   (innovation?'':'<label>备注／未完成原因<textarea name="reason" rows="2" maxlength="500" placeholder="填写拍摄类型、影响进度的原因及下一步">'+esc(task.unfinishedReason)+'</textarea></label>')+
+   '<div class="bar"><button class="primary">'+(innovation?'保存统一填写':'保存任务填报')+'</button><span role="status"></span></div></form></details>';
+ }).join('')+'</section>';}).join(''):'<p>当天暂无安排任务。</p>')+'</div>';
 }
 function dailyOutput(monthStart,monthEnd){
  const assignments=tasks.filter(t=>t.date===outputDay);
