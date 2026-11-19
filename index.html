@@ -242,8 +242,13 @@ main:not(.home-page) h1 {
 .daily-option-managers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0 14px}.daily-group-editor{padding:10px;border:1px solid #36587d;border-radius:10px;background:#102744}.daily-group-editor:nth-child(2){border-color:#66519d;background:#211b3c}.daily-group-editor label{display:flex;gap:8px;align-items:center;color:#bcd8f6;font-size:13px;font-weight:750}.daily-group-editor input{min-width:0;flex:1}.daily-group-editor button{margin-top:8px}.managed-option-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.managed-option-list span{display:inline-flex;align-items:center;gap:5px;padding:3px 5px 3px 8px;border-radius:999px;background:#1c456f;color:#d6ecff;font-size:12px}.daily-group-editor:nth-child(2) .managed-option-list span{background:#493778;color:#eadfff}.managed-option-list button{margin:0;padding:2px 6px;border-color:#698db2;background:#183550;color:#d8edff;font-size:11px}.daily-group-editor:nth-child(2) .managed-option-list button{border-color:#9977d5;background:#34235a;color:#ecddff}@media(max-width:720px){.daily-option-managers{grid-template-columns:1fr}.daily-group-editor label{align-items:stretch;flex-direction:column}}
 @media(max-width:900px){.people-page .overview-rings{grid-template-columns:1fr}.people-page .overview-rings .team-ring-card{min-height:0}}
 .team-attention { margin:0 14px 8px; padding:9px 12px; border:1px solid var(--dash-border); border-radius:8px; }
-.team-attention ul { display:flex; flex-wrap:wrap; gap:6px 20px; padding:0; margin:6px 0; list-style:none; }
+.team-attention ul { display:flex; flex-wrap:wrap; gap:8px 20px; padding:0; margin:6px 0; list-style:none; }
 .team-attention li small { color:#f3c58e; }
+.team-attention li { max-width:100%; }
+.team-attention .ta-head { font-weight:600; }
+.team-attention .ta-notes { margin-top:3px; display:flex; flex-wrap:wrap; gap:3px 10px; }
+.team-attention .ta-notes span { font-size:11px; font-weight:400; color:#c9b3f5; overflow-wrap:anywhere; }
+.team-attention .ta-notes em { font-style:normal; color:#7ee0b0; margin-right:4px; }
 .daily-task-card { margin-block:10px; border:1px solid var(--dash-border); border-radius:8px; }
 .daily-task-card > summary { padding:12px; cursor:pointer; }
 .daily-task-report { padding:0 12px 12px; }
@@ -2005,9 +2010,14 @@ function managementView(period,outputRows,[from,to],daily){
  }).join('');
  const missing=periodTasks.filter(t=>!recorded(t));
  const unknown=periodTasks.filter(t=>category(t)==='其他／待确认');
- const attention=[...new Set(incompleteTasks)];
- const preview=!isMonth&&attention.length?'<div class="team-attention"><strong>待跟进任务</strong><ul>'+
-  attention.slice(0,3).map(t=>'<li><span>'+esc(t.title||t.product||'未命名任务')+'</span>'+(t.unfinishedReason?' <span>'+esc(t.unfinishedReason)+'</span>':'')+' <small>'+esc(t.status||'待拍摄')+'</small></li>').join('')+
+const attention=[...new Set(incompleteTasks)];
+const attentionLine=t=>{
+ const lines=reasonLinesOf(t);
+ const notes=lines.length?'<div class="ta-notes">'+lines.map(l=>'<span><em>'+esc(l.who)+'</em>'+esc(l.text)+'</span>').join('')+'</div>':'';
+ return '<li><div class="ta-head"><span>'+esc(t.title||t.product||'未命名任务')+'</span> <small>'+esc(t.status||'待拍摄')+'</small></div>'+notes+'</li>';
+};
+const preview=!isMonth&&attention.length?'<div class="team-attention"><strong>待跟进任务</strong><ul>'+
+  attention.slice(0,3).map(attentionLine).join('')+
   '</ul>'+(attention.length>3?'<small>另有 '+(attention.length-3)+' 项</small> ':'')+'<button type="button" id="overviewSchedule">查看工作安排</button></div>':'';
 
  return '<section class="panel management"><div class="report-meta"><div class="bar chart-switch" role="group" aria-label="团队统计周期">'+teamPeriodLabels.map((text,i)=>'<button type="button" data-team-period="'+i+'" aria-pressed="'+(i===teamPeriod)+'">'+text+'</button>').join('')+'<span>'+esc(from===to?from:from+' 至 '+to)+'</span><label>查看日期<input id="teamOverviewDate" type="date" min="'+period+'-01" max="'+period+'-'+new Date(Date.UTC(Number(period.slice(0,4)),Number(period.slice(5)),0)).getUTCDate()+'" value="'+outputDay+'"></label><a href="#personalOutput" data-report-jump>查看个人产出明细</a></div></div>'+
