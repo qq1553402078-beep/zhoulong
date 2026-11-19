@@ -69,7 +69,9 @@
   control.after(status);
 
   let syncing = false;
-  let code = localStorage.getItem(codeKey) || sessionStorage.getItem(codeKey) || '';
+  // 内置团队访问码：无需手动输码，打开即自动同步（localStorage/sessionStorage 已存的值优先）
+  const BUILTIN_CODE = '2309c2e405e86590625b870c378fb4a1';
+  let code = localStorage.getItem(codeKey) || sessionStorage.getItem(codeKey) || BUILTIN_CODE;
   if (code) localStorage.setItem(codeKey, code);
   const request = async (method, body) => {
     const response = await fetch(endpoint, {
