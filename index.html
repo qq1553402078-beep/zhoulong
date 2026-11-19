@@ -789,10 +789,13 @@ function bindTeamGallery(){
  box.querySelector('[data-photo-prev]').onclick=()=>show(index-1);box.querySelector('[data-photo-next]').onclick=()=>show(index+1);
  box.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')show(index-1);if(e.key==='ArrowRight')show(index+1)});
 }
-const artworkDefaults=['model-1.png','model-2.png','editorial-interview.png','editorial-coast.png','editorial-wash.png'].map(file=>'./shooting-art/'+file);
+const artworkDefaults=['model-1.webp','model-2.webp','editorial-interview.webp','editorial-coast.webp','editorial-wash.webp'].map(file=>'./shooting-art/'+file);
 function shootingArt(index){
  const labels=['产品与石材的光影静物','通透内料与折射光影','自然口播与人物表达','海边迎风的自由与松弛','模特对着镜子微笑，揉出绵密的洗发泡沫'];
- return '<div class="service-visual editorial-photo"><img src="'+esc(settings.artwork.split(/\r?\n/)[index]?.trim()||artworkDefaults[index%5])+'" alt="'+labels[index%5]+' · AI 创意示意" loading="lazy" width="1024" height="1536"></div>';
+ var src=settings.artwork.split(/\r?\n/)[index]?.trim()||artworkDefaults[index%5];
+ // 兼容旧数据：把 shooting-art 下的 .png 自动换成已压缩的 .webp
+ src=src.replace(/(shooting-art\/[^?#]+)\.png(?=[?#]|$)/i,'$1.webp');
+ return '<div class="service-visual editorial-photo"><img src="'+esc(src)+'" alt="'+labels[index%5]+' · AI 创意示意" loading="lazy" width="1024" height="1536"></div>';
 }
 function weekRail(date){
  const current=today(), tomorrow=plusDay(current,1);
