@@ -518,8 +518,9 @@ const count=n=>Number(n).toLocaleString('zh-CN',{maximumFractionDigits:2});
 const card=(name,v)=>'<div class="card">'+name+'<b>'+v+'</b></div>';
 const newId=()=>globalThis.crypto?.randomUUID?.()||Date.now()+'-'+Math.random();
 const statuses=['待拍摄','拍摄中','后期中','已交付','已验收'];
-const defaultInnovationDeliverables=['脚本拆解','AI素材／生成','完整视频','拍摄方案','创新剪辑','其他创新交付'];
-const defaultInnovationShotTypes=['分镜素材','创新视频'];
+const defaultInnovationDeliverables=['脚本拆解','AI素材／生成','完整视频','拍摄方案','创新剪辑','其他创新交付','找创新框架'];
+// 数量类型铺开：保留原有分镜素材/创新视频，并把全部交付类型也纳入可填条数，用户自行选择填哪些
+const defaultInnovationShotTypes=['分镜素材','创新视频','脚本拆解','AI素材／生成','完整视频','拍摄方案','创新剪辑','其他创新交付','找创新框架'];
 const innovationTypeList=task=>Array.isArray(task?.innovationDeliverable)?task.innovationDeliverable.filter(Boolean):(task?.innovationDeliverable?[task.innovationDeliverable]:[]);
 // 创新组按类型拆分的条数。可传成员名做分人统计；兼容旧数据。
 // 优先级：memberShotCounts[name]（分人）> shotCounts（任务级/旧填报）> dailyShotCount（历史遗留全部归第一种）
@@ -1557,6 +1558,7 @@ function people(){
   if(!name)return;
   if(innovationDeliverables.includes(name)){deliverableEditor.querySelector('input').setCustomValidity('类型已存在');deliverableEditor.querySelector('input').reportValidity();return}
   innovationDeliverables=[...innovationDeliverables,name];
+  if(!innovationShotTypes.includes(name))innovationShotTypes=[...innovationShotTypes,name];
   saveManagedOptions();
   render();
  };
@@ -1577,7 +1579,10 @@ function people(){
   render();
  });
  main.querySelectorAll('[data-remove-innovation-deliverable]').forEach(button=>button.onclick=()=>{
-  innovationDeliverables=innovationDeliverables.filter(name=>name!==button.dataset.removeInnovationDeliverable);
+  const name=button.dataset.removeInnovationDeliverable;
+  innovationDeliverables=innovationDeliverables.filter(n=>n!==name);
+  // 数量类型里有对应项时也一起删，但保留默认的分镜素材/创新视频
+  if(!defaultInnovationShotTypes.slice(0,2).includes(name))innovationShotTypes=innovationShotTypes.filter(n=>n!==name);
   saveManagedOptions();
   render();
  });
