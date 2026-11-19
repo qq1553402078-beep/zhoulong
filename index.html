@@ -28,6 +28,13 @@ body:has(.people-page){background:#071326;color:#edf4ff}body:has(.people-page) h
 .people-page{max-width:1400px;padding-top:18px}.people-page .dashboard-title{margin-bottom:12px;padding:14px clamp(16px,3vw,32px)}.dashboard-title h1{font-size:clamp(26px,3.4vw,40px);margin:4px 0}.dashboard-title time{font-size:16px}.people-page .management{margin:12px 0 20px}.management>.report-meta{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:12px 16px}.management>.report-meta h2{font-size:18px;margin:0}.management>.report-meta .bar{margin:0;align-items:center}.management>.report-meta label{display:flex;align-items:center;gap:8px}.management>.report-meta input{width:auto;padding:5px 8px}.management>.cards{padding:0 14px;margin:10px 0;gap:9px}.management>.cards .card{padding:10px 12px}.management>.cards .card b{margin-top:4px;font-size:24px}.team-rings{padding:0 14px 8px;gap:9px}.team-ring-card{padding:12px;gap:12px}.team-ring{width:96px}.team-ring::before{inset:10px}.team-ring strong{font-size:19px}.team-ring-card h3{margin:0 0 4px;font-size:16px}.ring-details p{margin:3px 0}.team-rings-note{padding:0 14px 8px}.dashboard-focus{padding:0 14px 10px;gap:8px}.dashboard-focus article{padding:8px 10px}.dashboard-focus p{margin:3px 0}.management details{padding:9px 14px}
 .overview-metrics{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;padding:12px 14px 10px}.overview-metric{--metric-color:#45d8c5;display:grid;grid-template-columns:minmax(190px,.75fr) minmax(0,2fr);align-items:center;column-gap:24px;row-gap:5px;border:1px solid var(--dash-border);border-left:5px solid var(--metric-color);border-radius:13px;background:linear-gradient(100deg,#102746,#0c1e37);padding:16px 22px;min-height:112px}.overview-metric[data-tone="blue"]{--metric-color:#6daaff}.overview-metric[data-tone="gold"]{--metric-color:#f1c16d}.overview-metric-head{display:flex;flex-direction:column;align-items:flex-start;gap:7px;grid-row:span 2}.overview-metric h3{margin:0;color:#d9eaff;font-size:19px}.overview-metric-value{font-size:clamp(32px,4vw,46px);font-weight:850;line-height:1.08;color:#f3f8ff;font-variant-numeric:tabular-nums;letter-spacing:.01em}.overview-metric-value small{font-size:19px;font-weight:650;color:#c6d7ee}.overview-metric p{margin:0;color:var(--dash-muted);font-size:15px}.overview-track{height:13px;border-radius:9px;background:#203958;overflow:hidden}.overview-track span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--metric-color),#9bd9ff);min-width:0}.overview-empty{display:inline-flex;padding:6px 11px;border:1px solid #405a7a;border-radius:20px;color:#b7c7dc;font-size:16px;background:#10213a}
 .overview-reasons{display:grid;gap:7px;margin:0;padding:0;list-style:none}.overview-reasons li{display:grid;grid-template-columns:minmax(130px,.55fr) minmax(0,2fr);gap:12px;padding:8px 10px;border-radius:8px;background:#172b47;color:#dbe9fb}.overview-reasons strong{color:#fff}.overview-reasons span{color:#f7c998}.ov-reason-line{display:flex;gap:8px;align-items:flex-start;padding:2px 0;line-height:1.5}.ov-reason-line em{flex:none;font-style:normal;font-size:11px;color:#8fb6e8;background:#1c365a;padding:1px 6px;border-radius:5px;white-space:nowrap}.ov-reason-line span{overflow-wrap:anywhere}
+.metric-notes{margin-top:12px;border-top:1px solid #ffffff12;padding-top:9px}
+.metric-notes > summary{cursor:pointer;list-style:none;color:#f3c58e;font-size:13px;font-weight:750;margin-bottom:7px}
+.metric-notes > summary::-webkit-details-marker{display:none}
+.metric-notes > summary::before{content:'▾ ';color:#f3c58e}
+.metric-notes:not([open]) > summary::before{content:'▸ '}
+.metric-notes > summary span{display:inline-block;margin-left:7px;padding:1px 8px;border-radius:12px;background:#2a3f5e;color:#bcd8ff;font-size:11px}
+.metric-notes .overview-reasons{margin-top:2px}
 .reason-jump{width:max-content;max-width:100%;padding:0;border:0;border-bottom:1px dashed #f7c998;background:transparent;color:#f7c998;text-align:left;font:inherit;cursor:pointer}.reason-jump:hover,.reason-jump:focus-visible{color:#fff0ca;border-bottom-color:#fff0ca;outline:none}.shoot-type-breakdown{display:flex;flex-wrap:wrap;gap:10px}.shoot-type-tag{display:grid;grid-template-columns:auto auto auto;align-items:baseline;gap:3px 6px;min-width:142px;padding:9px 11px;border:1px solid #345273;border-left:4px solid #7daaff;border-radius:9px;background:#102947}.shoot-type-tag small{grid-column:1/-1;margin:0;color:#a9c9ef;font-size:12px;font-weight:750}.shoot-type-tag strong{font-size:22px;line-height:1;color:#f6fbff;font-variant-numeric:tabular-nums}.shoot-type-tag em{font-size:12px;font-style:normal;color:#c8ddf4}.shoot-type-tag b{font-size:12px;color:#82baff}.shoot-type-tag[data-type="产品展示"]{border-left-color:#59a5ff}.shoot-type-tag[data-type="内料展示"]{border-left-color:#a985f5}.shoot-type-tag[data-type="内料展示"] b{color:#ceb6ff}.shoot-type-tag[data-type="口播"]{border-left-color:#f2b967}.shoot-type-tag[data-type="口播"] b{color:#ffd38c}.shoot-type-tag[data-type="其他"]{border-left-color:#8b9bad}.shoot-type-tag[data-type="其他"] b{color:#b9c6d2}.completed-projects{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin-top:13px}.completed-projects > strong{color:#8ce6bd;font-size:13px}.completed-project-tag{padding:5px 8px;border:1px solid #2e765a;border-radius:999px;background:#143b31;color:#d4ffea;font-size:12px;font-weight:700}.completed-project-tag b{margin-left:4px;color:#8ce6bd}.innovation-deliveries{display:flex;flex-wrap:wrap;gap:9px}.innovation-delivery-tag{display:grid;grid-template-columns:auto auto;gap:4px 8px;min-width:180px;padding:9px 11px;border:1px solid #51407d;border-left:4px solid #ad8bff;border-radius:9px;background:#1b2544}.innovation-delivery-tag strong{color:#e1d4ff;font-size:13px}.innovation-delivery-tag span{color:#fff;font-size:20px;font-weight:850;line-height:1}.innovation-delivery-tag small{grid-column:1/-1;white-space:normal;color:#bdaee5;font-size:11px}.innovation-delivery-tag--ai{border-left-color:#51d4c1;background:#123b3b}.innovation-delivery-tag--ai strong{color:#a3f4e8}.innovation-delivery-tag--script{border-left-color:#aa8bff}.innovation-delivery-tag--video{border-left-color:#f2ac71;background:#452b2b}.innovation-delivery-tag--shoot{border-left-color:#65a6ff;background:#152f51}.overview-metric small{display:block;margin-top:3px;color:#9ab4d4;font-size:12px}
 .reference-links .reference-jump{display:inline-flex;align-items:center;gap:5px;width:fit-content;padding:5px 9px;border:1px solid #918058;border-radius:7px;background:#354638;color:#fff1cc;font-weight:650;text-decoration:none}.reference-jump:hover,.reference-jump:focus-visible{outline:2px solid #d7b86c;outline-offset:2px}.reference-links .reference-address{font-size:11px;overflow-wrap:anywhere}.capture .reference-links{margin-top:4px}
 .mobile-schedule,.mobile-edit-toggle{display:none}.worksheet .reference-editor{min-height:64px!important;margin-top:5px}.mobile-task{padding:15px;margin:10px 0;background:#fffdf6;border:1px solid #ded7c9;border-radius:13px}.mobile-task h3{margin:8px 0 10px;font-size:17px}.mobile-task .mobile-task-meta{display:flex;align-items:center;justify-content:space-between;gap:10px}.mobile-task dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}.mobile-task dt{color:#586656;font-size:12px}.mobile-task dd{margin:3px 0 0;overflow-wrap:anywhere}.mobile-task .mobile-notes{white-space:pre-wrap;overflow-wrap:anywhere;margin:10px 0}.mobile-task .reference-links{display:flex;flex-wrap:wrap;gap:8px}.mobile-task .reference-jump{min-height:40px;padding:9px 12px}.mobile-task .reference-jump:hover,.mobile-task .reference-jump:focus-visible{outline-color:#31573d}
@@ -259,6 +266,9 @@ main:not(.home-page) h1 {
 .daily-task-report { padding:0 12px 12px; }
 .daily-task-report h4,.daily-task-report p { margin:0 0 6px; }
 .daily-task-report .bar { margin:10px 0; }
+.reason-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px; margin:8px 0; }
+.reason-fields label { display:grid; gap:4px; font-size:12px; color:#9b8fb0; }
+.reason-fields textarea { resize:vertical; }
 .daily-breakdown { margin:8px 0; background:#141b2c; border:1px solid #3a4a6b; border-radius:10px; overflow:hidden; }
 .daily-breakdown .bd-summary { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; padding:9px 12px; cursor:pointer; list-style:none; }
 .daily-breakdown .bd-summary::-webkit-details-marker { display:none; }
@@ -1781,7 +1791,7 @@ function people(){
   const current=tasks.find(task=>task.id===form.dataset.dailyTask&&task.date===outputDay);
   if(!current)return;
   const values=new FormData(form);
-  const {cumulative,shotBatch,target,completion,status,delivery,reason,innovationNote,dailyGroup}=Object.fromEntries(values);
+  const {cumulative,shotBatch,target,completion,status,delivery,reason,remark,innovationNote,dailyGroup}=Object.fromEntries(values);
   // 当日拍摄明细（普通组）：逐行读取类型/条数/加急，合计作为当日拍摄量
   const dailyBreakdown=[...form.querySelectorAll('.daily-breakdown .bd-row')].map(row=>({
    category:(row.querySelector('.bd-category')?.value||'').trim(),
@@ -1790,12 +1800,8 @@ function people(){
    urgent:!!row.querySelector('.bd-urgent input')?.checked
   })).filter(x=>x.category||x.type||String(x.count).trim()!=='');
   const bdTotal=dailyBreakdown.reduce((s,x)=>s+(Number(x.count)||0),0);
-  const bdUrgentSum=dailyBreakdown.reduce((s,x)=>s+(x.urgent?(Number(x.count)||0):0),0);
-  const bdNet=Math.max(0,bdTotal-bdUrgentSum);
-  // 当日拍摄量：明细有数据且用户未手动改过 → 用净额（合计−加急）；否则用手填值
-  const shotEl=form.elements.shotBatch;
-  const shotManual=shotEl&&shotEl.dataset.bdAuto===undefined;
-  const finalShot=(dailyBreakdown.length&&!shotManual)?bdNet:(shotBatch===''?'':Number(shotBatch));
+  // 当日拍摄量：纯手动填写，明细仅作参考
+  const finalShot=(shotBatch===''?'':Number(shotBatch));
   const innovationDeliverable=values.getAll('innovationDeliverable').filter(Boolean);
   const innovation=isInnovationTask(current);
   const corrected=!innovation&&cumulative!==form.elements.cumulative.defaultValue;
@@ -1864,7 +1870,7 @@ function people(){
    innovationShotTotal=perSum||unifiedSum;
    nextMemberReports=memberReports;
   }
-  const next={...current,dailyGroup:normalizedGroup||current.dailyGroup||'',actual:innovation?current.actual:base,dailyShotCount:innovation?innovationShotTotal:finalShot,target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:innovation?(current.shootingCompletion||'auto'):completion,status:innovation?(current.status||statuses[0]):status,delivery:innovation?(current.delivery||''):(requiresDelivery?delivery:''),unfinishedReason:(reason||'').trim(),innovationDeliverable:innovation?innovationDeliverable:current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote,memberShotCounts:innovation?memberShotCounts:current.memberShotCounts,memberDeliverables:innovation?memberDeliverables:current.memberDeliverables,memberReports:innovation?nextMemberReports:current.memberReports,shotCounts:innovation?shotCounts:current.shotCounts,dailyBreakdown:innovation?(current.dailyBreakdown||[]):dailyBreakdown};
+  const next={...current,dailyGroup:normalizedGroup||current.dailyGroup||'',actual:innovation?current.actual:base,dailyShotCount:innovation?innovationShotTotal:finalShot,target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:innovation?(current.shootingCompletion||'auto'):completion,status:innovation?(current.status||statuses[0]):status,delivery:innovation?(current.delivery||''):(requiresDelivery?delivery:''),unfinishedReason:(reason||'').trim(),remark:(remark||'').trim(),innovationDeliverable:innovation?innovationDeliverable:current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote,memberShotCounts:innovation?memberShotCounts:current.memberShotCounts,memberDeliverables:innovation?memberDeliverables:current.memberDeliverables,memberReports:innovation?nextMemberReports:current.memberReports,shotCounts:innovation?shotCounts:current.shotCounts,dailyBreakdown:innovation?(current.dailyBreakdown||[]):dailyBreakdown};
   const message=form.querySelector('[role="status"]');
   if(requiresDelivery&&!delivery){message.textContent='已选择交付状态，请填写首次交付时间。';return}
   if(delivery&&current.assigned&&delivery<current.assigned){message.textContent='交付时间需在运营下发时间之后。';return}
@@ -2033,6 +2039,7 @@ function managementView(period,outputRows,[from,to],daily){
  const reasonLinesOf=t=>{
   const lines=[];
   if(t.unfinishedReason&&String(t.unfinishedReason).trim())lines.push({who:'未完成原因',text:String(t.unfinishedReason).trim()});
+  if(t.remark&&String(t.remark).trim())lines.push({who:'备注',text:String(t.remark).trim()});
   if(t.innovationNote&&String(t.innovationNote).trim())lines.push({who:'交付说明',text:String(t.innovationNote).trim()});
   const reports=t.memberReports||{};
   Object.keys(reports).forEach(name=>{
@@ -2041,6 +2048,18 @@ function managementView(period,outputRows,[from,to],daily){
    if(r.reason&&String(r.reason).trim())lines.push({who:name+' · 交付原因',text:String(r.reason).trim()});
   });
   return lines;
+ };
+ // 拍摄组卡片的说明/原因摘要：复用原因行 + 备注/当日明细
+ const shootingNotesOf=(list)=>{
+  const items=[];
+  list.forEach(t=>{
+   const lines=reasonLinesOf(t);
+   const bd=Array.isArray(t.dailyBreakdown)?t.dailyBreakdown.filter(b=>b&&((b.category||'').trim()||(b.type||'').trim()||b.count!=='')).map(b=>(b.urgent?'⚡':'')+[(b.category||'').trim(),(b.type||'').trim()].filter(Boolean).join('·')+' '+count(Number(b.count)||0)+'条'+(b.urgent?'（加急）':'')).join('、'):'';
+   if(bd)lines.push({who:'当日明细',text:bd});
+   if(lines.length)items.push('<li><strong>'+esc(t.product||t.title||'未命名项目')+'</strong><span>'+lines.map(l=>'<span class="ov-reason-line"><em>'+esc(l.who)+'</em><span>'+esc(l.text)+'</span></span>').join('')+'</span></li>');
+  });
+  if(!items.length)return '';
+  return '<details class="metric-notes" open><summary>📝 备注／说明 <span>'+items.length+' 项</span></summary><ul class="overview-reasons">'+items.join('')+'</ul></details>';
  };
  const incompleteDetail=incompleteTasks.length?'<ul class="overview-reasons">'+incompleteTasks.map(t=>{
   const lines=reasonLinesOf(t);
@@ -2076,7 +2095,7 @@ function managementView(period,outputRows,[from,to],daily){
  const completedGroups=new Map();
  for(const task of completedShooting){const key=task.product||task.title||'未命名项目';completedGroups.set(key,(completedGroups.get(key)||0)+shootingAmount(task));}
  const completedProjects=completedGroups.size?'<div class="completed-projects"><strong>已完成项目</strong>'+[...completedGroups].map(([name,amount])=>'<span class="completed-project-tag">'+esc(name)+'<b>'+count(amount)+' 条</b></span>').join('')+'</div>':'<div class="completed-projects"><strong>已完成项目</strong><span class="overview-empty">暂无</span></div>';
- const rings='<div class="overview-metrics">'+focusRings+metric('拍摄组项目与类型',shootValue,'<div class="shoot-type-breakdown">'+shootTypeDetail+'</div>'+completedProjects+'<p>个人已填报 '+reportNames.size+' 人 · <a href="#dailyOutput" data-report-jump>查看每日条数</a></p>',null,'')+
+ const rings='<div class="overview-metrics">'+focusRings+metric('拍摄组项目与类型',shootValue,'<div class="shoot-type-breakdown">'+shootTypeDetail+'</div>'+completedProjects+'<p>个人已填报 '+reportNames.size+' 人 · <a href="#dailyOutput" data-report-jump>查看每日条数</a></p>'+shootingNotesOf(shootingTasks),null,'')+
  metric('创新交付完成度',innovationRange.length?count(innovationFinished.length)+'<small> / '+count(innovationRange.length)+' 项</small>':'<span class="overview-empty">暂无任务</span>','<p>已完成 '+innovationFinished.length+' 项</p>'+innovationDetail+(shotTypeTotals.size?'<p style="margin-top:8px"><strong>按类型统计条数</strong></p>'+innovationShotDetail:''),innovationRange.length?innovationRatio:null,'')+
  (isMonth?metric('团队月度目标完成率',completion===null?'<span class="overview-empty">待设目标</span>':count(completion)+'<small>%</small>',
  '<p>团队目标 <strong>'+(targetTotal===null?'待设齐':count(targetTotal)+' 条')+'</strong></p><p>'+(completion===null?'两组的目标和实际均齐全后计算。':'已完成 '+count(knownTotal)+' 条，距目标还差 '+count(Math.max(0,targetTotal-knownTotal))+' 条。')+'</p>',completion===null?null:completion,'gold'):'')+'</div>';
@@ -2312,8 +2331,7 @@ function dailyTaskReports(assignments){
   const bdList=Array.isArray(task.dailyBreakdown)?task.dailyBreakdown:[];
   const bdSum=bdList.reduce((s,b)=>s+(Number(b&&b.count)||0),0);
   const bdUrgentSum=bdList.reduce((s,b)=>s+((b&&b.urgent)?(Number(b.count)||0):0),0);
-  const bdNet=Math.max(0,bdSum-bdUrgentSum); // 净额 = 合计 − 加急（加急素材另算，不占本任务当日产量）
-  const shotBatchAuto=(bdList.length&&bdSum>0)?bdNet:(task.dailyShotCount??''); // 明细有数据时自动用净额，否则沿用已存值
+  const bdNet=Math.max(0,bdSum-bdUrgentSum); // 仅用于参考提示
   const bdPreview=bdList.filter(b=>b&&((b.type||'').trim()||(b.category||'').trim()||b.count!=='')).map(b=>{
    const cat=(b.category||'').trim(),typ=(b.type||'').trim();
    return (b.urgent?'⚡':'')+(cat?esc(cat)+(typ?'·':'') :'')+(typ?esc(typ):(cat?'':'未命名'))+' '+count(Number(b.count)||0)+'条';
@@ -2329,9 +2347,9 @@ function dailyTaskReports(assignments){
   const leadName=members(task.lead).join('、')||'待分配';
   const modelName=members(task.model).join('、')||'待分配';
   const statusText=task.status||'待拍摄';
-  const normalFields='<label>任务下发量（条）<input type="number" min="1" step="1" name="target" value="'+esc(task.target)+'"></label><label>累计拍摄量（条）<input type="number" min="0" step="1" name="cumulative" value="'+esc(task.actual)+'" placeholder="可直接修正累计量"></label><label>当日拍摄量（条）<input type="number" min="0" step="1" name="shotBatch" data-bd-auto="'+esc(shotBatchAuto)+'" value="'+esc(shotBatchAuto)+'" placeholder="自动=明细合计−加急，可手动改"></label>';
-  // 当日拍摄明细区（仅普通组）：逐行登记各类型条数，合计自动作为当日拍摄量
-  const breakdownFields='<details class="daily-breakdown"><summary class="bd-summary"><span class="bd-caret">▸</span><strong>当日拍摄明细</strong><span class="bd-head-note">'+bdHeadNote+'</span><b data-bd-total>'+(bdSum>0?('合计 '+bdSum+' 条'+(bdUrgentSum>0?' − 加急 '+bdUrgentSum+' 条':'')+' = '+bdNet+' 条 → 当日拍摄量'):'')+'</b></summary><div class="bd-body"><datalist id="bdProductOpts">'+productOptions.map(t=>'<option value="'+esc(t)+'">').join('')+'</datalist><datalist id="bdTypeOpts">'+shotTypeOptions.map(t=>'<option value="'+esc(t)+'">').join('')+'</datalist><div class="bd-rows">'+(bdList.length?bdList.map(breakdownRow).join(''):breakdownRow({}))+'</div><button type="button" class="bd-add">＋ 添加一种类型</button><p class="bd-tip">各类型条数合计会自动填入「当日拍摄量」；<b>勾了「加急」的素材会自动减去</b>（加急另算，不占本任务当日产量），净额即当日拍摄量。你也可以直接手动改上面的数字覆盖。品类填「哪个产品」，类型填「拍了什么」。</p></div></details>';
+  const normalFields='<label>任务下发量（条）<input type="number" min="1" step="1" name="target" value="'+esc(task.target)+'"></label><label>累计拍摄量（条）<input type="number" min="0" step="1" name="cumulative" value="'+esc(task.actual)+'" placeholder="可直接修正累计量"></label><label>当日拍摄量（条）<input type="number" min="0" step="1" name="shotBatch" value="'+esc(task.dailyShotCount)+'" placeholder="填写当天拍摄总数（手动）"></label>';
+  // 当日拍摄明细区（仅普通组）：逐行登记各类型条数，合计仅作参考，当日拍摄量手动填
+  const breakdownFields='<details class="daily-breakdown"><summary class="bd-summary"><span class="bd-caret">▸</span><strong>当日拍摄明细</strong><span class="bd-head-note">'+bdHeadNote+'</span><b data-bd-total>'+(bdSum>0?('明细共 '+bdSum+' 条'+(bdUrgentSum>0?'（含加急 '+bdUrgentSum+' 条）':'')+' · 正常 '+bdNet+' 条（参考）'):'')+'</b></summary><div class="bd-body"><datalist id="bdProductOpts">'+productOptions.map(t=>'<option value="'+esc(t)+'">').join('')+'</datalist><datalist id="bdTypeOpts">'+shotTypeOptions.map(t=>'<option value="'+esc(t)+'">').join('')+'</datalist><div class="bd-rows">'+(bdList.length?bdList.map(breakdownRow).join(''):breakdownRow({}))+'</div><button type="button" class="bd-add">＋ 添加一种类型</button><p class="bd-tip">这里逐行登记当天拍了什么（品类·类型·条数），勾「加急」的临时素材会单独标注。<b>上面的「当日拍摄量」请手动填写</b>，这里只作参考核对。</p></div></details>';
   // 创新组：协作成员。必须是数组：无创新组成员时退回 lead 成员列表，再退回空数组（字符串会导致 .map 报错中断渲染）
   const shotCrew=members(task.lead).filter(n=>roster['创新组']?.includes(n));
   const reportCrew=shotCrew.length?shotCrew:(members(task.lead).length?members(task.lead):[]);
@@ -2427,7 +2445,7 @@ function dailyTaskReports(assignments){
    '<label>交付阶段<select name="status">'+options(task.status==='已验收'?statuses:statuses.slice(0,4),task.status||statuses[0])+'</select></label>'+
    '<label>首次交付时间<input type="datetime-local" name="delivery" value="'+esc(task.delivery)+'"></label>')+'</div>'+
    (innovation?'':breakdownFields)+
-   (innovation?'':'<label>备注／未完成原因<textarea name="reason" rows="2" maxlength="500" placeholder="填写拍摄类型、影响进度的原因及下一步">'+esc(task.unfinishedReason)+'</textarea></label>')+
+   (innovation?'':'<div class="reason-fields"><label>备注<textarea name="remark" rows="2" maxlength="500" placeholder="拍摄情况补充说明、拍摄类型等">'+esc(task.remark||'')+'</textarea></label><label>未完成原因<textarea name="reason" rows="2" maxlength="500" placeholder="未完成的原因、影响进度的原因及下一步">'+esc(task.unfinishedReason||'')+'</textarea></label></div>')+
    '<div class="bar"><button class="primary">'+(innovation?'保存统一填写':'保存任务填报')+'</button><span role="status"></span></div></form></details>';
  }).join('')+'</section>';}).join(''):'<p>当天暂无安排任务。</p>')+'</div>';
 }
@@ -2869,13 +2887,7 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
   });
   var net=Math.max(0,sum-urgentSum);
   var el=box.querySelector('[data-bd-total]');
-  if(el)el.textContent=sum>0?('合计 '+sum+' 条'+(urgentSum>0?' − 加急 '+urgentSum+' 条':'')+' = '+net+' 条 → 当日拍摄量'):'';
-  // 自动把净额填入当日拍摄量（仅当用户未手动改过：当前值仍等于自动基准）
-  var form=box.closest('form');
-  var shot=form&&form.querySelector('[name="shotBatch"]');
-  if(shot&&shot.dataset.bdAuto!==undefined&&String(shot.value)===String(shot.dataset.bdAuto)){
-   shot.value=net;shot.dataset.bdAuto=String(net);
-  }
+  if(el)el.textContent=sum>0?('明细共 '+sum+' 条'+(urgentSum>0?'（含加急 '+urgentSum+' 条）':'')+' · 正常 '+net+' 条（参考）'):'';
   var note=box.querySelector('.bd-head-note');
   if(note){
    var parts=[];
@@ -2889,10 +2901,6 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
    note.textContent=parts.length?parts.join('、'):'如有临时加急素材，可在此处填写 →';
   }
  };
- // 用户手动改当日拍摄量后，清掉自动基准，保存时用手动值
- document.addEventListener('input',function(e){
-  if(e.target.name==='shotBatch'&&e.target.dataset.bdAuto!==undefined)e.target.removeAttribute('data-bd-auto');
- });
  document.addEventListener('input',function(e){
   if(e.target.classList&&(e.target.classList.contains('bd-count')||e.target.classList.contains('bd-type')||e.target.classList.contains('bd-category')))bdUpdate(e.target.closest('.daily-breakdown'));
  });
