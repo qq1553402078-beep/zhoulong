@@ -19,7 +19,17 @@ body,body:has(.schedule-page){background:#f4efe5;color:#282923}header,body:has(.
 .schedule-page .worksheet{border:1px solid #596453;box-shadow:0 12px 28px #222b211a}.schedule-page .worksheet th{background:#b8a271;color:#211f17;padding:16px 12px;letter-spacing:.04em}.schedule-page .worksheet td{padding:14px 12px}.schedule-page .worksheet .ops-requirement{width:43%;min-width:340px}.schedule-page .worksheet .ops-requirement textarea{min-height:126px;resize:vertical;line-height:1.65}.schedule-page .worksheet input,.schedule-page .worksheet select{min-height:36px}.reference-links{display:grid;gap:6px;margin-top:8px}.reference-links a{overflow-wrap:anywhere;font-size:12px}.daily-output{margin:18px 0 26px}.daily-output .bar{margin:0}.daily-output input[type=number]{max-width:160px}.daily-output .report-meta{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}.daily-output p{margin:0}
 .schedule-page .worksheet{max-height:none}.schedule-page{max-width:1640px;padding-inline:3%}.schedule-page .new-task td{background:#394738}.schedule-page .new-task .ops-requirement textarea{min-height:85px}.schedule-page .capture td{padding:9px 11px;min-width:0;vertical-align:middle;overflow-wrap:anywhere}.schedule-page .capture th{padding:9px 11px}.schedule-page .capture .capture-notes{width:44%;white-space:pre-wrap;line-height:1.35}.schedule-page .capture table{table-layout:fixed}.schedule-page .capture th:nth-child(4){white-space:normal}.schedule-page .capture-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.schedule-page .capture-heading h1{font-size:26px;margin:0}.capture-links{display:block;font-size:11px;overflow-wrap:anywhere}
 .output-chart{padding:18px clamp(14px,3vw,28px);border-bottom:1px solid #ded7c9;background:#f9f6ec}.output-chart .chart-switch{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}.chart-switch button{background:#ebe6d8;color:#394236}.chart-switch button[aria-pressed=true]{background:#344b38;color:#fff}.chart-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}.chart-row{display:grid;grid-template-columns:minmax(76px,120px) minmax(40px,1fr) 85px;gap:10px;align-items:center}.chart-track{height:13px;border-radius:10px;background:#e8e4d7;overflow:hidden}.chart-bar{height:100%;border-radius:10px;background:linear-gradient(90deg,#345341,#799267)}.chart-value{text-align:right;font-variant-numeric:tabular-nums}.output-chart .empty{text-align:left;padding:12px 0;margin:0}.chart-caption{color:#59685e;font-size:12px;margin-top:12px}
-.management{margin:20px 0 28px}.management h2{margin:0 0 6px}.management p{margin:6px 0}.management .cards{padding:0 18px;margin:14px 0}.management .card{background:#f3efe2}.management .card b{font-size:22px}.management details{padding:12px 18px;border-top:1px solid #ded7c9}.management summary{cursor:pointer;font-weight:650}.management .target-input{width:115px}.target-progress{display:flex;align-items:center;gap:8px;min-width:135px}.target-progress progress{width:90px;accent-color:#476747}.mix-row{display:grid;grid-template-columns:minmax(100px,165px) minmax(60px,1fr) minmax(76px,115px);gap:12px;align-items:center;margin:8px 0}.mix-row .chart-track{height:12px}.mix-row strong{text-align:right}.management-actions{padding:12px 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.management-actions label{min-width:135px}.management-notes textarea{min-height:72px}.management [role=status]{color:#31563a}.chart-table-scroll{overflow:auto}
+.management{margin:20px 0 28px}.management h2{margin:0 0 6px}.management p{margin:6px 0}.management .cards{padding:0 18px;margin:14px 0}.management .card{background:#f3efe2}.management .card b{font-size:22px}.management details{padding:12px 18px;border-top:1px solid #ded7c9}.management summary{cursor:pointer;font-weight:650}.management .target-input{width:115px}.target-progress{display:flex;align-items:center;gap:8px;min-width:135px}.target-progress progress{width:90px;accent-color:#476747}.mix-row{display:grid;grid-template-columns:minmax(100px,165px) minmax(60px,1fr) minmax(76px,115px);gap:12px;align-items:center;margin:8px 0}.mix-row .chart-track{height:12px}.mix-row strong{text-align:right}
+.mix-row-unknown > span{color:#f0b429;cursor:pointer}
+.mix-unknown{margin:2px 0 12px;padding:8px 12px;border:1px solid #ffffff1e;border-radius:8px;background:#ffffff08}
+.mix-unknown > summary{cursor:pointer;color:#f0b429;font-size:12px}
+.mix-unknown ul{list-style:none;margin:8px 0;padding:0;display:grid;gap:6px;max-height:220px;overflow:auto}
+.mix-unknown li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:5px 8px;border-radius:6px;background:#1c2e49;font-size:12px;color:#dbe9fb}
+.mix-unknown li span{overflow-wrap:anywhere}
+.mix-unknown li b{color:#f0b429}
+.mix-unknown [data-goto-task]{flex:none;padding:2px 9px;border:1px solid #6d7fa5;background:transparent;color:#bcd0f5;border-radius:6px;cursor:pointer;font-size:11px}
+.mix-unknown [data-goto-task]:hover{background:#6d7fa533}
+.mix-unknown p{margin:6px 0 0;color:#7d8ba8;font-size:11px}.management-actions{padding:12px 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.management-actions label{min-width:135px}.management-notes textarea{min-height:72px}.management [role=status]{color:#31563a}.chart-table-scroll{overflow:auto}
 .team-rings{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:12px;padding:0 18px 14px}.team-ring-card{border:1px solid #ded7c9;border-radius:14px;background:#f9f6ec;padding:18px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}.team-ring-card h3{margin:0 0 8px;font-size:18px}.team-ring{width:126px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;flex:none;background:conic-gradient(var(--ring-fill));position:relative}.team-ring::before{content:"";position:absolute;inset:13px;background:#f9f6ec;border-radius:50%}.team-ring strong{position:relative;font-size:23px;font-variant-numeric:tabular-nums}.ring-details{flex:1;min-width:145px}.ring-details p{font-size:13px}.ring-key{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--key)}.team-rings-note{padding:0 18px 12px}
 .rest-grid td[data-shift]{text-align:center}.rest-grid td[data-shift="休"]{background:#a52e42}.rest-grid td[data-shift="上班"]{background:#e2efdf}.rest-grid td[data-shift="未安排"]{background:#efede8}.rest-grid td[data-shift] select{border-color:transparent;background:transparent;color:#444942;font-weight:600}.rest-grid td[data-shift="休"] select{color:#fff;font-weight:800}.rest-grid td[data-shift="上班"] select{color:#224d2b}.rest-grid td[data-shift] select option{background:#fff;color:#242823}.rest-grid td[data-shift] select:focus-visible{outline:2px solid currentColor;outline-offset:1px}
 .goal-group td{background:#eee8d9}.goal-group button{background:transparent;color:#273f30;font-weight:750;text-align:left;white-space:nowrap;padding:5px 0}.goal-group button::before{content:"▸";display:inline-block;width:16px}.goal-group button[aria-expanded="true"]::before{content:"▾"}.goal-members td:first-child{padding-left:34px}.goal-members[hidden]{display:none}
@@ -782,6 +792,8 @@ function assignmentHint(name,date,id){
  const parts=[];
  if(today.length)parts.push('今日摄影:'+today.join('、'));
  if(y1.length)parts.push('昨日摄影:'+y1.join('、'));
+ // 同一天被排给多个摄影师 → 撞档确认提示
+ if(today.length>1)parts.push('⚠今日多个摄影师，请确认是否撞档');
  // 连续两天/三天同一摄影师，轻提醒
  const repeat=y1.filter(x=>today.includes(x));
  const repeat3=y2.filter(x=>y1.includes(x)&&today.includes(x));
@@ -1242,7 +1254,7 @@ function taskRow(t,index){
  const placeholder=isStaff?'未选择':'选择'+label;
  return '<details class="multi-picker" data-placeholder="'+esc(placeholder)+'" data-special-values="'+esc(specials.join('|'))+'"><summary aria-label="'+esc(label+'，可多选')+'"><span class="schedule-field-value" data-empty="'+!chosen.length+'">'+esc(chosen.join('、')||placeholder)+'</span></summary>'+filter+(isStaff?'<input type="search" class="staff-search" aria-label="搜索'+label+'姓名" placeholder="搜索姓名" oninput="filterStaffOptions(this)">':'')+'<div class="multi-options">'+ordered.map(name=>{
  const sp=specialSet.has(name);
- const showPairHint=(k==='model'||k==='handModel'); // 仅模特/手模显示搭配摄影师提示
+ const showPairHint=(k==='model'); // 仅模特岗位显示搭配摄影师提示；摄影师/拍摄组/创新组/修片手模等都不显示
  const off=!sp&&isStaff&&resting(availability,t.date,name),retired=!sp&&isStaff&&!activeNames.includes(name),hint=(!sp&&isStaff&&showPairHint)?assignmentHint(name,t.date,t.id):'';
  const isEquip=k==='equipment';
  const equipUsed=isEquip?equipmentUsage(name,t.date,t.id):'';
@@ -2158,11 +2170,15 @@ function managementView(period,outputRows,[from,to],daily){
  };
  const basisRows=mixBasis==='volume'?own.filter(recorded):own;
  const total=mixBasis==='volume'?sum(basisRows,'actual'):basisRows.length;
+ // 「其他／待确认」明细：列出任务，可点跳转工作安排去补填拍摄类型
+ const unknownMixTasks=basisRows.filter(t=>category(t)==='其他／待确认');
+ const unknownMixList=unknownMixTasks.length?'<details class="mix-unknown"><summary>查看这 '+unknownMixTasks.length+' 项待确认任务</summary><ul>'+unknownMixTasks.map(t=>'<li><span>'+esc(t.date||'')+' · '+esc(t.product||t.title||'未命名任务')+(t.type?' · 类型:'+esc(t.type):' · <b>类型为空</b>')+'</span><button type="button" data-goto-task="'+esc(t.id)+'">去补填 ↗</button></li>').join('')+'</ul><p>点「去补填」跳到工作安排，给任务选好拍摄类型后，这里就会重新归类。</p></details>':'';
  const mix=categories.map(label=>{
   const items=basisRows.filter(t=>category(t)===label);
   const amount=mixBasis==='volume'?sum(items,'actual'):items.length;
   const ratio=total?100*amount/total:0;
-  return '<div class="mix-row"><span>'+label+'</span><div class="chart-track" aria-hidden="true"><div class="chart-bar" style="width:'+ratio+'%"></div></div><strong>'+count(amount)+(mixBasis==='volume'?' 条':' 项')+' · '+(total?count(ratio)+'%':'—')+'</strong></div>';
+  const isUnknown=label==='其他／待确认';
+  return '<div class="mix-row'+(isUnknown?' mix-row-unknown':'')+'"><span>'+label+'</span><div class="chart-track" aria-hidden="true"><div class="chart-bar" style="width:'+ratio+'%"></div></div><strong>'+count(amount)+(mixBasis==='volume'?' 条':' 项')+' · '+(total?count(ratio)+'%':'—')+'</strong></div>'+(isUnknown?unknownMixList:'');
  }).join('');
  const missing=periodTasks.filter(t=>!recorded(t));
  const unknown=periodTasks.filter(t=>category(t)==='其他／待确认');
@@ -2242,6 +2258,11 @@ function bindManagement(period){
  document.querySelector('#mixPhotographer').onchange=e=>{mixPhotographer=e.target.value;render();document.querySelector('#mixDetails').open=true};
  document.querySelector('#mixBasis').onchange=e=>{mixBasis=e.target.value;render();document.querySelector('#mixDetails').open=true};
  document.querySelectorAll('[data-mix-period]').forEach(b=>b.onclick=()=>{mixPeriod=Number(b.dataset.mixPeriod);render();document.querySelector('#mixDetails').open=true});
+ document.querySelectorAll('[data-goto-task]').forEach(b=>b.onclick=()=>{
+  const t=tasks.find(x=>x.id===b.dataset.gotoTask);if(!t)return;
+  location.hash='#/schedule';
+  setTimeout(()=>showSavedTask(t),0);
+ });
 }
 function outputGroup(role){
  if(['基础摄影','摄影助理','拍剪助理','拍摄组','摄助'].includes(role))return '拍摄组';
