@@ -40,6 +40,11 @@ body:has(.people-page){background:#071326;color:#edf4ff}body:has(.people-page) h
 .fold-toggle{cursor:pointer;border:1px solid #ffffff2e;background:#ffffff0e;color:#c9b3f5;border-radius:6px;padding:3px 9px;font-size:11px;line-height:1;white-space:nowrap}
 .fold-toggle:hover{background:#ffffff1c}
 .fold-toggle[aria-pressed="false"]{color:#7ee0b0;border-color:#7ee0b055}
+/* 拍摄设备行 */
+.equipment-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:5px;padding:5px 7px;border:1px dashed #ffffff22;border-radius:8px;background:#ffffff06}
+.equipment-row-label{font-size:11px;color:#b9a5e8;font-weight:700;white-space:nowrap}
+.equipment-row.has-conflict{border-color:#f0b42988;background:#f0b42912}
+.equipment-conflict-hint{flex-basis:100%;font-size:11px;line-height:1.4}
 </style>
 <style id="darkroom-motion">
 .home-page .cover-text h1,.home-page .section-heading h2 { text-shadow:0 -1px #0009,0 1px 1px #eee2; }
@@ -297,15 +302,18 @@ const defaults={
  scheduleTitle:'拍摄排班',scheduleIntro:'按运营工单排班，拍摄内容和运营要求可直接在表内修改。',
  restTitle:'中台休息表',peopleTitle:'中台人效与产出看板',
  navHome:'首页',navSchedule:'工作安排',navRest:'休息表',navPeople:'个人人效',navPlan:'产能规划',navAdmin:'管理后台',
- artwork:'',gallery:null,roster:defaultRoster,inactiveStaff:[],dailyGroups:[],innovationDeliverableOptions:[],innovationShotTypes:[],specialOptions:['无']
+ artwork:'',gallery:null,roster:defaultRoster,inactiveStaff:[],dailyGroups:[],innovationDeliverableOptions:[],innovationShotTypes:[],specialOptions:['无'],equipmentOptions:['手机1','手机2','手机3','相机1','相机2']
 };
 let settings={...defaults};
 try{settings={...defaults,...JSON.parse(localStorage.getItem(settingsKey)||'{}')}}catch{}
 let roster,products,types,staff,roleNames,restStaff,activeNames;
-function applySettings(){
- if(!Array.isArray(settings.specialOptions)){
-  settings.specialOptions=typeof settings.specialOptions==='string'?[...new Set(settings.specialOptions.split(/\r?\n/).map(s=>s.trim()).filter(Boolean))]:['无'];
- }
+ function applySettings(){
+  if(!Array.isArray(settings.specialOptions)){
+   settings.specialOptions=typeof settings.specialOptions==='string'?[...new Set(settings.specialOptions.split(/\r?\n/).map(s=>s.trim()).filter(Boolean))]:['无'];
+  }
+  if(!Array.isArray(settings.equipmentOptions)||!settings.equipmentOptions.length){
+   settings.equipmentOptions=[...defaults.equipmentOptions];
+  }
  if(settings.shootingTitle==='承接的拍摄类型')settings.shootingTitle='拍摄类型';
  settings.roster={...defaultRoster,...settings.roster};
  if((settings.rosterRevision||0)<3){
@@ -606,7 +614,7 @@ function rememberDraftRows(){
   const fields=new FormData(form);
   const draft={...draftRows.get(index),...Object.fromEntries(fields)};
   readReferenceNames(draft,fields);
-  for(const key of [...roles,'handModel','product','type'])draft[key]=fields.getAll(key).join('、');
+  for(const key of [...roles,'handModel','product','type','equipment'])draft[key]=fields.getAll(key).join('、');
   draft.acceptanceBatches=fields.getAll('batchDate').map((date,i)=>({
    date,times:fields.getAll('batchTimes')[i],quantity:fields.getAll('batchQuantity')[i]
   }));
@@ -993,7 +1001,7 @@ function schedule(){
   const next={...original,...Object.fromEntries(formData)};
   next.noteMarks=Object.fromEntries(Object.entries(readNoteMarks(next.noteMarks)).filter(([phrase])=>phrase&&next.notes.includes(phrase)));
   if(!readReferenceNames(next,formData)){alert('请为每条对标填写一个有效的 HTTP 或 HTTPS 链接。');return}
-  for(const k of [...roles,'handModel','product','type'])next[k]=formData.getAll(k).join('、');
+  for(const k of [...roles,'handModel','product','type','equipment'])next[k]=formData.getAll(k).join('、');
   const batchDates=formData.getAll('batchDate'),batchTimes=formData.getAll('batchTimes'),batchQuantities=formData.getAll('batchQuantity');
   next.acceptanceBatches=batchDates.map((date,index)=>({date,times:Number(batchTimes[index]),quantity:Number(batchQuantities[index])}));
   delete next.batchDate;delete next.batchTimes;delete next.batchQuantity;
@@ -1005,9 +1013,26 @@ function schedule(){
   }
   const error=taskError(next);
   if(error){alert(error);return}
-  if(save(original?tasks.map(t=>t.id===next.id?next:t):[...tasks,next])){rememberDraftRows();if(!original)draftRows.delete(Number(rowForm.id.replace('task-row-','')));mobileEditing=draftRows.size>0;showSavedTask(next)}
+  if(save(original?tasks.map(t=>t.id===next.id?next:t):[...tasks,next])){
+   rememberDraftRows();if(!original)draftRows.delete(Number(rowForm.id.replace('task-row-','')));
+   mobileEditing=draftRows.size>0;
+   showSavedTask(next);
+   const conflict=equipmentConflict(next);
+   if(conflict)setTimeout(()=>alert('⚠ 设备撞档提示\n'+conflict+'\n\n（已保存，请自行确认设备安排）'),80);
+  }
  });
  bindAcceptanceButtons();
+ // 初始化拍摄设备撞档提示（页面加载后标出已存在的同日设备冲突）
+ document.querySelectorAll('.worksheet [data-equipment-row]').forEach(row=>{
+  const firstEq=row.querySelector('input[name="equipment"]');
+  const form=firstEq?.form;
+  const box=row.querySelector('[data-equipment-conflict]');
+  const dateInput=form?.elements?.namedItem('date');
+  if(!form||!box)return;
+  const chosen=[...(row.querySelectorAll('input[name="equipment"]:checked')||[])].map(c=>c.value);
+  const conflict=equipmentConflict({id:form.dataset.rowForm||'',date:dateInput?.value||'',equipment:chosen});
+  if(conflict){box.textContent='⚠ '+conflict;box.style.color='#f0b429';row.classList.add('has-conflict')}
+ });
  document.querySelectorAll('[data-add-batch]').forEach(button=>button.onclick=()=>{
   const rows=button.parentElement.querySelector('.acceptance-rows');
   rows.insertAdjacentHTML('beforeend',acceptanceRow({},button.dataset.addBatch));
@@ -1103,10 +1128,23 @@ function taskRow(t,index){
  ];
  return '<tr data-task-id="'+esc(t.id)+'"'+(!t.id?' class="new-task"':savedTask?.id===t.id?' data-saved-row style="outline:2px solid #e0bd70;outline-offset:-2px"':'')+'><td class="ops-date" data-label="日期">'+input('date','排班日期','date','required')+'</td>'+
  '<td data-label="摄影师">'+staffSelect('lead','摄影师')+'</td><td data-label="手模">'+staffSelect('handModel','手模')+'</td><td data-label="模特">'+staffSelect('model','模特')+'</td>'+
- '<td class="ops-content" data-label="品类 / 拍摄类型">'+staffSelect('product','品类',['',...new Set([...products,...(t.product?[t.product]:[])])])+staffSelect('type','拍摄类型',['',...new Set([...types,...(t.type?[t.type]:[])])])+'</td>'+
+ '<td class="ops-content" data-label="品类 / 拍摄类型">'+staffSelect('product','品类',['',...new Set([...products,...(t.product?[t.product]:[])])])+staffSelect('type','拍摄类型',['',...new Set([...types,...(t.type?[t.type]:[])])])+'<div class="equipment-row" data-equipment-row title="拍摄设备（可多选，同日撞档会提示）"><span class="equipment-row-label">拍摄设备</span>'+staffSelect('equipment','拍摄设备',settings.equipmentOptions||[])+'<span class="equipment-conflict-hint" data-equipment-conflict></span></div></td>'+
  '<td class="ops-requirement" data-label="运营要求与对标链接">' +notesEditor(t,formId)+referenceEditor(t,formId)+referenceLinks(t,true,true)+
  '<div class="ops-actions"><form id="'+formId+'" data-row-form="'+esc(t.id)+'"><button class="primary">'+(t.id?'保存':'保存新安排')+'</button></form>'+(t.id?'<button type="button" data-delete="'+esc(t.id)+'">删除</button>':'<button type="button" data-cancel-row="'+index+'">取消</button>')+(safeLink(t.workOrder)?'<a target="_blank" rel="noopener noreferrer" href="'+esc(t.workOrder)+'">打开工单</a>':'')+overtime+'</div></td></tr>'+
  '<tr class="row-edit"><td colspan="6"><details><summary>工单与交付 · '+esc(t.status)+' · '+esc(t.title)+'</summary><div class="grid">'+detail.map(([label,field])=>'<label>'+label+field+'</label>').join('')+'</div>'+acceptanceEditor(t,formId)+'</details></td></tr>';
+}
+// 拍摄设备同日撞档检测：返回被重复安排的设备及对应任务描述，无冲突返回空字符串
+function equipmentConflict(t){
+ const chosen=Array.isArray(t.equipment)?t.equipment:members(t.equipment||'');
+ if(!chosen.length||!t.date)return '';
+ const hits=[];
+ for(const other of tasks){
+  if(other.id===t.id||other.date!==t.date)continue;
+  const used=Array.isArray(other.equipment)?other.equipment:members(other.equipment||'');
+  const overlap=chosen.filter(e=>used.includes(e));
+  if(overlap.length)hits.push(overlap.join('、')+'（'+(other.title||other.product||'另一任务')+'）');
+ }
+ return hits.length?'同日「'+hits.join('；')+'」已安排相同设备，注意设备撞档或数量不够。':'';
 }
 function taskError(t){
  if(!t.title.trim())return '请输入运营任务名称。';
@@ -2291,6 +2329,7 @@ function adminView(message=''){
  field('mentors','带教关系（每行一组，例如 杨建勋：游苗、陈丽娜）','area'))+
  panel('品类与拍摄类型',field('products','品类选项（每行一项）','area',products.join('\n'))+field('types','拍摄类型选项（每行一项）','area',types.join('\n'))+field('shooting','首页拍摄类型介绍（每行填写 类型：说明）','area'))+
  panel('人员特殊选项',field('specialOptions','人员选择框里的特殊选项（每行一项，例如 无、不需要、待定）。排班时可与真人互斥选择，用于对某些任务标记「无需此类人员」。','area',(settings.specialOptions||[]).join('\n'))+'<p class="wide">增删后点「保存网站设置」生效。特殊选项会出现在摄影师、手模、模特、摄助、修片的下拉里，排在真人前面；勾选后会自动取消已选真人。</p>')+
+ panel('拍摄设备',field('equipmentOptions','拍摄设备清单（每行一项，可改名、增删。例如 手机1、手机2、手机3、相机1、相机2）','area',(settings.equipmentOptions||defaults.equipmentOptions).join('\n'))+'<p class="wide">每一项会出现在排班表「拍摄内容」里的「拍摄设备」一栏，可多选。改名后已安排任务里的设备名会自动更新；同一天同一设备被重复安排会给出黄色撞档提示（仍可保存）。</p>')+
  panel('交付时效与运营对接',field('shiftIntro','调休与交付说明','area')+field('normalTitle','常规时效标题')+field('urgentTitle','加急时效标题')+field('normalText','常规交付说明','area')+field('urgentText','加急交付说明','area')+
  field('opsLead','运营对接负责人')+field('opsSummary','对接职责')+field('orderFlow','下单与确认','area')+field('deliveryFlow','拍摄与交付','area')+field('feedbackFlow','反馈与复核','area'))+
  panel('产能规划',field('planTitle','页面标题')+field('planIntro','规划说明','area')+field('planNotes','补充安排','area'))+
@@ -2349,6 +2388,29 @@ function adminView(message=''){
   next.products=lines(fields.get('products'));
   next.types=lines(fields.get('types'));
   next.specialOptions=lines(fields.get('specialOptions'));
+  // 拍摄设备：读取新清单，并把已排班任务里被改名的设备迁移到新名（按最长公共前缀匹配）
+  const newEquipment=lines(fields.get('equipmentOptions'));
+  if(!newEquipment.length){status.textContent='拍摄设备清单至少要保留一项。';return}
+  next.equipmentOptions=newEquipment;
+  const oldEquipment=Array.isArray(settings.equipmentOptions)?settings.equipmentOptions:[];
+  const rename={};const usedNew=new Set();
+  const commonPrefix=(a,b)=>{let i=0;while(i<a.length&&i<b.length&&a[i]===b[i])i++;return i};
+  for(const old of oldEquipment){
+   if(newEquipment.includes(old)){usedNew.add(old);continue}
+   let best='',bestScore=1;
+   for(const nw of newEquipment){if(usedNew.has(nw))continue;const score=commonPrefix(old,nw);if(score>=bestScore){best=nw;bestScore=score}}
+   if(best){rename[old]=best;usedNew.add(best)}
+  }
+  const renameKeys=Object.keys(rename);
+  if(renameKeys.length){
+   tasks=tasks.map(task=>{
+    const eq=Array.isArray(task.equipment)?task.equipment:members(task.equipment||'');
+    if(!eq.length)return task;
+    const mapped=[...new Set(eq.map(e=>rename[e]||e))];
+    return {...task,equipment:mapped.join('、')};
+   });
+   localStorage.setItem(key,JSON.stringify(tasks));
+  }
   next.roster=Object.create(null);
   for(const role of Object.keys(defaultRoster))next.roster[role]=[];
   next.inactiveStaff=[];
@@ -2429,6 +2491,20 @@ const linkDlvToShot=cb=>{
  }
 };
 document.addEventListener('change',e=>{
+ // 拍摄设备勾选变化：实时显示同日撞档提示
+ const eq=e.target.closest?.('input[name="equipment"]');
+ if(eq){
+  const row=eq.closest('[data-equipment-row]');
+  const box=row?.querySelector('[data-equipment-conflict]');
+  if(row&&box){
+   const form=eq.form;const dateInput=form?.elements?.namedItem('date');
+   const chosen=[...(form?.querySelectorAll('input[name="equipment"]:checked')||[])].map(c=>c.value);
+   const conflict=equipmentConflict({id:form?.dataset.rowForm||'',date:dateInput?.value||'',equipment:chosen});
+   box.textContent=conflict?'⚠ '+conflict:'';
+   box.style.color=conflict?'#f0b429':'';
+   row.classList.toggle('has-conflict',!!conflict);
+  }
+ }
  // 数量类型下拉：显示对应隐藏 chip
  const sel=e.target.closest?.('.shot-add-select');
  if(sel){
