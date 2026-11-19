@@ -2273,8 +2273,7 @@ function dailyTaskReports(assignments){
    const cat=(b.category||'').trim(),typ=(b.type||'').trim();
    return (b.urgent?'⚡':'')+(cat?esc(cat)+(typ?'·':'') :'')+(typ?esc(typ):(cat?'':'未命名'))+' '+count(Number(b.count)||0)+'条';
   }).join('、');
-  const urgentBd=bdList.filter(b=>b&&b.urgent&&((b.type||'').trim()||(b.category||'').trim()));
-  const bdHeadNote=bdPreview?bdPreview+(urgentBd.length?'':'') :'点右侧箭头展开，按行登记各品类/类型的条数';
+  const bdHeadNote=bdPreview?bdPreview :'如有临时加急素材，可在此处填写 →';
   const progress=Number(task.target)>0&&task.actual!=null&&task.actual!==''?count(100*Number(task.actual)/Number(task.target))+'%':'—';
   const crew=crewRoles.filter(([field])=>members(task[field]).length).map(([field,label])=>label+'：'+members(task[field]).join('、')).join(' · ');
   const reported=task.dailyShotCount!=null&&task.dailyShotCount!=='';
@@ -2830,7 +2829,7 @@ if('serviceWorker' in navigator && location.protocol==='https:'){
     var urgent=!!row.querySelector('.bd-urgent input')?.checked;
     if(cat||typ||String(cnt).trim()!=='')parts.push((urgent?'⚡':'')+(cat?cat+(typ?'·':''):'')+(typ||(cat?'':'未命名'))+' '+cnt+'条');
    });
-   note.textContent=parts.length?parts.join('、'):'点右侧箭头展开，按行登记各品类/类型的条数';
+   note.textContent=parts.length?parts.join('、'):'如有临时加急素材，可在此处填写 →';
   }
  };
  document.addEventListener('input',function(e){
