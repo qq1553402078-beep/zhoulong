@@ -136,6 +136,7 @@
     // 禁用保存/新增/删除/导入等操作按钮，但保留导航、标签切换、申请权限
     var keep = ['access-request', 'access-switch', 'adminCodeInput', 'adminLogin', 'adminApprove', 'adminReject', 'adminRefreshVisits'];
     document.querySelectorAll('main button, main input[type=submit]').forEach(function (b) {
+      if (b.closest('.tasks-page')) return; // 任务中心：运营需能下发/管理自己的需求
       if (keep.indexOf(b.id) >= 0) return;
       var txt = (b.textContent || '').trim();
       var isNav = b.hasAttribute('data-tab') || b.hasAttribute('data-home-section') || b.hasAttribute('data-report-jump') ||
@@ -151,6 +152,7 @@
     });
     // 禁用表单输入
     document.querySelectorAll('main input, main textarea, main select').forEach(function (el) {
+      if (el.closest('.tasks-page')) return; // 任务中心放行
       if (keep.indexOf(el.id) >= 0) return;
       if (el.type === 'search') return; // 搜索允许
       el.disabled = true;

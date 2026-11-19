@@ -6,7 +6,8 @@
     daily: 'studio-ops-daily-output-v1',
     monthly: 'studio-ops-monthly-output-v1',
     management: 'studio-ops-management-v1',
-    settings: 'studio-settings-v1'
+    settings: 'studio-settings-v1',
+    requests: 'studio-ops-requests-v1'
   };
   const cacheKey = 'studio-team-sync-baseline-v1';
   const codeKey = 'studio-team-access-v1';
@@ -22,8 +23,8 @@
   function capture() {
     const records = Object.create(null);
     for (const [scope, key] of Object.entries(scopes)) {
-      const data = read(localStorage, key, scope === 'tasks' ? [] : {});
-      if (scope === 'tasks') {
+      const data = read(localStorage, key, (scope === 'tasks' || scope === 'requests') ? [] : {});
+      if (scope === 'tasks' || scope === 'requests') {
         for (const task of data) if (task?.id) records[JSON.stringify([scope, task.id])] = task;
       } else if (scope === 'rest' || scope === 'daily' || scope === 'monthly') {
         for (const [date, people] of Object.entries(data)) {
@@ -43,12 +44,12 @@
   }
 
   function apply(records) {
-    const data = { tasks: [], rest: Object.create(null), daily: Object.create(null),
+    const data = { tasks: [], requests: [], rest: Object.create(null), daily: Object.create(null),
       monthly: Object.create(null), management: Object.create(null), settings: Object.create(null) };
     for (const [index, value] of Object.entries(records)) {
       if (value === null) continue;
       const [scope, id, name] = JSON.parse(index);
-      if (scope === 'tasks') data.tasks.push(value);
+      if (scope === 'tasks' || scope === 'requests') data[scope].push(value);
       else if (scope === 'settings') data.settings = value;
       else if (scope === 'rest' || scope === 'daily' || scope === 'monthly') {
         (data[scope][id] ??= Object.create(null))[name] = value;
