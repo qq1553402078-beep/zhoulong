@@ -561,6 +561,8 @@ const defaultDailyGroups=['拍摄组','创新组'];
 let dailyGroups=[];
 let innovationDeliverables=[];
 let innovationShotTypes=[];
+// 记录每个作用域（unified / member:人名）用户主动添加的数量类型，render 重建时保持显示
+const shotInputChosen={};
 function refreshManagedOptions(){
  let legacy=[];
  try{legacy=JSON.parse(localStorage.getItem(dailyGroupKey)||'[]')||[]}catch{}
@@ -2086,7 +2088,17 @@ function dailyTaskReports(assignments){
   const shotCrew=members(task.lead).filter(n=>roster['创新组']?.includes(n));
   const reportCrew=shotCrew.length?shotCrew:(members(task.lead).length?members(task.lead):[]);
   const deliverableCheckboxes=(namePrefix,chosen)=>innovationDeliverables.map(kind=>'<label><input type="checkbox" name="'+namePrefix+'" value="'+esc(kind)+'"'+((chosen||[]).includes(kind)?' checked':'')+'><span>'+esc(kind)+'</span></label>').join('');
-  const shotInputs=(namePrefix,saved)=>innovationShotTypes.map(kind=>'<label style="font-size:12px">'+esc(kind)+' <input type="number" min="0" step="1" name="'+namePrefix+':'+esc(kind)+'" value="'+esc(saved?.[kind]??'')+'" placeholder="0" style="width:70px"> 条</label>').join('');
+  // 数量输入框：默认只显示分镜素材/创新视频；已保存过值或用户主动添加的类型也显示，其余收进「＋添加类型」下拉
+  const baseShotTypes=['分镜素材','创新视频'];
+  const shotChosenFor=scope=>shotInputChosen[scope]||new Set();
+  const shotInputs=(namePrefix,saved,scope)=>{
+   const chosen=shotChosenFor(scope);
+   const shown=innovationShotTypes.filter(k=>baseShotTypes.includes(k)||chosen.has(k)||(saved&&Number(saved[k])>0));
+   const boxes=shown.map(kind=>'<span class="chip-shot" style="display:inline-flex;align-items:center;gap:4px;background:#ffffff10;border:1px solid #ffffff2e;border-radius:16px;padding:5px 9px;font-size:12px">'+esc(kind)+' <input type="number" min="0" step="1" name="'+namePrefix+':'+esc(kind)+'" value="'+esc(saved?.[kind]??'')+'" placeholder="0" style="width:58px"> 条'+(baseShotTypes.includes(kind)?'':' <button type="button" data-remove-shot="'+esc(kind)+'" data-scope="'+esc(scope)+'" title="移除此类型" style="border:0;background:transparent;color:#c9b3f5;cursor:pointer;font-size:14px;line-height:1;padding:0 2px">×</button>')+'</span>').join('');
+   const remaining=innovationShotTypes.filter(k=>!shown.includes(k));
+   const selector=remaining.length?'<select class="shot-add-select" data-scope="'+esc(scope)+'" data-prefix="'+esc(namePrefix)+'" style="width:auto;min-width:120px;padding:5px 8px;font-size:12px"><option value="">＋ 添加类型</option>'+remaining.map(k=>'<option value="'+esc(k)+'">'+esc(k)+'</option>').join('')+'</select>':'';
+   return '<span class="shot-inputs">'+boxes+selector+'</span>';
+  };
   // 读取某成员的小任务完整数据（兼容旧的 memberShotCounts/memberDeliverables）
   const getMemberReport=person=>{
    const r=(task?.memberReports&&task.memberReports[person])||{};
@@ -2122,14 +2134,14 @@ function dailyTaskReports(assignments){
   }
   // 统一填写（任务级）：只显示真实填写过的任务级分项，不从旧总数回退（否则清空后又冒出数字）
   const unifiedShot=(()=>{const out={};const raw=task?.shotCounts;if(raw&&typeof raw==='object')Object.keys(raw).forEach(k=>{const n=Number(raw[k]);if(k&&isFinite(n)&&n>0)out[k]=n});return out})();
-  const unifiedFields='<fieldset class="innovation-deliverable-picker"><legend>统一填写 <small>整条任务一起记</small></legend><div>'+deliverableCheckboxes('innovationDeliverable',selectedDeliverables)+'</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+shotInputs('unifiedShot',unifiedShot)+'</div></fieldset>';
+  const unifiedFields='<fieldset class="innovation-deliverable-picker"><legend>统一填写 <small>整条任务一起记</small></legend><div>'+deliverableCheckboxes('innovationDeliverable',selectedDeliverables)+'</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+shotInputs('unifiedShot',unifiedShot,'unified')+'</div></fieldset>';
   // 点开成员 = 一个完整独立小任务（数量/类型/说明/原因/状态/时间）
   const memberFields=reportCrew.length?'<fieldset class="innovation-deliverable-picker"><legend>👇 点开成员 = 单独小任务 <small>各填各的，返回看上方汇总</small></legend>'+reportCrew.map(person=>{
    const r=getMemberReport(person),total=totalOf(r.counts);
    return '<details class="member-report" style="margin:6px 0;border:1px solid #ffffff14;border-radius:8px;padding:6px 10px"><summary style="cursor:pointer;color:#c9b3f5;font-size:13px;font-weight:700">👤 '+esc(person)+(total>0||r.deliverables.length||r.note?' <span style="color:#7ee0b0;font-size:11px">已填 '+count(total)+' 条</span>':'')+'</summary>'+
     '<div style="margin-top:8px">'+
     '<div style="font-size:11px;color:#9b8fb0;margin-bottom:4px">交付类型（可多选）</div><div>'+deliverableCheckboxes('memberDeliverable:'+esc(person),r.deliverables)+'</div>'+
-    '<div style="font-size:11px;color:#9b8fb0;margin:8px 0 4px">数量 <span style="color:#7ee0b0">小任务总数自动 = 各类型之和（当前 '+count(total)+' 条）</span></div><div style="display:flex;flex-wrap:wrap;gap:8px">'+shotInputs('shotType:'+esc(person),r.counts)+'</div>'+
+    '<div style="font-size:11px;color:#9b8fb0;margin:8px 0 4px">数量 <span style="color:#7ee0b0">小任务总数自动 = 各类型之和（当前 '+count(total)+' 条）</span></div><div style="display:flex;flex-wrap:wrap;gap:8px">'+shotInputs('shotType:'+esc(person),r.counts,'member:'+person)+'</div>'+
     '<label style="display:block;margin-top:8px;font-size:11px;color:#9b8fb0">交付说明<input name="memberNote:'+esc(person)+'" maxlength="200" value="'+esc(r.note)+'" placeholder="这个成员今天做了什么、交付了什么"></label>'+
     '<label style="display:block;margin-top:6px;font-size:11px;color:#9b8fb0">交付原因／未完成原因<input name="memberReason:'+esc(person)+'" maxlength="200" value="'+esc(r.reason)+'" placeholder="为什么没完成、原因说明"></label>'+
     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">'+
@@ -2349,6 +2361,53 @@ if(typeof window!=='undefined'){
  main.addEventListener('invalid',event=>{event.target.closest('details')?.setAttribute('open','')},true);
 }
 render();
+// 数量类型：下拉添加 / 移除（事件委托 + 局部 DOM 操作，不整页刷新，保留已填内容与展开状态）
+const shotBaseTypes=['分镜素材','创新视频'];
+document.addEventListener('change',e=>{
+ const sel=e.target.closest?.('.shot-add-select');
+ if(!sel)return;
+ const kind=sel.value,scope=sel.dataset.scope,prefix=sel.dataset.prefix;
+ if(!kind||!scope)return;
+ (shotInputChosen[scope]??=new Set()).add(kind);
+ const opt=sel.querySelector('option[value="'+CSS.escape(kind)+'"]');
+ if(opt)opt.remove();
+ const chip=document.createElement('span');
+ chip.className='chip-shot';
+ chip.style.cssText='display:inline-flex;align-items:center;gap:4px;background:#ffffff10;border:1px solid #ffffff2e;border-radius:16px;padding:5px 9px;font-size:12px';
+ const label=document.createElement('span');label.textContent=kind;chip.appendChild(label);
+ const input=document.createElement('input');input.type='number';input.min='0';input.step='1';input.value='';input.placeholder='0';input.style.cssText='width:58px';input.name=prefix+':'+kind;chip.appendChild(input);
+ const unit=document.createElement('span');unit.textContent=' 条';chip.appendChild(unit);
+ const rm=document.createElement('button');rm.type='button';rm.title='移除此类型';rm.textContent='×';
+ rm.style.cssText='border:0;background:transparent;color:#c9b3f5;cursor:pointer;font-size:14px;line-height:1;padding:0 2px';
+ rm.dataset.removeShot=kind;rm.dataset.scope=scope;rm.dataset.prefix=prefix;chip.appendChild(rm);
+ sel.parentNode.insertBefore(chip,sel);
+ sel.value='';
+ if(!sel.querySelector('option[value]:not([value=""])'))sel.style.display='none';
+});
+document.addEventListener('click',e=>{
+ const btn=e.target.closest?.('[data-remove-shot]');
+ if(!btn)return;
+ const kind=btn.dataset.removeShot,scope=btn.dataset.scope,prefix=btn.dataset.prefix;
+ if(shotInputChosen[scope])shotInputChosen[scope].delete(kind);
+ const wrap=btn.closest('.shot-inputs');
+ btn.closest('.chip-shot')?.remove();
+ if(wrap){
+  let sel=wrap.querySelector('.shot-add-select');
+  if(!sel&&prefix){
+   sel=document.createElement('select');
+   sel.className='shot-add-select';sel.dataset.scope=scope;sel.dataset.prefix=prefix;
+   sel.style.cssText='width:auto;min-width:120px;padding:5px 8px;font-size:12px';
+   sel.innerHTML='<option value="">＋ 添加类型</option>';
+   wrap.appendChild(sel);
+  }
+  if(sel){
+   sel.style.display='';
+   if(![...sel.options].some(o=>o.value===kind)){
+    const opt=document.createElement('option');opt.value=kind;opt.textContent=kind;sel.appendChild(opt);
+   }
+  }
+ }
+});
 window.addEventListener('studio-team-refresh', () => {
  if(tab==='schedule')rememberDraftRows();
  try{tasks=JSON.parse(localStorage.getItem(key)||'[]')}catch{}
