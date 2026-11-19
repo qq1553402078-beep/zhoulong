@@ -1696,7 +1696,7 @@ function people(){
    // 局部刷新该卡片的汇总表，不整页重渲染（保持展开状态和滚动位置）
    const card=this.closest('[data-daily-task-card]');
    const summary=card&&card.querySelector('.member-summary');
-   if(summary&&innovation){
+   if(summary&&isInnovationTask(current)){
     const crew=(function(){const s=members(current.lead).filter(n=>roster['创新组']?.includes(n));return s.length?s:(members(current.lead).length?members(current.lead):[])})();
     const getR=p=>(next.memberReports&&next.memberReports[p])||{};
     const cnt=p=>getR(p).counts||{};
