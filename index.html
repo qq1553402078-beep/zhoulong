@@ -2114,17 +2114,30 @@ function managementView(period,outputRows,[from,to],daily){
  const shootingAmount=task=>isMonth?Number(task.actual||task.dailyShotCount||0):shotOf(task);
  // 明细类型文本 → 4 大类（含加急素材，按明细里登记的类型归类）
  const detailCategory=text=>{const s=String(text||'');return /口播/.test(s)?'口播':/内料/.test(s)?'内料展示':/产品展示|产品使用|产品/.test(s)?'产品展示':'其他'};
- // 先按当日拍摄明细逐行累计（加急也算进去）；没有明细的任务按主类型+当日量回退
+ // 主任务量按主类型累加 + 明细各项按明细类型额外累加（额外拍摄/加急素材也算进去）
  const shootTypeCounts={产品展示:0,内料展示:0,口播:0,其他:0};
  shootingTasks.forEach(task=>{
+  // 主任务本身的当日产量（如玉米粉口播 7 条）
+  shootTypeCounts[shootCategory(task)]+=shootingAmount(task);
+  // 当天额外登记的各类型（如人设口播 5 条、加急痛点展示 81 条）
   const bd=Array.isArray(task.dailyBreakdown)?task.dailyBreakdown.filter(b=>b&&Number(b.count)>0):[];
-  if(bd.length){bd.forEach(b=>{shootTypeCounts[detailCategory((b.category||'')+' '+(b.type||''))]+=Number(b.count)||0});}
-  else{shootTypeCounts[shootCategory(task)]+=shootingAmount(task);}
+  bd.forEach(b=>{shootTypeCounts[detailCategory((b.category||'')+' '+(b.type||''))]+=Number(b.count)||0});
  });
  const shootingTotal=Object.values(shootTypeCounts).reduce((a,b)=>a+b,0);
  const shootTypeDetail=['产品展示','内料展示','口播','其他'].map(kind=>{const amount=shootTypeCounts[kind];const ratio=shootingTotal?100*amount/shootingTotal:0;return '<span class="shoot-type-tag" data-type="'+kind+'"><small>'+kind+'</small><strong>'+count(amount)+'</strong><em>条</em><b>'+count(ratio)+'%</b></span>'}).join('');
  const completedGroups=new Map();
- for(const task of completedShooting){const key=task.product||task.title||'未命名项目';completedGroups.set(key,(completedGroups.get(key)||0)+shootingAmount(task));}
+ for(const task of completedShooting){
+  const key=task.product||task.title||'未命名项目';
+  completedGroups.set(key,(completedGroups.get(key)||0)+shootingAmount(task));
+  // 已完成任务的加急明细，按品类单列为已完成项目（如除臭贴痛点素材）
+  const bd=Array.isArray(task.dailyBreakdown)?task.dailyBreakdown:[];
+  bd.forEach(b=>{
+   if(b&&b.urgent&&Number(b.count)>0){
+    const cat=(b.category||'').trim()||(b.type||'').trim()||'加急素材';
+    completedGroups.set(cat,(completedGroups.get(cat)||0)+Number(b.count));
+   }
+  });
+ }
  const completedProjects=completedGroups.size?'<div class="completed-projects"><strong>已完成项目</strong>'+[...completedGroups].map(([name,amount])=>'<span class="completed-project-tag">'+esc(name)+'<b>'+count(amount)+' 条</b></span>').join('')+'</div>':'<div class="completed-projects"><strong>已完成项目</strong><span class="overview-empty">暂无</span></div>';
  const rings='<div class="overview-metrics">'+focusRings+metric('拍摄组项目与类型',shootValue,'<div class="shoot-type-breakdown">'+shootTypeDetail+'</div>'+completedProjects+'<p>个人已填报 '+reportNames.size+' 人 · <a href="#dailyOutput" data-report-jump>查看每日条数</a></p>'+shootingNotesOf(shootingTasks),null,'')+
  metric('创新交付完成度',innovationRange.length?count(innovationFinished.length)+'<small> / '+count(innovationRange.length)+' 项</small>':'<span class="overview-empty">暂无任务</span>','<p>已完成 '+innovationFinished.length+' 项</p>'+innovationDetail+(shotTypeTotals.size?'<p style="margin-top:8px"><strong>按类型统计条数</strong></p>'+innovationShotDetail:''),innovationRange.length?innovationRatio:null,'')+
