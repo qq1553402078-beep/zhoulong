@@ -1667,10 +1667,8 @@ function people(){
    .filter(value=>value!=null&&value!=='');
   return recorded.length||dayTotals.length?recorded.reduce((total,value)=>total+Number(value),0)+dayTotals.reduce((total,[,values])=>total+Number(values[name]),0):'—';
  };
- const monday=weekOf(outputDay);
- const sunday=plusDay(monday,6);
- const weekStart=monday<monthStart?monthStart:monday;
- const weekEnd=sunday>monthEnd?monthEnd:sunday;
+ const weekEnd=plusDay(outputDay,-1);
+ const weekStart=plusDay(outputDay,-7);
  const outputMonth=month;
  const estimateOctober=outputMonth==='2026-10';
  const weekDays=Math.round((Date.parse(weekEnd)-Date.parse(weekStart))/86400000)+1;
@@ -1680,7 +1678,7 @@ function people(){
   return [name,role,production(name,outputDay,outputDay),production(name,weekStart,weekEnd),total];
  });
  const outputRanges=[[outputDay,outputDay],[weekStart,weekEnd],[monthStart,monthEnd]];
- const outputNote=estimateOctober?'10 月日、周产出为估算：月总条数 ÷ 31 × 对应天数，未写入每日实绩。':'周产出统计所选月份内的周一至周日。月度补录只覆盖月产出。';
+ const outputNote=estimateOctober?'10 月日、周产出为估算：月总条数 ÷ 31 × 对应天数，未写入每日实绩。':'周产出统计最近 7 天（不含当天，如 20 号统计 13–19 号）。月度补录只覆盖月产出。';
  const outputCell=x=>esc(typeof x==='number'?count(x):x);
  const pct=(n,d)=>d?(100*n/d).toFixed(1)+'%':'—';
  const report=groups.map(p=>{
@@ -2016,7 +2014,7 @@ function managementView(period,outputRows,[from,to],daily){
  const config=history[period]||{};
  const inRange=date=>date&&date.slice(0,10)>=from&&date.slice(0,10)<=to;
  const monthTasks=tasks.filter(t=>t.date.startsWith(period));
- const periodTasks=monthTasks.filter(t=>t.date>=from&&t.date<=to);
+ const periodTasks=tasks.filter(t=>t.date>=from&&t.date<=to);
  const recorded=t=>t.actual!=null&&t.actual!=='';
  const shotOf=t=>t.dailyShotCount!=null&&t.dailyShotCount!==''?Number(t.dailyShotCount):Number(t.actual||0);
  const recordedShot=t=>(t.dailyShotCount!=null&&t.dailyShotCount!=='')||(t.actual!=null&&t.actual!=='');
@@ -2172,13 +2170,12 @@ function managementView(period,outputRows,[from,to],daily){
  ];
  const mixAllPeople=[...new Set(mixPeopleGroups.flatMap(([,names])=>names))];
  const selected=(mixAllPeople.includes(mixPhotographer)||mixPhotographer==='__all__')?mixPhotographer:(mixAllPeople[0]||'');
- // 拍摄类型占比：独立的日/周/月范围
- const mixMonday=(d=>{const x=new Date(d+'T00:00:00Z');const wd=(x.getUTCDay()+6)%7;x.setUTCDate(x.getUTCDate()-wd);return x.toISOString().slice(0,10)})(outputDay);
+ // 拍摄类型占比：独立的日/周/月范围（周=最近7天不含当天）
  const [mixY,mixM]=period.split('-').map(Number);
  const mixMonthEnd=new Date(Date.UTC(mixY,mixM,0)).toISOString().slice(0,10);
- const mixRanges=[[outputDay,outputDay],[mixMonday,plusDay(mixMonday,6)],[period+'-01',mixMonthEnd]];
+ const mixRanges=[[outputDay,outputDay],[plusDay(outputDay,-7),plusDay(outputDay,-1)],[period+'-01',mixMonthEnd]];
  const [mixFrom,mixTo]=mixRanges[mixPeriod]||mixRanges[0];
- const mixTasks=monthTasks.filter(t=>t.date>=mixFrom&&t.date<=mixTo);
+ const mixTasks=tasks.filter(t=>t.date>=mixFrom&&t.date<=mixTo);
  const allScope=selected==='__all__';
  const own=allScope?mixTasks:mixTasks.filter(t=>participates(t,selected));
  const baseCategory=type=>type.startsWith('口播')?'口播':type.startsWith('产品使用')?'产品使用展示':type;
