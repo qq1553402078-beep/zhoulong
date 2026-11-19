@@ -771,13 +771,13 @@ function assignmentHint(name,date,id){
  const leadsOn=d=>[...new Set(tasks.filter(t=>t.date===d&&t.id!==id&&participates(t,name)).map(t=>members(t.lead).join('、')||'摄影师待定'))];
  const today=leadsOn(date),y1=leadsOn(yest),y2=leadsOn(before);
  const parts=[];
- if(today.length)parts.push('今:'+today.join('、'));
- if(y1.length)parts.push('昨:'+y1.join('、'));
+ if(today.length)parts.push('今日摄影:'+today.join('、'));
+ if(y1.length)parts.push('昨日摄影:'+y1.join('、'));
  // 连续两天/三天同一摄影师，轻提醒
  const repeat=y1.filter(x=>today.includes(x));
  const repeat3=y2.filter(x=>y1.includes(x)&&today.includes(x));
- if(repeat3.length)parts.push('⚠连3天');
- else if(repeat.length)parts.push('⚠连2天');
+ if(repeat3.length)parts.push('⚠已连续3天同摄');
+ else if(repeat.length)parts.push('⚠已连续2天同摄');
  return parts.join('  ');
 }
 function staffingSummary(date){
@@ -1233,7 +1233,8 @@ function taskRow(t,index){
  const placeholder=isStaff?'未选择':'选择'+label;
  return '<details class="multi-picker" data-placeholder="'+esc(placeholder)+'" data-special-values="'+esc(specials.join('|'))+'"><summary aria-label="'+esc(label+'，可多选')+'"><span class="schedule-field-value" data-empty="'+!chosen.length+'">'+esc(chosen.join('、')||placeholder)+'</span></summary>'+filter+(isStaff?'<input type="search" class="staff-search" aria-label="搜索'+label+'姓名" placeholder="搜索姓名" oninput="filterStaffOptions(this)">':'')+'<div class="multi-options">'+ordered.map(name=>{
  const sp=specialSet.has(name);
- const off=!sp&&isStaff&&resting(availability,t.date,name),retired=!sp&&isStaff&&!activeNames.includes(name),hint=!sp&&isStaff?assignmentHint(name,t.date,t.id):'';
+ const showPairHint=(k==='model'||k==='handModel'); // 仅模特/手模显示搭配摄影师提示
+ const off=!sp&&isStaff&&resting(availability,t.date,name),retired=!sp&&isStaff&&!activeNames.includes(name),hint=(!sp&&isStaff&&showPairHint)?assignmentHint(name,t.date,t.id):'';
  const isEquip=k==='equipment';
  const equipUsed=isEquip?equipmentUsage(name,t.date,t.id):'';
  const equipOff=isEquip&&!!equipUsed&&!chosen.includes(name); // 已被别处占用且本任务未选 → 禁用
