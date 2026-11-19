@@ -1586,6 +1586,7 @@ function people(){
   // 创新组：支持「统一填写」(任务级) + 「按成员单独填写」(每人的条数与交付类型)
   let memberShotCounts=current.memberShotCounts;
   let memberDeliverables=current.memberDeliverables;
+  let nextMemberReports=current.memberReports;
   let shotCounts=current.shotCounts;
   let innovationShotTotal=current.dailyShotCount;
   if(innovation){
@@ -1614,12 +1615,37 @@ function people(){
     if(!person||!val)continue;
     (memberDeliverables[person]??=[]).push(val);
    }
+   // 4) 每个成员组装成独立小任务 memberReports[人名]
+   const memberNames=new Set([...Object.keys(memberShotCounts),...Object.keys(memberDeliverables)]);
+   for(const [key] of values.entries()){
+    const m=key.match(/^member(Note|Reason|Completion|Status|Delivery):(.+)$/);
+    if(m)memberNames.add(m[2]);
+   }
+   const memberReports={};
+   memberNames.forEach(person=>{
+    const prev=(current.memberReports&&current.memberReports[person])||{};
+    const note=values.get('memberNote:'+person);
+    const reason=values.get('memberReason:'+person);
+    const completion=values.get('memberCompletion:'+person);
+    const mStatus=values.get('memberStatus:'+person);
+    const delivery=values.get('memberDelivery:'+person);
+    memberReports[person]={
+     deliverables:memberDeliverables[person]||[],
+     counts:memberShotCounts[person]||{},
+     note:note!=null?String(note).trim():prev.note||'',
+     reason:reason!=null?String(reason).trim():prev.reason||'',
+     completion:completion||'auto',
+     status:mStatus||'',
+     delivery:delivery||''
+    };
+   });
    // 总数：优先用按人分填的和，否则用统一填写的和
    const perSum=Object.values(memberShotCounts).reduce((s,o)=>s+Object.values(o).reduce((a,b)=>a+b,0),0);
    const unifiedSum=Object.values(shotCounts).reduce((a,b)=>a+b,0);
    innovationShotTotal=(perSum||unifiedSum)>0?(perSum||unifiedSum):current.dailyShotCount;
+   nextMemberReports=memberReports;
   }
-  const next={...current,dailyGroup:normalizedGroup||current.dailyGroup||'',actual:innovation?current.actual:base,dailyShotCount:innovation?innovationShotTotal:(shotBatch===''?'':Number(shotBatch)),target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:completion,status,delivery:requiresDelivery?delivery:'',unfinishedReason:reason.trim(),innovationDeliverable:innovation?innovationDeliverable:current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote,memberShotCounts:innovation?memberShotCounts:current.memberShotCounts,memberDeliverables:innovation?memberDeliverables:current.memberDeliverables,shotCounts:innovation?shotCounts:current.shotCounts};
+  const next={...current,dailyGroup:normalizedGroup||current.dailyGroup||'',actual:innovation?current.actual:base,dailyShotCount:innovation?innovationShotTotal:(shotBatch===''?'':Number(shotBatch)),target:innovation?current.target:(target===''?'':Number(target)),shootingCompletion:completion,status,delivery:requiresDelivery?delivery:'',unfinishedReason:reason.trim(),innovationDeliverable:innovation?innovationDeliverable:current.innovationDeliverable,innovationNote:innovation?(innovationNote||'').trim():current.innovationNote,memberShotCounts:innovation?memberShotCounts:current.memberShotCounts,memberDeliverables:innovation?memberDeliverables:current.memberDeliverables,memberReports:innovation?nextMemberReports:current.memberReports,shotCounts:innovation?shotCounts:current.shotCounts};
   const message=form.querySelector('[role="status"]');
   if(requiresDelivery&&!delivery){message.textContent='已选择交付状态，请填写首次交付时间。';return}
   if(delivery&&current.assigned&&delivery<current.assigned){message.textContent='交付时间需在运营下发时间之后。';return}
@@ -1962,19 +1988,58 @@ function dailyTaskReports(assignments){
   const reportCrew=shotCrew.length?shotCrew:(members(task.lead).length?members(task.lead):[]);
   const deliverableCheckboxes=(namePrefix,chosen)=>innovationDeliverables.map(kind=>'<label><input type="checkbox" name="'+namePrefix+'" value="'+esc(kind)+'"'+((chosen||[]).includes(kind)?' checked':'')+'><span>'+esc(kind)+'</span></label>').join('');
   const shotInputs=(namePrefix,saved)=>innovationShotTypes.map(kind=>'<label style="font-size:12px">'+esc(kind)+' <input type="number" min="0" step="1" name="'+namePrefix+':'+esc(kind)+'" value="'+esc(saved?.[kind]??'')+'" placeholder="0" style="width:70px"> 条</label>').join('');
+  // 读取某成员的小任务完整数据（兼容旧的 memberShotCounts/memberDeliverables）
+  const getMemberReport=person=>{
+   const r=(task?.memberReports&&task.memberReports[person])||{};
+   return {
+    note:r.note||'', reason:r.reason||'', completion:r.completion||'auto', status:r.status||'', delivery:r.delivery||'',
+    deliverables:Array.isArray(r.deliverables)?r.deliverables:(Array.isArray(task?.memberDeliverables?.[person])?task.memberDeliverables[person]:[]),
+    counts:shotCountsOf(task,person)
+   };
+  };
+  const totalOf=counts=>Object.values(counts||{}).reduce((a,b)=>a+(Number(b)||0),0);
+  const statusDone=r=>r.completion==='complete'||((!r.completion||r.completion==='auto')&&r.status&&statuses.slice(2).includes(r.status));
+  // 大任务汇总：三人完成情况一览（小任务 → 汇总）
+  let summaryHTML='';
+  if(innovation&&reportCrew.length){
+   const rows=reportCrew.map(person=>{
+    const r=getMemberReport(person),total=totalOf(r.counts);
+    return '<tr><td style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14"><strong>'+esc(person)+'</strong></td>'+innovationShotTypes.map(k=>'<td style="padding:4px 6px;border-bottom:1px solid #ffffff14">'+count(r.counts[k]||0)+'</td>').join('')+
+     '<td style="padding:4px 6px;border-bottom:1px solid #ffffff14;color:#7ee0b0;font-weight:700">'+count(total)+'</td>'+
+     '<td style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14;font-size:11px">'+esc(r.deliverables.join('、')||'—')+'</td>'+
+     '<td style="padding:4px 6px;border-bottom:1px solid #ffffff14">'+(statusDone(r)?'<span style="color:#7ee0b0">已完成</span>':'<span style="color:#e8b96b">待完成</span>')+'</td></tr>';
+   }).join('');
+   const allCounts=innovationShotTypes.map(k=>reportCrew.reduce((s,p)=>s+(getMemberReport(p).counts[k]||0),0));
+   const grandTotal=allCounts.reduce((a,b)=>a+b,0);
+   const allTypes=[...new Set(reportCrew.flatMap(p=>getMemberReport(p).deliverables))];
+   const doneCount=reportCrew.filter(p=>statusDone(getMemberReport(p))).length;
+   summaryHTML='<div class="member-summary" style="margin:8px 0;padding:10px 12px;border:1px solid #5a456e;border-radius:10px;background:#1a1524">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="color:#c9b3f5">📊 成员完成情况汇总（'+doneCount+'/'+reportCrew.length+' 已完成）</strong><span style="color:#7ee0b0;font-weight:800">合计 '+count(grandTotal)+' 条</span></div>'+
+    '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:#9b8fb0">'+
+    '<th style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14">成员</th>'+innovationShotTypes.map(k=>'<th style="padding:4px 6px;border-bottom:1px solid #ffffff14">'+esc(k)+'</th>').join('')+
+    '<th style="padding:4px 6px;border-bottom:1px solid #ffffff14">小计</th><th style="text-align:left;padding:4px 6px;border-bottom:1px solid #ffffff14">交付类型</th><th style="padding:4px 6px;border-bottom:1px solid #ffffff14">状态</th></tr></thead><tbody>'+rows+
+    '<tr style="background:#ffffff08"><td style="text-align:left;padding:4px 6px"><strong>合计</strong></td>'+allCounts.map(v=>'<td style="padding:4px 6px;color:#dcc7ff;font-weight:700">'+count(v)+'</td>').join('')+'<td style="padding:4px 6px;color:#7ee0b0;font-weight:800">'+count(grandTotal)+'</td><td colspan="2" style="padding:4px 6px;font-size:11px;color:#9b8fb0">'+esc(allTypes.join('、')||'—')+'</td></tr>'+
+    '</tbody></table></div>';
+  }
   // 统一填写（任务级）：想一次性填的人填这里
   const unifiedShot=shotCountsOf(task);
   const unifiedFields='<fieldset class="innovation-deliverable-picker"><legend>统一填写 <small>整条任务一起记</small></legend><div>'+deliverableCheckboxes('innovationDeliverable',selectedDeliverables)+'</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">'+shotInputs('unifiedShot',unifiedShot)+'</div></fieldset>';
-  // 按成员单独填写：点开名字展开，每人可填交付类型 + 分镜/视频条数
-  const memberFields=reportCrew.length?'<fieldset class="innovation-deliverable-picker"><legend>按成员单独填写 <small>点名字展开各填各的</small></legend>'+reportCrew.map(person=>{
-   const saved=shotCountsOf(task,person);
-   const perDeliverables=Array.isArray(task?.memberDeliverables?.[person])?task.memberDeliverables[person]:[];
-   const hasData=Object.keys(saved).length||perDeliverables.length;
-   return '<details class="member-report" style="margin:6px 0;border:1px solid #ffffff14;border-radius:8px;padding:6px 10px"><summary style="cursor:pointer;color:#c9b3f5;font-size:13px;font-weight:700">👤 '+esc(person)+(hasData?' <span style="color:#7ee0b0;font-size:11px">已填</span>':'')+'</summary>'+
-    '<div style="margin-top:8px"><div style="font-size:11px;color:#9b8fb0;margin-bottom:4px">交付类型（可多选）</div><div>'+deliverableCheckboxes('memberDeliverable:'+esc(person),perDeliverables)+'</div>'+
-    '<div style="font-size:11px;color:#9b8fb0;margin:8px 0 4px">条数（分镜素材 / 创新视频）</div><div style="display:flex;flex-wrap:wrap;gap:8px">'+shotInputs('shotType:'+esc(person),saved)+'</div></div></details>';
+  // 点开成员 = 一个完整独立小任务（数量/类型/说明/原因/状态/时间）
+  const memberFields=reportCrew.length?'<fieldset class="innovation-deliverable-picker"><legend>👇 点开成员 = 单独小任务 <small>各填各的，返回看上方汇总</small></legend>'+reportCrew.map(person=>{
+   const r=getMemberReport(person),total=totalOf(r.counts);
+   return '<details class="member-report" style="margin:6px 0;border:1px solid #ffffff14;border-radius:8px;padding:6px 10px"><summary style="cursor:pointer;color:#c9b3f5;font-size:13px;font-weight:700">👤 '+esc(person)+(total>0||r.deliverables.length||r.note?' <span style="color:#7ee0b0;font-size:11px">已填 '+count(total)+' 条</span>':'')+'</summary>'+
+    '<div style="margin-top:8px">'+
+    '<div style="font-size:11px;color:#9b8fb0;margin-bottom:4px">交付类型（可多选）</div><div>'+deliverableCheckboxes('memberDeliverable:'+esc(person),r.deliverables)+'</div>'+
+    '<div style="font-size:11px;color:#9b8fb0;margin:8px 0 4px">数量 <span style="color:#7ee0b0">小任务总数自动 = 各类型之和（当前 '+count(total)+' 条）</span></div><div style="display:flex;flex-wrap:wrap;gap:8px">'+shotInputs('shotType:'+esc(person),r.counts)+'</div>'+
+    '<label style="display:block;margin-top:8px;font-size:11px;color:#9b8fb0">交付说明<input name="memberNote:'+esc(person)+'" maxlength="200" value="'+esc(r.note)+'" placeholder="这个成员今天做了什么、交付了什么"></label>'+
+    '<label style="display:block;margin-top:6px;font-size:11px;color:#9b8fb0">交付原因／未完成原因<input name="memberReason:'+esc(person)+'" maxlength="200" value="'+esc(r.reason)+'" placeholder="为什么没完成、原因说明"></label>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">'+
+    '<label style="font-size:11px;color:#9b8fb0">完成状态<select name="memberCompletion:'+esc(person)+'"><option value="auto"'+(r.completion==='auto'?' selected':'')+'>自动</option><option value="complete"'+(r.completion==='complete'?' selected':'')+'>已完成</option><option value="incomplete"'+(r.completion==='incomplete'?' selected':'')+'>未完成</option></select></label>'+
+    '<label style="font-size:11px;color:#9b8fb0">交付阶段<select name="memberStatus:'+esc(person)+'">'+options(statuses,r.status||statuses[0])+'</select></label>'+
+    '<label style="font-size:11px;color:#9b8fb0">交付时间<input type="datetime-local" name="memberDelivery:'+esc(person)+'" value="'+esc(r.delivery)+'"></label>'+
+    '</div></div></details>';
   }).join('')+'</fieldset>':'';
-  const innovationFields=unifiedFields+memberFields+'<label>交付说明<input name="innovationNote" maxlength="120" value="'+esc(task.innovationNote)+'" placeholder="例如：完成洗发水脚本拆解 + AI 分镜"></label>';
+  const innovationFields=summaryHTML+unifiedFields+memberFields;
   return '<details class="daily-task-card daily-task-card--'+cardState+'" data-daily-task-card="'+esc(task.id)+'"'+((reported||innovationDone)?'':' open')+'><summary><strong class="daily-summary-product">'+esc(task.product||task.title||'拍摄任务')+'</strong><span class="daily-summary-crew"><em>摄影师：'+esc(leadName)+'</em><em>模特：'+esc(modelName)+'</em></span><span class="daily-summary-state">'+esc(summary)+' · '+esc(statusText)+'</span></summary>'+
    '<form class="daily-task-report" data-daily-task="'+esc(task.id)+'">'+
    '<p class="daily-task-meta"><span><strong>协作成员</strong> '+esc(crew||'待安排人员')+'</span><span><strong>'+(innovation?'创新交付':'拍摄进度')+'</strong> '+(innovation?'创新组按脚本、AI 素材、完整视频等交付记录。':'计划 '+esc(task.target==null||task.target===''?'—':task.target)+' 条 · 条数完成度 '+progress+' · '+(shootingComplete(task)?'已完成':'未完成'))+'</span></p>'+
