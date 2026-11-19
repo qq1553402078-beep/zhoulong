@@ -219,7 +219,7 @@
     var box = document.createElement('div');
     box.id = 'ai-box';
     box.innerHTML =
-      '<div class="ai-head">✨ 中台小秘书 <span style="font-size:11px;color:#d8b8ff;font-weight:400">你的拍摄搭子 · 免费</span> <button id="ai-close" style="float:right;background:none;border:0;color:#fff;cursor:pointer;font-size:18px">×</button></div>' +
+      '<div class="ai-head">✨ 中台小秘书 <span style="font-size:11px;color:#d8b8ff;font-weight:400">你的拍摄搭子 · 免费</span> <button id="ai-clear" title="清空当前聊天记录" style="float:right;background:none;border:0;color:#d8b8ff;cursor:pointer;font-size:11px;margin-right:6px">清空记录</button> <button id="ai-close" style="float:right;background:none;border:0;color:#fff;cursor:pointer;font-size:18px">×</button></div>' +
       '<div class="ai-tabs"><button class="ai-tab active" data-mode="ask">随便聊聊</button><button class="ai-tab" data-mode="analyze">拆对标</button><button class="ai-tab" data-mode="image">生个图</button></div>' +
       '<div id="ai-log" class="ai-log"><div class="ai-msg ai-sys" id="ai-welcome"></div></div>' +
       '<div id="ai-attach" class="ai-attach" hidden><img id="ai-attach-img" alt="已选图片"><button type="button" id="ai-attach-remove" title="移除图片">×</button></div>' +
@@ -252,24 +252,58 @@
     document.head.appendChild(style);
     document.body.appendChild(box);
     document.getElementById('ai-close').onclick = function () { box.remove(); };
+    document.getElementById('ai-clear').onclick = function () {
+      history[mode] = [];
+      saveHistory();
+      renderWelcome();
+      sysMsg('记录清空啦，我们重新开始吧～ ✨');
+    };
     var log = document.getElementById('ai-log');
     var q = document.getElementById('ai-q');
     var mode = 'ask';
     var attachedImage = ''; // 压缩后的 data URL（含头）
-    // 前端压缩图片：最长边 <=1000px、JPEG 质量 0.72，控制在 ~150KB 内
-    function compressImage(file, cb) {
+    /* ---------- 聊天历史（存本地，刷新不丢） ---------- */
+    var HISTORY_KEY = 'studio-ai-chat-history-v1';
+    var history = { ask: [], analyze: [], image: [] };
+    try { var savedHistory = JSON.parse(localStorage.getItem(HISTORY_KEY) || 'null'); if (savedHistory && typeof savedHistory === 'object') history = { ask: savedHistory.ask || [], analyze: savedHistory.analyze || [], image: savedHistory.image || [] }; } catch (e) {}
+    function saveHistory() {
+      // 每个 tab 最多保留 30 条，避免 localStorage 撑爆（图片较占空间）
+      ['ask', 'analyze', 'image'].forEach(function (m) { if (history[m].length > 30) history[m] = history[m].slice(-30); });
+      try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch (e) {}
+    }
+    // 渲染一条历史消息到 log（不写存储）
+    function appendMsg(msg) {
+      if (msg.kind === 'user') {
+        var bubble = document.createElement('div'); bubble.className = 'ai-msg ai-user';
+        if (msg.image) { var im = document.createElement('img'); im.className = 'ai-userimg'; im.src = msg.image; bubble.appendChild(im); }
+        if (msg.text) bubble.appendChild(document.createTextNode(msg.text));
+        log.appendChild(bubble);
+      } else if (msg.kind === 'reply') {
+        log.insertAdjacentHTML('beforeend', '<div class="ai-msg ai-reply">' + esc(msg.text) + '</div>');
+      } else if (msg.kind === 'image') {
+        log.insertAdjacentHTML('beforeend', '<div class="ai-img"><img src="' + msg.img + '" alt="AI生成图"><div style="font-size:11px;color:#9b8fb0;margin-top:6px">' + (msg.caption || '中台小秘书生成 · 免费') + '</div></div>');
+      }
+      log.scrollTop = log.scrollHeight;
+    }
+    function renderHistory() {
+      log.querySelectorAll('.ai-msg:not(#ai-welcome),.ai-img').forEach(function (n) { n.remove(); });
+      (history[mode] || []).forEach(appendMsg);
+      log.scrollTop = log.scrollHeight;
+    }
+    // 前端压缩图片。生图需作参考图(模型要求<512px)，压到512；其他视觉理解压到1000
+    function compressImage(file, cb, maxOverride) {
       var reader = new FileReader();
       reader.onload = function (e) {
         var img = new Image();
         img.onload = function () {
-          var max = 1000, w = img.width, h = img.height;
+          var max = maxOverride || 1000, w = img.width, h = img.height;
           if (w > max || h > max) { var s = max / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
           var canvas = document.createElement('canvas');
           canvas.width = w; canvas.height = h;
           var ctx = canvas.getContext('2d');
           ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); // 防透明PNG转JPEG变黑
           ctx.drawImage(img, 0, 0, w, h);
-          cb(canvas.toDataURL('image/jpeg', 0.72));
+          cb(canvas.toDataURL('image/jpeg', maxOverride ? 0.8 : 0.72));
         };
         img.onerror = function () { cb(''); };
         img.src = e.target.result;
@@ -282,12 +316,13 @@
     fileInput.onchange = function () {
       var file = fileInput.files && fileInput.files[0];
       if (!file) return;
+      // 统一压到512：生图需作参考图(<512px)，视觉理解512也够用，避免切换tab后超限
       compressImage(file, function (dataUrl) {
         attachedImage = dataUrl;
         document.getElementById('ai-attach-img').src = dataUrl;
         attachBox.hidden = false;
         q.focus();
-      });
+      }, 512);
       fileInput.value = '';
     };
     document.getElementById('ai-attach-remove').onclick = function () {
@@ -338,8 +373,8 @@
       tab.onclick = function () {
         mode = tab.dataset.mode;
         document.querySelectorAll('.ai-tab').forEach(function (t) { t.classList.toggle('active', t === tab); });
-        log.querySelectorAll('.ai-msg:not(#ai-welcome),.ai-img').forEach(function (n) { n.remove(); });
         renderWelcome();
+        renderHistory();
         q.placeholder = ph[mode];
         q.focus();
       };
@@ -387,6 +422,8 @@
       if (text) bubble.appendChild(document.createTextNode(text));
       log.appendChild(bubble);
       log.scrollTop = log.scrollHeight;
+      history[mode].push({ kind: 'user', text: text, image: img || '' });
+      saveHistory();
       var endpoint, payload;
       if (mode === 'analyze') {
         endpoint = '/ai/analyze'; payload = { url: text, image: img };
@@ -410,11 +447,15 @@
         if (d.image) {
           var promptLine = d.prompt ? '<div style="font-size:11px;color:#b9a7d6;margin-top:6px;line-height:1.5">✨ 实际用的画面词：<span style="color:#d9c9ff">' + esc(d.prompt) + '</span><br><span style="color:#7d748c">可复制去别的 AI 生图工具用</span></div>' : '';
           log.insertAdjacentHTML('beforeend', '<div class="ai-img"><img src="' + d.image + '" alt="AI生成图"><div style="font-size:11px;color:#9b8fb0;margin-top:6px">中台小秘书生成 · 免费</div>' + promptLine + '</div>');
+          history[mode].push({ kind: 'image', img: d.image, caption: '中台小秘书生成 · 免费' + (d.prompt ? '｜画面词：' + d.prompt : '') });
         } else if (d.answer) {
           log.insertAdjacentHTML('beforeend', '<div class="ai-msg ai-reply">' + esc(d.answer) + '</div>');
+          history[mode].push({ kind: 'reply', text: d.answer });
         } else {
           log.insertAdjacentHTML('beforeend', '<div class="ai-msg ai-reply">' + esc(d.error || '暂时无法处理') + '</div>');
+          history[mode].push({ kind: 'reply', text: d.error || '暂时无法处理' });
         }
+        saveHistory();
         log.scrollTop = log.scrollHeight;
       }).catch(function () {
         var t = log.querySelector('.ai-sys:last-child'); if (t) t.remove();
@@ -423,6 +464,7 @@
     }
     document.getElementById('ai-send').onclick = send;
     q.onkeydown = function (e) { if (e.key === 'Enter') send(); };
+    renderHistory();
     q.focus();
   }
 
