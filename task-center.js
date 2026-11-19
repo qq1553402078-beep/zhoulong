@@ -160,7 +160,6 @@
         <div class="tc-sh-meta"><span class="tc-status tc-s-${esc(r.status)}">${esc(r.status)}</span>${r.priority === '加急' ? ' <span class="tc-urgent">加急</span>' : ''}
           <span>交付类型：${esc(r.deliverType || '—')}</span><span>截止：${esc(r.deadline || '—')}</span><span>交付：${p.done}/${p.target}</span></div>
         <div class="tc-prog" style="max-width:420px"><span style="width:${p.target ? Math.min(100, Math.round(p.done / p.target * 100)) : 0}%"></span></div>
-        ${r.brief ? `<p style="white-space:pre-wrap;margin:8px 0"><b>需求说明：</b>${esc(r.brief)}</p>` : ''}
         ${benchmarkLinks(r)}${storyboardTable(r)}
       </div>
       <div class="panel" style="padding:18px;margin-top:12px"><div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>交付反馈</b></div>${fb}</div>
@@ -171,13 +170,36 @@
     </div>`;
   }
 
-  function benchmarkLinks(r) {
-    const links = (r.benchmarks || []).filter(Boolean);
-    if (!links.length) return '';
-    return '<p><b>对标分镜（点击跳转）：</b><br>' + links.map(u => {
-      const plat = /dingtalk|alidocs/i.test(u) ? '钉钉' : /feishu|larksuite/i.test(u) ? '飞书' : /douyin/i.test(u) ? '抖音' : '链接';
-      return `<a class="tc-linktag" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${plat} ↗</a>`;
-    }).join(' ') + '</p>';
+  // 对标链接：兼容老的纯字符串数组与新的 {name,url} 结构
+  function benchList(r){
+   const arr=Array.isArray(r?.benchmarks)?r.benchmarks:[];
+   return arr.map(x=>typeof x==='string'?{name:'',url:x}:(x&&typeof x==='object'?{name:x.name||'',url:x.url||''}:null)).filter(x=>x&&(x.url||x.name));
+  }
+  function readBench(root){
+   return [...(root?.querySelectorAll('.tc-bench-row')||[])].map(row=>({
+    name:(row.querySelector('.bench-name')?.value||'').trim(),
+    url:(row.querySelector('.bench-url')?.value||'').trim()
+   })).filter(x=>x.url||x.name);
+  }
+  function benchRowsHTML(items){
+   const rows=items&&items.length?items:[{name:'',url:''}];
+   return rows.map(x=>
+    '<div class="tc-bench-row"><input class="bench-name" value="'+esc(x.name||'')+'" placeholder="链接名称，如：山药葛根粉对标">'+
+    '<input class="bench-url" value="'+esc(x.url||'')+'" placeholder="粘贴对标链接，可跳钉钉/飞书/抖音">'+
+    (x.url?'<a class="bench-jump" href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer" title="点击跳转">↗</a>':'<span class="bench-jump bench-jump-ph" title="填入链接后可跳转">↗</span>')+
+    '<button type="button" class="bench-del tc-link" title="删除此条">×</button></div>'
+   ).join('');
+  }
+  function benchEditor(items){
+   return '<div class="tc-bench-editor"><div class="tc-bench-rows">'+benchRowsHTML(items)+'</div><button type="button" class="bench-add tc-btn">＋ 添加对标链接</button></div>';
+  }
+  function benchmarkLinks(r){
+   const items=benchList(r);
+   if(!items.length)return '';
+   return '<div class="tc-bench-view"><b>对标分镜（点击跳转）：</b><div class="tc-bench-tags">'+items.map(x=>{
+    const plat=/dingtalk|alidocs/i.test(x.url)?'钉钉':/feishu|larksuite/i.test(x.url)?'飞书':/douyin/i.test(x.url)?'抖音':'链接';
+    return x.url?'<a class="tc-linktag" href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">'+(x.name?esc(x.name):plat)+' ↗</a>':'<span class="tc-tag">'+esc(x.name)+'</span>';
+   }).join('')+'</div></div>';
   }
   function storyboardTable(r) {
     const rows = (r.storyboards || []);
@@ -209,9 +231,8 @@
           <span class="tc-tag tc-tag-kind">${esc(r.scriptKind || '脚本')}</span>
           ${r.category ? `<span class="tc-tag">${esc(r.category)}</span>` : ''}
         </div>
-        <div class="tc-sh-line">脚本标题 <b>${esc(r.scriptTitle || r.title || '—')}</b></div>
-        <div class="tc-sh-line">公共标签 ${pubTags}<span class="tc-tag-add">＋ 添加公共标签</span></div>
-        <div class="tc-sh-line">个人标签 ${perTags}<span class="tc-tag-add">＋ 添加个人标签</span></div>
+        <div class="tc-sh-line">公共标签 ${pubTags}${pubTags ? '' : '<span class="tc-muted">暂无</span>'}</div>
+        <div class="tc-sh-line">个人标签 ${perTags}${perTags ? '' : '<span class="tc-muted">暂无</span>'}</div>
         ${r.originScript ? `<div class="tc-sh-line">原脚本 <span class="tc-origin">${esc(r.originScript)}</span></div>` : ''}
       </div>
       <div class="tc-sh-side">
@@ -309,7 +330,6 @@
       <h2>${isEdit ? '编辑任务' : '下发拍摄任务'}</h2>
       <div class="tc-grid">
         <label>任务名称 <input name="title" required maxlength="80" value="${esc(r?.title || '')}" placeholder="例如：11.11 秘与产品分镜"></label>
-        <label>脚本标题 <input name="scriptTitle" value="${esc(r?.scriptTitle || '')}" placeholder="例如：玉米糊对标"></label>
         <label>项目组（运营组） <select name="group">${opts(['', ...groups], r?.group || (isOps() ? myGroup() : ''))}</select></label>
         <label>所属团队 <input name="team" value="${esc(r?.team || '')}" placeholder="例如：内容团队"></label>
         <label>脚本标签 <select name="scriptKind">${opts(['脚本', '视频', '素材', '成片'], r?.scriptKind || '脚本')}</select></label>
@@ -317,16 +337,16 @@
         <label>交付类型 <select name="deliverType">${opts(DELIVER, r?.deliverType || DELIVER[0])}</select></label>
         <label>截止日期 <input type="date" name="deadline" value="${esc(r?.deadline || '')}"></label>
         <label>优先级 <select name="priority">${opts(PRIORITY, r?.priority || '常规')}</select></label>
-        <label>目标条数 <input type="number" min="0" name="target" value="${esc(r?.target || '')}" placeholder="计划交付条数"></label>
+        <label>目标条数 <input type="number" min="0" name="target" value="${esc(r?.target || '')}" placeholder="例如：30"></label>
       </div>
-      <div class="tc-grid" style="margin-top:10px">
-        <label>公共标签（逗号分隔） <input name="publicTags" value="${esc((r?.publicTags || []).join('、'))}" placeholder="平台:抖音、平台:小红书"></label>
-        <label>个人标签（逗号分隔） <input name="personalTags" value="${esc((r?.personalTags || []).join('、'))}" placeholder="自定义标签"></label>
+      <div class="tc-grid" style="margin-top:12px">
+        <label>公共标签（逗号分隔） <input name="publicTags" value="${esc((r?.publicTags || []).join('、'))}" placeholder="例如：平台:抖音、平台:小红书"></label>
+        <label>个人标签（逗号分隔） <input name="personalTags" value="${esc((r?.personalTags || []).join('、'))}" placeholder="例如：重点跟进"></label>
         <label>原脚本 <input name="originScript" value="${esc(r?.originScript || '')}" placeholder="例如：玉米糊口播"></label>
       </div>
-      <label style="display:block;margin-top:10px">需求说明 <textarea name="brief" rows="3" placeholder="拍摄场景、卖点、注意事项…">${esc(r?.brief || '')}</textarea></label>
-      <label style="display:block;margin-top:10px">对标分镜链接（每行一个，可跳钉钉/飞书） <textarea name="benchmarks" rows="2" placeholder="https://...">${esc((r?.benchmarks || []).join('\n'))}</textarea></label>
+      ${benchEditor(benchList(r))}
       <div class="tc-sb-head"><h3>分镜脚本</h3><button type="button" id="tcAddSb" class="tc-btn">＋ 添加分镜</button></div>
+      <p class="tc-field-hint">按镜头逐行填写：拍摄内容写画面，拍摄需求写要点，对标分镜粘贴参考链接（可点击跳转）。</p>
       <div id="tcStoryboards">${sb.map((s, i) => sbRow(s, i)).join('')}</div>
       ${cfg.templates.length ? `<div class="bar"><label>从模板套用 <select id="tcTemplate"><option value="">选择模板…</option>${cfg.templates.map((t, i) => `<option value="${i}">${esc(t.name)}</option>`).join('')}</select></label></div>` : ''}
       <div class="bar"><label><input type="checkbox" name="saveAsTemplate" style="width:auto"> 存为模板</label><label>模板名 <input name="templateName" placeholder="可选" style="max-width:200px"></label></div>
@@ -336,9 +356,9 @@
   function sbRow(s, i) {
     return `<div class="tc-sb-row" data-sb="${i}">
       <input class="sb-seq" value="${esc(s.seq || i + 1)}" placeholder="序号" style="width:44px">
-      <input class="sb-content" value="${esc(s.content || '')}" placeholder="拍摄内容">
-      <input class="sb-need" value="${esc(s.need || '')}" placeholder="拍摄需求">
-      <input class="sb-link" value="${esc(s.link || '')}" placeholder="对标分镜链接">
+      <input class="sb-content" value="${esc(s.content || '')}" placeholder="拍摄内容，如：产品摆桌特写">
+      <input class="sb-need" value="${esc(s.need || '')}" placeholder="拍摄需求，如：1:1 复刻、补光">
+      <input class="sb-link" value="${esc(s.link || '')}" placeholder="对标链接（可留空）">
       <button type="button" class="tc-sb-del tc-link" title="删除">×</button>
     </div>`;
   }
@@ -370,7 +390,6 @@
         <div class="tc-script-head"><div class="tc-sh-main">
           <div class="tc-sh-author"><span class="tc-avatar">${esc((r.creator || me()).slice(0, 1))}</span><div><b>${esc(r.creator || me())}</b> / <input name="team" class="tc-inline" value="${esc(r.team || '')}" placeholder="团队"> / <input name="group" class="tc-inline" value="${esc(r.group || '')}" placeholder="运营组"><br><small>发布时间：${esc((r.createdAt || '').replace('T', ' '))}</small></div></div>
           <div class="tc-sh-tags"><select name="scriptKind" class="tc-inline">${opts(['脚本', '视频', '素材', '成片'], r.scriptKind || '脚本')}</select><input name="category" class="tc-inline" value="${esc(r.category || '')}" placeholder="品类标签"></div>
-          <div class="tc-sh-line">脚本标题 <input name="scriptTitle" class="tc-inline tc-inline-wide" value="${esc(r.scriptTitle || r.title || '')}" placeholder="脚本标题"></div>
           <div class="tc-sh-line">任务名称 <input name="title" class="tc-inline tc-inline-wide" value="${esc(r.title || '')}" placeholder="任务名称"></div>
           <div class="tc-sh-line">公共标签 <input name="publicTags" class="tc-inline tc-inline-wide" value="${esc((r.publicTags || []).join('、'))}" placeholder="平台:抖音、平台:小红书"></div>
           <div class="tc-sh-line">个人标签 <input name="personalTags" class="tc-inline tc-inline-wide" value="${esc((r.personalTags || []).join('、'))}" placeholder="个人标签"></div>
@@ -384,10 +403,11 @@
           <label>目标 <input type="number" min="0" name="target" value="${esc(r.target || '')}" style="width:70px"></label>
           <label>进度 <input type="number" min="0" name="done" value="${p.done}" style="width:70px"></label>
         </div>
-        <label style="display:block;margin:8px 20px"><b>需求说明</b><textarea name="brief" rows="2" style="width:100%">${esc(r.brief || '')}</textarea></label>
-        <label style="display:block;margin:8px 20px"><b>对标分镜链接（每行一个）</b><textarea name="benchmarks" rows="2" style="width:100%">${esc((r.benchmarks || []).join('\n'))}</textarea></label>
-        ${benchmarkLinks(r)}
-        <div class="tc-sb-headline" style="padding:0 20px"><span class="tc-sb-bar"></span><b>分镜脚本</b><button type="button" id="tcAddSbRow" class="tc-btn" style="margin-left:auto">＋ 添加分镜</button></div>
+        <div class="tc-editor-section" style="padding:12px 20px">
+          ${benchEditor(benchList(r))}
+        </div>
+        <div class="tc-sb-headline" style="padding:6px 20px"><span class="tc-sb-bar"></span><b>分镜脚本</b><button type="button" id="tcAddSbRow" class="tc-btn" style="margin-left:auto">＋ 添加分镜</button></div>
+        <p class="tc-field-hint" style="padding:0 20px">按镜头逐行填写：拍摄内容写画面，拍摄需求写要点，对标分镜粘贴参考链接（可点击跳转）。</p>
         <div id="tcEditStoryboards" style="padding:0 20px">${editableStoryboard(r)}</div>
       </div>
       <div class="panel" style="padding:18px;margin-top:12px"><div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>模特选择</b><span class="tc-muted">（休息自动标注）</span></div>
@@ -426,14 +446,13 @@
       <div class="tc-grid">
         <label>模板名称 <input name="name" required value="${esc(x.name || '')}" placeholder="例如：玉米糊对标"></label>
         <label>交付类型 <select name="deliverType">${opts(DELIVER, x.deliverType || DELIVER[0])}</select></label>
-        <label>脚本标题 <input name="scriptTitle" value="${esc(x.scriptTitle || '')}"></label>
         <label>脚本标签 <select name="scriptKind">${opts(['脚本', '视频', '素材', '成片'], x.scriptKind || '脚本')}</select></label>
         <label>品类标签 <input name="category" value="${esc(x.category || '')}" placeholder="例如：食品/山药葛根玉米粉"></label>
-        <label>目标条数 <input type="number" min="0" name="target" value="${esc(x.target || '')}"></label>
+        <label>目标条数 <input type="number" min="0" name="target" value="${esc(x.target || '')}" placeholder="例如：30"></label>
       </div>
-      <label style="display:block;margin-top:10px">需求说明 <textarea name="brief" rows="2" style="width:100%">${esc(x.brief || '')}</textarea></label>
-      <label style="display:block;margin-top:8px">对标分镜链接（每行一个） <textarea name="benchmarks" rows="2" style="width:100%">${esc((x.benchmarks || []).join('\n'))}</textarea></label>
+      ${benchEditor(benchList(x))}
       <div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>分镜脚本</b><button type="button" id="tcTplAddSb" class="tc-btn" style="margin-left:auto">＋ 添加分镜</button></div>
+      <p class="tc-field-hint">按镜头逐行填写拍摄内容、拍摄需求；对标链接可点击跳转。</p>
       <div id="tcTplStoryboards">${sb.map((s, i) => tplSbRow(s, i)).join('')}</div>
       <div class="bar"><button type="submit" class="tc-btn tc-primary">保存模板</button><button type="button" id="tcTplCancel" class="tc-btn">取消</button></div>
     </form>`;
@@ -441,9 +460,9 @@
   function tplSbRow(s, i) {
     return `<div class="tc-sb-row" data-tplsb>
       <input class="sb-seq" value="${esc(s.seq || i + 1)}" style="width:42px" placeholder="序号">
-      <input class="sb-content" value="${esc(s.content || '')}" placeholder="拍摄内容">
-      <input class="sb-need" value="${esc(s.need || '')}" placeholder="拍摄需求">
-      <input class="sb-link" value="${esc(s.link || '')}" placeholder="对标分镜链接">
+      <input class="sb-content" value="${esc(s.content || '')}" placeholder="拍摄内容，如：产品摆桌特写">
+      <input class="sb-need" value="${esc(s.need || '')}" placeholder="拍摄需求，如：1:1 复刻">
+      <input class="sb-link" value="${esc(s.link || '')}" placeholder="对标链接（可留空）">
       <button type="button" class="tc-sb-del tc-link" title="删除分镜">×</button>
     </div>`;
   }
@@ -563,18 +582,18 @@
         need: row.querySelector('.sb-need')?.value || '', link: row.querySelector('.sb-link')?.value || ''
       })).filter(s => s.content || s.need || s.link);
       Object.assign(r, {
-        title: val('title') || r.title, scriptTitle: val('scriptTitle'), team: val('team'), group: val('group'),
+        title: val('title') || r.title, scriptTitle: r.scriptTitle || '', team: val('team'), group: val('group'),
         scriptKind: val('scriptKind') || '脚本', category: val('category'), publicTags: split(val('publicTags')),
         personalTags: split(val('personalTags')), originScript: val('originScript'),
         status: val('status') || r.status, priority: val('priority') || '常规', deliverType: val('deliverType'),
-        deadline: val('deadline'), target: Number(val('target')) || 0, brief: val('brief'),
-        benchmarks: val('benchmarks').split(/\r?\n/).map(s => s.trim()).filter(Boolean), storyboards,
+        deadline: val('deadline'), target: Number(val('target')) || 0, brief: r.brief || '',
+        benchmarks: readBench(root), storyboards,
         models: fd.getAll('models'), done: Number(val('done')) || 0
       });
       const fb = val('feedback');
       if (fb) r.feedback = { text: fb, by: me(), at: now() };
       const cfg = config();
-      (r.benchmarks || []).forEach(u => { if (!cfg.benchmarks.includes(u)) cfg.benchmarks.push(u); });
+      benchList(r).forEach(x => { const u = x.url; if (u && !cfg.benchmarks.includes(u)) cfg.benchmarks.push(u); });
       if (val('asTemplate') === 'on' && val('templateName')) {
         cfg.templates.push({ name: val('templateName'), title: r.title, scriptTitle: r.scriptTitle, scriptKind: r.scriptKind, category: r.category, deliverType: r.deliverType, target: r.target, brief: r.brief, benchmarks: r.benchmarks, storyboards });
       }
@@ -655,10 +674,10 @@
       const t = config().templates[Number(tpl.value)]; if (!t) return;
       form.elements.title.value = t.title || ''; form.elements.deliverType.value = t.deliverType || DELIVER[0];
       form.elements.target.value = t.target || ''; form.elements.brief.value = t.brief || '';
-      if (form.elements.scriptTitle) form.elements.scriptTitle.value = t.scriptTitle || '';
       if (form.elements.scriptKind) form.elements.scriptKind.value = t.scriptKind || '脚本';
       if (form.elements.category) form.elements.category.value = t.category || '';
-      if (t.benchmarks) form.elements.benchmarks.value = t.benchmarks.join('\n');
+      const benchBox = main.querySelector('#tcForm .tc-bench-rows');
+      if (benchBox) benchBox.innerHTML = benchRowsHTML(t.benchmarks || []);
       if (t.storyboards) { main.querySelector('#tcStoryboards').innerHTML = t.storyboards.map((s, i) => sbRow(s, i)).join(''); bindSbDel(main); }
     };
     form.onsubmit = e => {
@@ -671,7 +690,7 @@
         need: row.querySelector('.sb-need').value, link: row.querySelector('.sb-link').value
       })).filter(s => s.content || s.need || s.link);
       const splitTags = v => String(v || '').split(/[、,，]/).map(s => s.trim()).filter(Boolean);
-      const benchmarks = (fd.get('benchmarks') || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const benchmarks = readBench(main.querySelector('#tcForm'));
       const editId = form.dataset.edit;
       const list = all();
       const r = editId ? list.find(x => x.id === editId) : { id: uid(), creator: me(), createdAt: now(), status: '待处理', done: 0, history: [], comments: [] };
@@ -687,7 +706,7 @@
       });
       // 对标库沉淀
       const cfg = config();
-      benchmarks.forEach(u => { if (!cfg.benchmarks.includes(u)) cfg.benchmarks.push(u); });
+      benchmarks.forEach(x => { const u = x.url || x; if (u && !cfg.benchmarks.includes(u)) cfg.benchmarks.push(u); });
       // 存模板
       if (fd.get('saveAsTemplate') && (fd.get('templateName') || '').trim()) {
         cfg.templates.push({ name: fd.get('templateName').trim(), title: r.title, scriptTitle: r.scriptTitle, scriptKind: r.scriptKind, category: r.category, deliverType: r.deliverType, target: r.target, brief: r.brief, benchmarks, storyboards });
@@ -747,9 +766,9 @@
           need: row.querySelector('.sb-need')?.value || '', link: row.querySelector('.sb-link')?.value || ''
         })).filter(s => s.content || s.need || s.link);
         const tpl = {
-          name, deliverType: fd.get('deliverType'), scriptTitle: (fd.get('scriptTitle')||'').trim(),
+          name, deliverType: fd.get('deliverType'), scriptTitle: '',
           scriptKind: fd.get('scriptKind'), category: (fd.get('category')||'').trim(), target: Number(fd.get('target'))||0,
-          brief: (fd.get('brief')||'').trim(), benchmarks: (fd.get('benchmarks')||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean), storyboards
+          brief: '', benchmarks: readBench(tplFormEl), storyboards
         };
         const cfg = config();
         const idx = Number(tplFormEl.dataset.index);
@@ -831,6 +850,28 @@
     const csv = '\uFEFF' + [head, ...rows].map(row => row.map(v => '"' + String(v ?? '').replace(/"/g, '""') + '"').join(',')).join('\n');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = '任务中心报表_' + today() + '.csv'; a.click();
   }
+
+  /* 对标链接编辑器：增删行 + 跳转预览（事件委托，render 重建后仍有效） */
+  document.addEventListener('click', e => {
+    const add = e.target.closest?.('.bench-add');
+    if (add) { const rows = add.closest('.tc-bench-editor')?.querySelector('.tc-bench-rows'); if (rows) rows.insertAdjacentHTML('beforeend', benchRowsHTML([{}])); return; }
+    const del = e.target.closest?.('.bench-del');
+    if (del) { const row = del.closest('.tc-bench-row'); if (row) {
+      const rows = row.parentElement;
+      if (rows && rows.children.length > 1) row.remove();
+      else { const n = row.querySelector('.bench-name'), u = row.querySelector('.bench-url'); if (n) n.value=''; if (u) u.value=''; const j=row.querySelector('.bench-jump'); if(j){j.className='bench-jump bench-jump-ph';j.removeAttribute('href');} }
+    } return; }
+    const jump = e.target.closest?.('.bench-jump');
+    if (jump && jump.tagName === 'A' && jump.href) { e.preventDefault(); window.open(jump.href, '_blank', 'noopener'); return; }
+  });
+  document.addEventListener('input', e => {
+    if (!e.target.classList?.contains('bench-url')) return;
+    const row = e.target.closest('.tc-bench-row'); if (!row) return;
+    const j = row.querySelector('.bench-jump'); if (!j) return;
+    const url = e.target.value.trim();
+    if (url) { j.className = 'bench-jump'; j.setAttribute('href', /^https?:\/\//i.test(url) ? url : 'https://' + url); }
+    else { j.className = 'bench-jump bench-jump-ph'; j.removeAttribute('href'); }
+  });
 
   /* team-sync 刷新后重绘当前标签 */
   window.addEventListener('studio-team-refresh', () => {
