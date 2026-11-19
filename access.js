@@ -222,7 +222,8 @@
       '<div class="ai-head">✨ 中台小秘书 <span style="font-size:11px;color:#d8b8ff;font-weight:400">你的拍摄搭子 · 免费</span> <button id="ai-close" style="float:right;background:none;border:0;color:#fff;cursor:pointer;font-size:18px">×</button></div>' +
       '<div class="ai-tabs"><button class="ai-tab active" data-mode="ask">随便聊聊</button><button class="ai-tab" data-mode="analyze">拆对标</button><button class="ai-tab" data-mode="image">生个图</button></div>' +
       '<div id="ai-log" class="ai-log"><div class="ai-msg ai-sys" id="ai-welcome"></div></div>' +
-      '<div class="ai-input-row"><input id="ai-q" placeholder="问我点什么…"><button id="ai-send">发送</button></div>';
+      '<div id="ai-attach" class="ai-attach" hidden><img id="ai-attach-img" alt="已选图片"><button type="button" id="ai-attach-remove" title="移除图片">×</button></div>' +
+      '<div class="ai-input-row"><label class="ai-upload" title="添加产品图／参考图">＋<input id="ai-file" type="file" accept="image/*" hidden></label><input id="ai-q" placeholder="问我点什么…"><button id="ai-send">发送</button></div>';
     var style = document.createElement('style');
     style.textContent =
       '#ai-box{position:fixed;right:18px;top:112px;z-index:8001;width:min(420px,calc(100vw - 36px));height:min(580px,calc(100vh - 140px));background:#15131c;border:1px solid #5a456e;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 60px #000c,0 0 30px #a76bf033}' +
@@ -239,15 +240,59 @@
       '.ai-demo:hover{background:#3d2b5e;transform:translateY(-1px)}' +
       '.ai-img{background:#1c2733;padding:8px;border-radius:10px;align-self:flex-start;max-width:90%}' +
       '.ai-img img{max-width:100%;border-radius:6px;display:block}' +
-      '.ai-input-row{display:flex;gap:8px;padding:10px;border-top:1px solid #3a3348}' +
-      '.ai-input-row input{flex:1;padding:10px;border-radius:8px;border:1px solid #4a4258;background:#0e0c14;color:#fff;outline:none;font-size:13px}' +
-      '.ai-input-row button{padding:10px 14px;border:0;border-radius:8px;background:linear-gradient(135deg,#a76bf0,#e05fa8);color:#fff;cursor:pointer;font-weight:700}';
+      '.ai-input-row{display:flex;gap:8px;padding:10px;border-top:1px solid #3a3348;align-items:center}' +
+      '.ai-upload{width:38px;height:38px;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px;line-height:1;border:1px dashed #7a5fae;border-radius:8px;color:#c9b3f5;cursor:pointer;background:#1d1730}' +
+      '.ai-upload:hover{background:#2a2042}' +
+      '.ai-input-row input{flex:1;min-width:0;padding:10px;border-radius:8px;border:1px solid #4a4258;background:#0e0c14;color:#fff;outline:none;font-size:13px}' +
+      '.ai-input-row button{padding:10px 14px;border:0;border-radius:8px;background:linear-gradient(135deg,#a76bf0,#e05fa8);color:#fff;cursor:pointer;font-weight:700}' +
+      '.ai-attach{position:relative;display:inline-block;margin:10px 14px 0;padding:4px;border:1px solid #6b4fa0;border-radius:8px;background:#1d1730;align-self:flex-end;max-width:150px}' +
+      '.ai-attach img{max-width:140px;max-height:100px;border-radius:5px;display:block}' +
+      '.ai-attach button{position:absolute;top:-8px;right:-8px;width:22px;height:22px;border:0;border-radius:50%;background:#e05fa8;color:#fff;font-size:15px;line-height:22px;cursor:pointer}' +
+      '.ai-userimg{max-width:150px;border-radius:6px;display:block;margin-bottom:4px}';
     document.head.appendChild(style);
     document.body.appendChild(box);
     document.getElementById('ai-close').onclick = function () { box.remove(); };
     var log = document.getElementById('ai-log');
     var q = document.getElementById('ai-q');
     var mode = 'ask';
+    var attachedImage = ''; // 压缩后的 data URL（含头）
+    // 前端压缩图片：最长边 <=1000px、JPEG 质量 0.72，控制在 ~150KB 内
+    function compressImage(file, cb) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        var img = new Image();
+        img.onload = function () {
+          var max = 1000, w = img.width, h = img.height;
+          if (w > max || h > max) { var s = max / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); // 防透明PNG转JPEG变黑
+          ctx.drawImage(img, 0, 0, w, h);
+          cb(canvas.toDataURL('image/jpeg', 0.72));
+        };
+        img.onerror = function () { cb(''); };
+        img.src = e.target.result;
+      };
+      reader.onerror = function () { cb(''); };
+      reader.readAsDataURL(file);
+    }
+    var fileInput = document.getElementById('ai-file');
+    var attachBox = document.getElementById('ai-attach');
+    fileInput.onchange = function () {
+      var file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+      compressImage(file, function (dataUrl) {
+        attachedImage = dataUrl;
+        document.getElementById('ai-attach-img').src = dataUrl;
+        attachBox.hidden = false;
+        q.focus();
+      });
+      fileInput.value = '';
+    };
+    document.getElementById('ai-attach-remove').onclick = function () {
+      attachedImage = ''; attachBox.hidden = true;
+    };
     var demos = {
       ask: [
         '按抖音信息流逻辑，给这个产品写一段带货文案（3秒钩子+痛点+卖点）',
@@ -266,13 +311,13 @@
         '夜景氛围感带货：暖光台灯、木质背景、生活化陈列、竖屏9:16'
       ]
     };
-    var ph = { ask: '问我点什么…', analyze: '粘贴对标链接 https://…', image: '描述你想要的画面…' };
+    var ph = { ask: '问我点什么…（可传产品图）', analyze: '粘贴对标链接，或传参考图…', image: '描述画面，或只传产品图…' };
     function renderWelcome() {
       var w = document.getElementById('ai-welcome');
       var intro = {
-        ask: '嗨～我是中台小秘书 ✨ 满脑子都是抖音信息流那点事儿：3秒钩子、搭景打光、带货文案、起标题，随叫随到 😉\n不知道从哪下手？点下面的例子试试水～',
-        analyze: '把对标链接丢给我，我按抖音信息流逻辑帮你拆——3秒怎么留人、场景怎么搭、灯怎么打、怎么转化，扒得明明白白 👀',
-        image: '想要啥画面直接说，我按抖音带货场景给你生成竖屏参考图 🎨 居家场景、产品搭景、补光氛围都行，一天免费出 200 张～'
+        ask: '嗨～我是中台小秘书 ✨ 满脑子都是抖音信息流那点事儿：3秒钩子、搭景打光、带货文案、起标题，随叫随到 😉\n📎 点左下角「＋」上传你的产品图，我就能看图给你搭场景、教打光～',
+        analyze: '把对标链接丢给我，我按抖音信息流逻辑帮你拆——3秒怎么留人、场景怎么搭、灯怎么打、怎么转化 👀\n也可以直接传一张对标截图，我照样拆给你看～',
+        image: '想要啥画面直接说，我按抖音带货场景给你生成竖屏参考图 🎨\n📎 传一张你的产品图，我会把产品融进场景里出参考图，一天免费出 200 张～'
       }[mode];
       w.textContent = intro;
       if (demos[mode] && demos[mode].length) {
@@ -332,23 +377,31 @@
     }
     function send() {
       var text = (q.value || '').trim();
-      if (!text) return;
+      var img = attachedImage;
+      if (!text && !img) return;
       q.value = '';
-      log.insertAdjacentHTML('beforeend', '<div class="ai-msg ai-user">' + esc(text) + '</div>');
+      // 用户气泡：有图先显示缩略图
+      var bubble = document.createElement('div');
+      bubble.className = 'ai-msg ai-user';
+      if (img) { var im = document.createElement('img'); im.className = 'ai-userimg'; im.src = img; bubble.appendChild(im); }
+      if (text) bubble.appendChild(document.createTextNode(text));
+      log.appendChild(bubble);
       log.scrollTop = log.scrollHeight;
       var endpoint, payload;
       if (mode === 'analyze') {
-        endpoint = '/ai/analyze'; payload = { url: text };
+        endpoint = '/ai/analyze'; payload = { url: text, image: img };
       } else if (mode === 'image') {
-        endpoint = '/ai/image'; payload = { prompt: text };
+        endpoint = '/ai/image'; payload = { prompt: text, image: img };
       } else {
         var ctx = {
           leader: (function () { try { return (JSON.parse(localStorage.getItem('studio-ops-settings-v1') || '{}').leader) || ''; } catch (e) { return ''; } })(),
           name: viewer && viewer.name ? viewer.name : (savedName || ''),
           stats: realStats()
         };
-        endpoint = '/ai/ask'; payload = { question: text, context: ctx };
+        endpoint = '/ai/ask'; payload = { question: text || '看看这张图片，给我搭建和打光建议', context: ctx, image: img };
       }
+      // 发送后清空附件
+      attachedImage = ''; attachBox.hidden = true;
       sysMsg('让我想想哈…马上就好 😉');
       fetch(API + endpoint, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
