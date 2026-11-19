@@ -1,5 +1,13 @@
 <!doctype html>
-<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>中台拍摄工作台</title>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>中台拍摄工作台</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#14223b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="中台工作台">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f4f6fa;color:#182438;font:14px system-ui,sans-serif}header{background:#14223b;color:white;padding:22px 5%;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}header strong{font-size:20px}nav{display:flex;gap:8px}button,input,select,textarea{font:inherit}button{border:0;border-radius:8px;padding:9px 14px;cursor:pointer;background:#e9eff8;color:#203853}nav button{background:#263753;color:#e4edff}nav .active,.primary{background:#2855d9;color:white}main{max-width:1420px;margin:auto;padding:28px 5%}h1{font-size:28px;margin:0 0 8px}p{line-height:1.65;color:#52637b;margin:8px 0 18px}.bar{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:20px 0}.spacer{flex:1}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin:22px 0}.card,.panel{background:white;border:1px solid #dde5f0;border-radius:12px}.card{padding:16px;color:#52637b}.card b{display:block;margin-top:8px;font-size:27px;color:#162b4f}.panel{overflow:auto}table{width:100%;border-collapse:collapse;text-align:left}th,td{padding:13px 14px;border-bottom:1px solid #e8edf5;vertical-align:top}th{background:#edf2fb;white-space:nowrap;color:#364a67}td{min-width:72px}td.notes{min-width:235px;white-space:pre-wrap;overflow-wrap:anywhere}.empty{text-align:center;padding:38px;color:#52637b}.tag{display:inline-block;background:#eaf0ff;color:#2548a4;border-radius:6px;padding:4px 7px;white-space:nowrap}.late{background:#fff0ed;color:#a02b23}label{display:grid;gap:5px;color:#394e69}input,select,textarea{width:100%;border:1px solid #ccd7e7;border-radius:7px;padding:8px;background:white;color:#172438}dialog{width:min(840px,95vw);max-height:90vh;border:0;border-radius:14px;padding:24px;color:inherit;box-shadow:0 16px 64px #14223b44}dialog::backdrop{background:#14223b88}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.wide{grid-column:1/-1}textarea{min-height:75px}a{color:#2855d9}small{color:#5c708d}.danger{color:#a02b23}.plan{padding:18px;margin:12px 0}.plan h3{margin:0}.plan p{margin:8px 0}.crew td:nth-child(n+3){white-space:nowrap}
 .entry{padding:18px;margin:20px 0}.entry h2{font-size:17px;margin:0 0 12px}.entry textarea{min-height:60px}.entry .bar{margin:10px 0 0}.assign{min-width:110px;padding:5px 7px}.report th,.report td{white-space:nowrap}.report tbody tr:nth-child(even){background:#f6f8fc}.report td:nth-child(n+3),.report th:nth-child(n+3){text-align:right}.report-meta{padding:16px 18px;border-bottom:1px solid #dde5f0}.report-meta strong{font-size:17px}td.actions button{margin-bottom:5px;white-space:nowrap}.entry select{min-width:145px}
@@ -2332,4 +2340,46 @@ window.addEventListener('studio-team-refresh', () => {
  try{settings={...defaults,...JSON.parse(localStorage.getItem(settingsKey)||'{}')};applySettings();refreshManagedOptions()}catch{}
  render();
 });
-</script><script src="access.js?v=access-12" defer></script><script src="team-sync.js?v=shared-settings-4" defer></script></html>
+</script><script src="access.js?v=access-12" defer></script><script src="team-sync.js?v=shared-settings-4" defer></script>
+<script>
+if('serviceWorker' in navigator && location.protocol==='https:'){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(function(){});
+  });
+}
+(function(){
+  var deferred=null;
+  var isIOS=/iPad|iPhone|iPod/i.test(navigator.userAgent);
+  function showBar(text,onInstall){
+    if(document.getElementById('pwa-install-bar'))return;
+    var el=document.createElement('div');
+    el.id='pwa-install-bar';
+    el.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:99999;display:flex;align-items:center;gap:10px;max-width:94vw;padding:9px 12px;border-radius:12px;background:#14223b;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,.35);font:13px system-ui';
+    var s=document.createElement('span');s.textContent=text;el.appendChild(s);
+    if(onInstall){
+      var b=document.createElement('button');b.textContent='安装';
+      b.style.cssText='border:0;border-radius:8px;padding:7px 12px;background:#2855d9;color:#fff;cursor:pointer;white-space:nowrap';
+      b.onclick=onInstall;el.appendChild(b);
+    }
+    var x=document.createElement('button');x.textContent='×';x.setAttribute('aria-label','关闭');
+    x.style.cssText='border:0;background:transparent;color:#cbd5e1;cursor:pointer;font-size:18px;line-height:1;padding:0 2px';
+    x.onclick=function(){el.remove()};el.appendChild(x);
+    document.body.appendChild(el);
+  }
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();deferred=e;
+    showBar('把它装到手机桌面，像 APP 一样打开',function(){
+      deferred.prompt();
+      deferred.userChoice.then(function(){
+        var bar=document.getElementById('pwa-install-bar');if(bar)bar.remove();
+        deferred=null;
+      });
+    });
+  });
+  if(isIOS && !navigator.standalone){
+    setTimeout(function(){
+      showBar('iPhone 安装：点底部「分享」→「添加到主屏幕」',null);
+    },2500);
+  }
+})();
+</script></html>
