@@ -150,24 +150,22 @@
     const p = progressOf(r);
     const fb = r.feedback ? `<div class="tc-feedback"><strong>中台反馈（拍摄问题与建议）</strong><p>${esc(r.feedback.text)}</p><small>${esc(r.feedback.by)} · ${esc(r.feedback.at)}</small></div>` : '<div class="tc-muted">中台暂未填写反馈。</div>';
     const comments = (r.comments || []).map(c => `<div class="tc-comment"><b>${esc(c.by)}</b> <small>${esc(c.at)}</small><p>${esc(c.text)}</p></div>`).join('') || '<div class="tc-muted">还没有讨论。</div>';
-    const history = (r.history || []).slice().reverse().map(h => `<li><small>${esc(h.at)}</small> ${esc(h.by)}：${esc(h.text)}</li>`).join('');
     return `<div class="tc-detail">
       <div class="bar"><button type="button" data-ops-tab="list" class="tc-btn">← 返回列表</button><span class="spacer"></span>
         ${r.status === '已交付' ? `<button type="button" data-reject-req="${esc(r.id)}" class="tc-btn tc-danger">打回修改</button><button type="button" data-accept-req="${esc(r.id)}" class="tc-btn tc-primary">验收通过</button>` : ''}
       </div>
-      <div class="panel" style="padding:18px">
-        <h2>${esc(r.title)} <span class="tc-status tc-s-${esc(r.status)}">${esc(r.status)}</span>${r.priority === '加急' ? ' <span class="tc-urgent">加急</span>' : ''}</h2>
-        <p><b>项目组：</b>${esc(r.group || '—')}　<b>交付类型：</b>${esc(r.deliverType || '—')}　<b>截止：</b>${esc(r.deadline || '—')}　<b>目标条数：</b>${p.target}</p>
-        <p><b>交付进度：</b>${p.done}/${p.target}　<b>创建人：</b>${esc(r.creator || me())}　<b>创建时间：</b>${esc(r.createdAt)}</p>
-        <p><b>需求说明：</b><span style="white-space:pre-wrap">${esc(r.brief || '—')}</span></p>
-        ${benchmarkLinks(r)}
-        ${storyboardTable(r)}
+      <div class="panel tc-script-card">${scriptHeader(r)}
+        <div class="tc-sh-meta"><span class="tc-status tc-s-${esc(r.status)}">${esc(r.status)}</span>${r.priority === '加急' ? ' <span class="tc-urgent">加急</span>' : ''}
+          <span>交付类型：${esc(r.deliverType || '—')}</span><span>截止：${esc(r.deadline || '—')}</span><span>交付：${p.done}/${p.target}</span></div>
+        <div class="tc-prog" style="max-width:420px"><span style="width:${p.target ? Math.min(100, Math.round(p.done / p.target * 100)) : 0}%"></span></div>
+        ${r.brief ? `<p style="white-space:pre-wrap;margin:8px 0"><b>需求说明：</b>${esc(r.brief)}</p>` : ''}
+        ${benchmarkLinks(r)}${storyboardTable(r)}
       </div>
-      <div class="panel" style="padding:18px;margin-top:12px"><h3>交付反馈</h3>${fb}</div>
-      <div class="panel" style="padding:18px;margin-top:12px"><h3>讨论</h3>${comments}
+      <div class="panel" style="padding:18px;margin-top:12px"><div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>交付反馈</b></div>${fb}</div>
+      <div class="panel" style="padding:18px;margin-top:12px"><div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>关联记录</b></div>${comments}
         <div class="bar"><input id="tcComment" placeholder="补充讨论…" style="max-width:none;flex:1"><button type="button" id="tcAddComment" data-req="${esc(r.id)}" class="tc-btn tc-primary">发送</button></div>
+        <ul class="tc-history">${(r.history || []).slice().reverse().map(h => `<li><small>${esc(h.at)}</small> ${esc(h.by)}：${esc(h.text)}</li>`).join('') || '<li>暂无</li>'}</ul>
       </div>
-      <div class="panel" style="padding:18px;margin-top:12px"><h3>变更记录</h3><ul class="tc-history">${history || '<li>暂无</li>'}</ul></div>
     </div>`;
   }
 
@@ -182,8 +180,47 @@
   function storyboardTable(r) {
     const rows = (r.storyboards || []);
     if (!rows.length) return '';
-    return `<table class="tc-table tc-storyboard" style="margin-top:10px"><thead><tr><th>序号</th><th style="text-align:left">拍摄内容</th><th style="text-align:left">拍摄需求</th><th>对标分镜</th></tr></thead><tbody>` +
-      rows.map(s => `<tr><td>${esc(s.seq || '')}</td><td style="text-align:left">${esc(s.content || '')}</td><td style="text-align:left">${esc(s.need || '')}</td><td>${s.link ? `<a class="tc-linktag" href="${esc(s.link)}" target="_blank" rel="noopener noreferrer">打开 ↗</a>` : '—'}</td></tr>`).join('') + '</tbody></table>';
+    return `<div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>分镜脚本</b><span class="tc-muted">（点击可复制对标链接）</span></div>
+    <table class="tc-table tc-storyboard"><thead><tr>
+      <th style="width:42px">序号</th><th style="text-align:left">拍摄内容</th><th style="text-align:left">拍摄需求</th><th style="text-align:left">对标分镜</th><th style="text-align:left">具体要求</th><th style="text-align:left">服装</th>
+    </tr></thead><tbody>` +
+      rows.map(s => `<tr>
+        <td>${esc(s.seq || '')}</td>
+        <td style="text-align:left">${esc(s.content || '')}</td>
+        <td style="text-align:left">${esc(s.need || '')}</td>
+        <td style="text-align:left">${s.link ? `<a class="tc-benchmark-link" href="${esc(s.link)}" target="_blank" rel="noopener noreferrer" title="点击跳转">${esc(s.link)}</a>` : '—'}</td>
+        <td style="text-align:left">${esc(s.detail || '')}</td>
+        <td style="text-align:left">${esc(s.outfit || '')}</td>
+      </tr>`).join('') + '</tbody></table>';
+  }
+  /* 图2 样式：发布者信息卡（脚本标题/标签/原脚本/关联任务/收藏分享） */
+  function scriptHeader(r, mode) {
+    const creator = r.creator || me();
+    const team = r.team || '';
+    const group = r.group || '';
+    const pub = (r.createdAt || '').replace('T', ' ');
+    const pubTags = (r.publicTags || []).map(t => `<span class="tc-tag">${esc(t)}</span>`).join('');
+    const perTags = (r.personalTags || []).map(t => `<span class="tc-tag tc-tag-per">${esc(t)}</span>`).join('');
+    const linkCount = r.linkedTaskId ? 1 : 0;
+    return `<div class="tc-script-head">
+      <div class="tc-sh-main">
+        <div class="tc-sh-author"><span class="tc-avatar">${esc((creator || '?').slice(0, 1))}</span><div><b>${esc(creator)}</b>${team || group ? ' / ' + [team, group].filter(Boolean).map(esc).join(' / ') : ''}<br><small>发布时间：${esc(pub)}</small></div></div>
+        <div class="tc-sh-tags">
+          <span class="tc-tag tc-tag-kind">${esc(r.scriptKind || '脚本')}</span>
+          ${r.category ? `<span class="tc-tag">${esc(r.category)}</span>` : ''}
+        </div>
+        <div class="tc-sh-line">脚本标题 <b>${esc(r.scriptTitle || r.title || '—')}</b></div>
+        <div class="tc-sh-line">公共标签 ${pubTags}<span class="tc-tag-add">＋ 添加公共标签</span></div>
+        <div class="tc-sh-line">个人标签 ${perTags}<span class="tc-tag-add">＋ 添加个人标签</span></div>
+        ${r.originScript ? `<div class="tc-sh-line">原脚本 <span class="tc-origin">${esc(r.originScript)}</span></div>` : ''}
+      </div>
+      <div class="tc-sh-side">
+        <div class="tc-rel-task">🔗 关联任务 <b>${linkCount}</b></div>
+        ${r.linkedTaskId ? `<div class="tc-rel-name">${esc(taskNameById(r.linkedTaskId))}</div>` : ''}
+        <button type="button" class="tc-fav" title="收藏">☆ 收藏</button>
+        <button type="button" class="tc-share" title="分享">↗ 分享</button>
+      </div>
+    </div>`;
   }
 
   /* ---------- 中台视图 ---------- */
@@ -270,11 +307,20 @@
       <h2>${isEdit ? '编辑任务' : '下发拍摄任务'}</h2>
       <div class="tc-grid">
         <label>任务名称 <input name="title" required maxlength="80" value="${esc(r?.title || '')}" placeholder="例如：11.11 秘与产品分镜"></label>
-        <label>项目组 <select name="group">${opts(['', ...groups], r?.group || (isOps() ? myGroup() : ''))}</select></label>
+        <label>脚本标题 <input name="scriptTitle" value="${esc(r?.scriptTitle || '')}" placeholder="例如：玉米糊对标"></label>
+        <label>项目组（运营组） <select name="group">${opts(['', ...groups], r?.group || (isOps() ? myGroup() : ''))}</select></label>
+        <label>所属团队 <input name="team" value="${esc(r?.team || '')}" placeholder="例如：内容团队"></label>
+        <label>脚本标签 <select name="scriptKind">${opts(['脚本', '视频', '素材', '成片'], r?.scriptKind || '脚本')}</select></label>
+        <label>品类标签 <input name="category" value="${esc(r?.category || '')}" placeholder="例如：食品/山药葛根玉米粉"></label>
         <label>交付类型 <select name="deliverType">${opts(DELIVER, r?.deliverType || DELIVER[0])}</select></label>
         <label>截止日期 <input type="date" name="deadline" value="${esc(r?.deadline || '')}"></label>
         <label>优先级 <select name="priority">${opts(PRIORITY, r?.priority || '常规')}</select></label>
         <label>目标条数 <input type="number" min="0" name="target" value="${esc(r?.target || '')}" placeholder="计划交付条数"></label>
+      </div>
+      <div class="tc-grid" style="margin-top:10px">
+        <label>公共标签（逗号分隔） <input name="publicTags" value="${esc((r?.publicTags || []).join('、'))}" placeholder="平台:抖音、平台:小红书"></label>
+        <label>个人标签（逗号分隔） <input name="personalTags" value="${esc((r?.personalTags || []).join('、'))}" placeholder="自定义标签"></label>
+        <label>原脚本 <input name="originScript" value="${esc(r?.originScript || '')}" placeholder="例如：玉米糊口播"></label>
       </div>
       <label style="display:block;margin-top:10px">需求说明 <textarea name="brief" rows="3" placeholder="拍摄场景、卖点、注意事项…">${esc(r?.brief || '')}</textarea></label>
       <label style="display:block;margin-top:10px">对标分镜链接（每行一个，可跳钉钉/飞书） <textarea name="benchmarks" rows="2" placeholder="https://...">${esc((r?.benchmarks || []).join('\n'))}</textarea></label>
@@ -287,10 +333,12 @@
   }
   function sbRow(s, i) {
     return `<div class="tc-sb-row" data-sb="${i}">
-      <input class="sb-seq" value="${esc(s.seq || i + 1)}" placeholder="序号" style="width:52px">
+      <input class="sb-seq" value="${esc(s.seq || i + 1)}" placeholder="序号" style="width:44px">
       <input class="sb-content" value="${esc(s.content || '')}" placeholder="拍摄内容">
       <input class="sb-need" value="${esc(s.need || '')}" placeholder="拍摄需求">
       <input class="sb-link" value="${esc(s.link || '')}" placeholder="对标分镜链接">
+      <input class="sb-detail" value="${esc(s.detail || '')}" placeholder="具体要求">
+      <input class="sb-outfit" value="${esc(s.outfit || '')}" placeholder="服装">
       <button type="button" class="tc-sb-del tc-link" title="删除">×</button>
     </div>`;
   }
@@ -305,17 +353,17 @@
     return `<div class="tc-detail"><div class="bar"><button type="button" data-center-tab="pending" class="tc-btn">← 返回</button><span class="spacer"></span>
       ${r.linkedTaskId ? '' : `<button type="button" id="tcToSchedule" data-req="${esc(r.id)}" class="tc-btn tc-primary">转为工作安排 →</button>`}
       </div>
-      <div class="panel" style="padding:18px"><h2>${esc(r.title)} <span class="tc-status tc-s-${esc(r.status)}">${esc(r.status)}</span>${r.priority === '加急' ? ' <span class="tc-urgent">加急</span>' : ''}</h2>
-        <p><b>项目组：</b>${esc(r.group || '—')}　<b>类型：</b>${esc(r.deliverType || '—')}　<b>截止：</b>${esc(r.deadline || '—')}　<b>目标：</b>${p.target}　<b>进度：</b>${p.done}</p>
-        <p><b>创建人：</b>${esc(r.creator || '—')}　<b>时间：</b>${esc(r.createdAt || '')}　<b>排班：</b>${linked}</p>
-        <p><b>需求：</b><span style="white-space:pre-wrap">${esc(r.brief || '—')}</span></p>
-        ${benchmarkLinks(r)}${storyboardTable(r)}
+      <div class="panel tc-script-card">${scriptHeader(r)}
+        <div class="tc-sh-meta"><span class="tc-status tc-s-${esc(r.status)}">${esc(r.status)}</span>${r.priority === '加急' ? ' <span class="tc-urgent">加急</span>' : ''}
+          <span>交付类型：${esc(r.deliverType || '—')}</span><span>截止：${esc(r.deadline || '—')}</span><span>目标：${p.target} 条</span><span>进度：${p.done}</span>${linked}</div>
+        ${r.brief ? `<p style="white-space:pre-wrap;margin:8px 0"><b>需求说明：</b>${esc(r.brief)}</p>` : ''}
+        ${storyboardTable(r)}
       </div>
-      <div class="panel" style="padding:18px;margin-top:12px"><h3>模特选择（休息自动标注）</h3>
+      <div class="panel" style="padding:18px;margin-top:12px"><div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>模特选择</b><span class="tc-muted">（休息自动标注）</span></div>
         <div class="tc-models">${crew.map(n => { const rest = restInfo(n, r.deadline || today()); return `<label class="tc-model ${rest === '休' ? 'tc-rest' : ''}"><input type="checkbox" value="${esc(n)}" ${(r.models || []).includes(n) ? 'checked' : ''}> ${esc(n)}${rest === '休' ? ' · 休息' : ''}</label>`; }).join('') || '<span class="tc-muted">名册里暂无模特</span>'}</div>
         <div class="bar"><button type="button" id="tcSaveModels" data-req="${esc(r.id)}" class="tc-btn">保存模特</button></div>
       </div>
-      <div class="panel" style="padding:18px;margin-top:12px"><h3>交付与反馈</h3>
+      <div class="panel" style="padding:18px;margin-top:12px"><div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>交付与反馈</b></div>
         <div class="tc-grid">
           <label>状态 <select id="tcStatus">${opts(STATUS, r.status)}</select></label>
           <label>完成条数 <input type="number" min="0" id="tcDone" value="${p.done}"></label>
@@ -323,10 +371,11 @@
         <label style="display:block;margin-top:10px">拍摄问题与建议反馈 <textarea id="tcFeedback" rows="3" placeholder="拍摄中遇到的问题、给运营的建议…">${esc(r.feedback?.text || '')}</textarea></label>
         <div class="bar"><label><input type="checkbox" id="tcUrgent" style="width:auto" ${r.priority === '加急' ? 'checked' : ''}> 加急交付</label><button type="button" id="tcSaveProgress" data-req="${esc(r.id)}" class="tc-btn tc-primary">保存进度与反馈</button><span role="status"></span></div>
       </div>
-      <div class="panel" style="padding:18px;margin-top:12px"><h3>讨论</h3>${(r.comments || []).map(c => `<div class="tc-comment"><b>${esc(c.by)}</b> <small>${esc(c.at)}</small><p>${esc(c.text)}</p></div>`).join('') || '<div class="tc-muted">还没有讨论。</div>'}
+      <div class="panel" style="padding:18px;margin-top:12px"><div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>关联记录</b></div>
+        ${(r.comments || []).map(c => `<div class="tc-comment"><b>${esc(c.by)}</b> <small>${esc(c.at)}</small><p>${esc(c.text)}</p></div>`).join('') || '<div class="tc-muted">还没有讨论。</div>'}
         <div class="bar"><input id="tcComment" placeholder="补充讨论…" style="max-width:none;flex:1"><button type="button" id="tcAddComment" data-req="${esc(r.id)}" class="tc-btn tc-primary">发送</button></div>
+        <ul class="tc-history">${(r.history || []).slice().reverse().map(h => `<li><small>${esc(h.at)}</small> ${esc(h.by)}：${esc(h.text)}</li>`).join('')}</ul>
       </div>
-      <div class="panel" style="padding:18px;margin-top:12px"><h3>变更记录</h3><ul class="tc-history">${(r.history || []).slice().reverse().map(h => `<li><small>${esc(h.at)}</small> ${esc(h.by)}：${esc(h.text)}</li>`).join('') || '<li>暂无</li>'}</ul></div>
     </div>`;
   }
 
@@ -489,6 +538,9 @@
       const t = config().templates[Number(tpl.value)]; if (!t) return;
       form.elements.title.value = t.title || ''; form.elements.deliverType.value = t.deliverType || DELIVER[0];
       form.elements.target.value = t.target || ''; form.elements.brief.value = t.brief || '';
+      if (form.elements.scriptTitle) form.elements.scriptTitle.value = t.scriptTitle || '';
+      if (form.elements.scriptKind) form.elements.scriptKind.value = t.scriptKind || '脚本';
+      if (form.elements.category) form.elements.category.value = t.category || '';
       if (t.benchmarks) form.elements.benchmarks.value = t.benchmarks.join('\n');
       if (t.storyboards) { main.querySelector('#tcStoryboards').innerHTML = t.storyboards.map((s, i) => sbRow(s, i)).join(''); bindSbDel(main); }
     };
@@ -499,15 +551,21 @@
       if (!title) { status.textContent = '请填写任务名称'; return; }
       const storyboards = [...main.querySelectorAll('#tcStoryboards .tc-sb-row')].map(row => ({
         seq: row.querySelector('.sb-seq').value, content: row.querySelector('.sb-content').value,
-        need: row.querySelector('.sb-need').value, link: row.querySelector('.sb-link').value
-      })).filter(s => s.content || s.need || s.link);
+        need: row.querySelector('.sb-need').value, link: row.querySelector('.sb-link').value,
+        detail: row.querySelector('.sb-detail')?.value || '', outfit: row.querySelector('.sb-outfit')?.value || ''
+      })).filter(s => s.content || s.need || s.link || s.detail || s.outfit);
+      const splitTags = v => String(v || '').split(/[、,，]/).map(s => s.trim()).filter(Boolean);
       const benchmarks = (fd.get('benchmarks') || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
       const editId = form.dataset.edit;
       const list = all();
       const r = editId ? list.find(x => x.id === editId) : { id: uid(), creator: me(), createdAt: now(), status: '待处理', done: 0, history: [], comments: [] };
       if (!r) { status.textContent = '任务不存在'; return; }
       Object.assign(r, {
-        title, group: fd.get('group') || '', deliverType: fd.get('deliverType'), deadline: fd.get('deadline') || '',
+        title, scriptTitle: (fd.get('scriptTitle') || '').trim(), team: (fd.get('team') || '').trim(),
+        scriptKind: fd.get('scriptKind') || '脚本', category: (fd.get('category') || '').trim(),
+        publicTags: splitTags(fd.get('publicTags')), personalTags: splitTags(fd.get('personalTags')),
+        originScript: (fd.get('originScript') || '').trim(),
+        group: fd.get('group') || '', deliverType: fd.get('deliverType'), deadline: fd.get('deadline') || '',
         priority: fd.get('priority'), target: Number(fd.get('target')) || 0, brief: fd.get('brief') || '',
         benchmarks, storyboards, models: r.models || []
       });
@@ -516,7 +574,7 @@
       benchmarks.forEach(u => { if (!cfg.benchmarks.includes(u)) cfg.benchmarks.push(u); });
       // 存模板
       if (fd.get('saveAsTemplate') && (fd.get('templateName') || '').trim()) {
-        cfg.templates.push({ name: fd.get('templateName').trim(), title, deliverType: r.deliverType, target: r.target, brief: r.brief, benchmarks, storyboards });
+        cfg.templates.push({ name: fd.get('templateName').trim(), title: r.title, scriptTitle: r.scriptTitle, scriptKind: r.scriptKind, category: r.category, deliverType: r.deliverType, target: r.target, brief: r.brief, benchmarks, storyboards });
       }
       saveConfig(cfg);
       if (!editId) list.push(r);
