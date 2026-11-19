@@ -91,6 +91,18 @@ body:has(.tasks-page) .tc-tabs{border-color:#e2dcef}
 .tc-benchmark-link{color:#5b3fb0;word-break:break-all;font-size:12px;text-decoration:underline}
 .tc-storyboard{margin:0 20px 18px!important;width:calc(100% - 40px)!important}
 .tc-storyboard td{white-space:pre-wrap;min-width:90px}
+/* 任务模板卡片 */
+.tc-tpl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.tc-tpl-card{border:1px solid #e2dcef;border-radius:12px;padding:14px;background:#fff}
+.tc-tpl-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tc-tpl-head b{color:#3d2b63;font-size:15px}
+.tc-tpl-meta{color:#8a8199;font-size:12px;margin:6px 0}
+/* 可编辑详情内联输入 */
+.tc-inline{display:inline-block;width:auto;min-width:80px;padding:3px 7px;border:1px solid #d8cfe8;border-radius:6px;font:inherit;font-size:13px;color:#2b2340;background:#fff}
+.tc-inline-wide{min-width:220px;max-width:100%}
+.tc-sh-meta label{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#6b6280}
+.tc-sh-meta select,.tc-sh-meta input{padding:4px 6px;border:1px solid #d8cfe8;border-radius:6px;color:#2b2340;background:#fff}
+.tc-btn.tc-danger{color:#c0392b;border-color:#e6b0b0}
 .tc-models{display:flex;flex-wrap:wrap;gap:8px}
 .tc-model{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border:1px solid #d8cfe8;border-radius:16px;cursor:pointer;font-size:13px}
 .tc-model input{width:auto}

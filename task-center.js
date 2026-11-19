@@ -105,6 +105,7 @@
       <button type="button" data-ops-tab="list" aria-pressed="${opsTab === 'list'}">我的下发</button>
       <button type="button" data-ops-tab="new" aria-pressed="${opsTab === 'new'}">＋ 下发任务</button>
       <button type="button" data-ops-tab="board" aria-pressed="${opsTab === 'board'}">交付看板</button>
+      <button type="button" data-ops-tab="templates" aria-pressed="${opsTab === 'templates'}">任务模板</button>
       <button type="button" data-ops-tab="data" aria-pressed="${opsTab === 'data'}">数据看板</button>
       <button type="button" data-ops-tab="perm" aria-pressed="${opsTab === 'perm'}">权限申请</button>
     </div>`;
@@ -113,6 +114,7 @@
     else if (opsTab === 'new') body = taskForm(null, true);
     else if (opsTab === 'detail') body = opsDetail(mine.find(r => r.id === opsDetailId));
     else if (opsTab === 'board') body = boardView(mine, true);
+    else if (opsTab === 'templates') body = templatesView();
     else if (opsTab === 'data') body = dataBoard(mine);
     else if (opsTab === 'perm') body = permView();
     main.innerHTML = bar + tabs + `<div class="tc-bell-wrap"><button type="button" class="tc-bell" id="tcBell">🔔 消息 <span class="tc-bell-count">${notices().length}</span></button><div class="tc-bell-list" id="tcBellList" hidden></div></div>` + body;
@@ -341,45 +343,78 @@
 
   /* ---------- 中台任务处理详情 ---------- */
   let centerDetailId = '';
+  function editableStoryboard(r) {
+    const rows = (r.storyboards && r.storyboards.length) ? r.storyboards : [{ seq: 1, content: '', need: '', link: '' }];
+    return rows.map((s, i) => `<div class="tc-sb-row" data-sbrow>
+      <input class="sb-seq" value="${esc(s.seq || i + 1)}" placeholder="序号" style="width:42px">
+      <input class="sb-content" value="${esc(s.content || '')}" placeholder="拍摄内容">
+      <input class="sb-need" value="${esc(s.need || '')}" placeholder="拍摄需求">
+      <input class="sb-link" value="${esc(s.link || '')}" placeholder="对标分镜链接">
+      <button type="button" class="tc-sb-del tc-link" title="删除分镜">×</button>
+    </div>`).join('');
+  }
   function centerDetail(r) {
     if (!r) return centerList(requests());
     const p = progressOf(r);
     const linked = r.linkedTaskId ? `<span class="tc-ok">已转排班：${esc(taskNameById(r.linkedTaskId))}</span>` : '<span class="tc-warn">尚未转排班</span>';
     const crew = modelNames();
-    return `<div class="tc-detail"><div class="bar"><button type="button" data-center-tab="pending" class="tc-btn">← 返回</button><span class="spacer"></span>
-      ${r.linkedTaskId ? '' : `<button type="button" id="tcToSchedule" data-req="${esc(r.id)}" class="tc-btn tc-primary">转为工作安排 →</button>`}
+    const cfg = config();
+    return `<form id="tcEditForm" data-req="${esc(r.id)}" class="tc-detail">
+      <div class="bar"><button type="button" data-center-tab="pending" class="tc-btn">← 返回</button><span class="spacer"></span>
+        ${r.linkedTaskId ? `<button type="button" id="tcGoSchedule" data-task="${esc(r.linkedTaskId)}" class="tc-btn">跳转到工作安排 ↗</button>` : `<button type="button" id="tcToSchedule" data-req="${esc(r.id)}" class="tc-btn tc-primary">转为工作安排 →</button>`}
+        <button type="submit" class="tc-btn tc-primary">💾 保存全部修改</button>
       </div>
-      <div class="panel tc-script-card">${scriptHeader(r)}
-        <div class="tc-sh-meta"><span class="tc-status tc-s-${esc(r.status)}">${esc(r.status)}</span>${r.priority === '加急' ? ' <span class="tc-urgent">加急</span>' : ''}
-          <span>交付类型：${esc(r.deliverType || '—')}</span><span>截止：${esc(r.deadline || '—')}</span><span>目标：${p.target} 条</span><span>进度：${p.done}</span>${linked}</div>
-        ${r.brief ? `<p style="white-space:pre-wrap;margin:8px 0"><b>需求说明：</b>${esc(r.brief)}</p>` : ''}
-        ${storyboardTable(r)}
+      <div class="panel tc-script-card">
+        <div class="tc-script-head"><div class="tc-sh-main">
+          <div class="tc-sh-author"><span class="tc-avatar">${esc((r.creator || me()).slice(0, 1))}</span><div><b>${esc(r.creator || me())}</b> / <input name="team" class="tc-inline" value="${esc(r.team || '')}" placeholder="团队"> / <input name="group" class="tc-inline" value="${esc(r.group || '')}" placeholder="运营组"><br><small>发布时间：${esc((r.createdAt || '').replace('T', ' '))}</small></div></div>
+          <div class="tc-sh-tags"><select name="scriptKind" class="tc-inline">${opts(['脚本', '视频', '素材', '成片'], r.scriptKind || '脚本')}</select><input name="category" class="tc-inline" value="${esc(r.category || '')}" placeholder="品类标签"></div>
+          <div class="tc-sh-line">脚本标题 <input name="scriptTitle" class="tc-inline tc-inline-wide" value="${esc(r.scriptTitle || r.title || '')}" placeholder="脚本标题"></div>
+          <div class="tc-sh-line">任务名称 <input name="title" class="tc-inline tc-inline-wide" value="${esc(r.title || '')}" placeholder="任务名称"></div>
+          <div class="tc-sh-line">公共标签 <input name="publicTags" class="tc-inline tc-inline-wide" value="${esc((r.publicTags || []).join('、'))}" placeholder="平台:抖音、平台:小红书"></div>
+          <div class="tc-sh-line">个人标签 <input name="personalTags" class="tc-inline tc-inline-wide" value="${esc((r.personalTags || []).join('、'))}" placeholder="个人标签"></div>
+          <div class="tc-sh-line">原脚本 <input name="originScript" class="tc-inline tc-inline-wide" value="${esc(r.originScript || '')}" placeholder="原脚本"></div>
+        </div><div class="tc-sh-side"><div class="tc-rel-task">🔗 关联任务 <b>${r.linkedTaskId ? 1 : 0}</b></div>${linked}<button type="button" class="tc-fav" title="收藏">☆ 收藏</button><button type="button" class="tc-share" title="分享">↗ 分享</button></div></div>
+        <div class="tc-sh-meta">
+          <label>状态 <select name="status">${opts(STATUS, r.status)}</select></label>
+          <label>优先级 <select name="priority">${opts(PRIORITY, r.priority || '常规')}</select></label>
+          <label>交付类型 <select name="deliverType">${opts(DELIVER, r.deliverType || DELIVER[0])}</select></label>
+          <label>截止 <input type="date" name="deadline" value="${esc(r.deadline || '')}"></label>
+          <label>目标 <input type="number" min="0" name="target" value="${esc(r.target || '')}" style="width:70px"></label>
+          <label>进度 <input type="number" min="0" name="done" value="${p.done}" style="width:70px"></label>
+        </div>
+        <label style="display:block;margin:8px 20px"><b>需求说明</b><textarea name="brief" rows="2" style="width:100%">${esc(r.brief || '')}</textarea></label>
+        <label style="display:block;margin:8px 20px"><b>对标分镜链接（每行一个）</b><textarea name="benchmarks" rows="2" style="width:100%">${esc((r.benchmarks || []).join('\n'))}</textarea></label>
+        ${benchmarkLinks(r)}
+        <div class="tc-sb-headline" style="padding:0 20px"><span class="tc-sb-bar"></span><b>分镜脚本</b><button type="button" id="tcAddSbRow" class="tc-btn" style="margin-left:auto">＋ 添加分镜</button></div>
+        <div id="tcEditStoryboards" style="padding:0 20px">${editableStoryboard(r)}</div>
       </div>
       <div class="panel" style="padding:18px;margin-top:12px"><div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>模特选择</b><span class="tc-muted">（休息自动标注）</span></div>
-        <div class="tc-models">${crew.map(n => { const rest = restInfo(n, r.deadline || today()); return `<label class="tc-model ${rest === '休' ? 'tc-rest' : ''}"><input type="checkbox" value="${esc(n)}" ${(r.models || []).includes(n) ? 'checked' : ''}> ${esc(n)}${rest === '休' ? ' · 休息' : ''}</label>`; }).join('') || '<span class="tc-muted">名册里暂无模特</span>'}</div>
-        <div class="bar"><button type="button" id="tcSaveModels" data-req="${esc(r.id)}" class="tc-btn">保存模特</button></div>
+        <div class="tc-models">${crew.map(n => { const rest = restInfo(n, r.deadline || today()); return `<label class="tc-model ${rest === '休' ? 'tc-rest' : ''}"><input type="checkbox" name="models" value="${esc(n)}" ${(r.models || []).includes(n) ? 'checked' : ''}> ${esc(n)}${rest === '休' ? ' · 休息' : ''}</label>`; }).join('') || '<span class="tc-muted">名册里暂无模特</span>'}</div>
       </div>
-      <div class="panel" style="padding:18px;margin-top:12px"><div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>交付与反馈</b></div>
-        <div class="tc-grid">
-          <label>状态 <select id="tcStatus">${opts(STATUS, r.status)}</select></label>
-          <label>完成条数 <input type="number" min="0" id="tcDone" value="${p.done}"></label>
-        </div>
-        <label style="display:block;margin-top:10px">拍摄问题与建议反馈 <textarea id="tcFeedback" rows="3" placeholder="拍摄中遇到的问题、给运营的建议…">${esc(r.feedback?.text || '')}</textarea></label>
-        <div class="bar"><label><input type="checkbox" id="tcUrgent" style="width:auto" ${r.priority === '加急' ? 'checked' : ''}> 加急交付</label><button type="button" id="tcSaveProgress" data-req="${esc(r.id)}" class="tc-btn tc-primary">保存进度与反馈</button><span role="status"></span></div>
+      <div class="panel" style="padding:18px;margin-top:12px"><div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>拍摄问题与建议反馈</b></div>
+        <textarea name="feedback" rows="3" style="width:100%" placeholder="拍摄中遇到的问题、给运营的建议…">${esc(r.feedback?.text || '')}</textarea>
+        <div class="bar"><label><input type="checkbox" name="asTemplate" style="width:auto"> 存为任务模板</label><label>模板名 <input name="templateName" placeholder="可选" style="max-width:200px"></label></div>
       </div>
       <div class="panel" style="padding:18px;margin-top:12px"><div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>关联记录</b></div>
         ${(r.comments || []).map(c => `<div class="tc-comment"><b>${esc(c.by)}</b> <small>${esc(c.at)}</small><p>${esc(c.text)}</p></div>`).join('') || '<div class="tc-muted">还没有讨论。</div>'}
         <div class="bar"><input id="tcComment" placeholder="补充讨论…" style="max-width:none;flex:1"><button type="button" id="tcAddComment" data-req="${esc(r.id)}" class="tc-btn tc-primary">发送</button></div>
         <ul class="tc-history">${(r.history || []).slice().reverse().map(h => `<li><small>${esc(h.at)}</small> ${esc(h.by)}：${esc(h.text)}</li>`).join('')}</ul>
       </div>
-    </div>`;
+      <div class="bar"><button type="submit" class="tc-btn tc-primary">💾 保存全部修改</button><span role="status"></span></div>
+    </form>`;
   }
 
   /* ---------- 配置视图 ---------- */
   function templatesView() {
     const t = config().templates;
-    return `<div class="panel" style="padding:18px"><h2>任务模板</h2><p class="tc-muted">运营下发时可一键套用，省去重复填写。</p>
-      ${t.map((x, i) => `<div class="tc-cfg-row"><b>${esc(x.name)}</b> · ${esc(x.deliverType || '')} <button type="button" data-del-template="${i}" class="tc-link tc-danger">删除</button></div>`).join('') || '<p class="tc-muted">暂无模板。在新建任务时勾选「存为模板」即可创建。</p>'}</div>`;
+    if (!t.length) return `<div class="panel" style="padding:18px"><h2>任务模板</h2><p class="tc-muted">暂无模板。在任务详情或新建任务时勾选「存为模板」即可创建；创建后可在这里一键套用下发。</p></div>`;
+    return `<div class="panel" style="padding:18px"><h2>任务模板</h2><p class="tc-muted">点「用此模板下发」即可带出模板内容，再改成新任务。</p>
+      <div class="tc-tpl-grid">${t.map((x, i) => `<div class="tc-tpl-card">
+        <div class="tc-tpl-head"><b>${esc(x.name)}</b><span class="tc-tag">${esc(x.deliverType || '任务')}</span></div>
+        <div class="tc-tpl-meta">${esc(x.scriptTitle || x.title || '')}${x.category ? ' · ' + esc(x.category) : ''}${x.target ? ' · 目标 ' + esc(x.target) + ' 条' : ''}</div>
+        ${(x.storyboards || []).length ? `<table class="tc-table tc-storyboard" style="margin:8px 0 0"><thead><tr><th>序号</th><th style="text-align:left">拍摄内容</th><th style="text-align:left">拍摄需求</th><th>对标分镜</th></tr></thead><tbody>${x.storyboards.map(s => `<tr><td>${esc(s.seq || '')}</td><td style="text-align:left">${esc(s.content || '')}</td><td style="text-align:left">${esc(s.need || '')}</td><td>${s.link ? `<a class="tc-linktag" href="${esc(s.link)}" target="_blank" rel="noopener">链接 ↗</a>` : '—'}</td></tr>`).join('')}</tbody></table>` : ''}
+        <div class="bar"><button type="button" data-use-template="${i}" class="tc-btn tc-primary">用此模板下发</button><button type="button" data-del-template="${i}" class="tc-btn tc-danger">删除</button></div>
+      </div>`).join('')}</div></div>`;
   }
   function benchmarksView() {
     const b = config().benchmarks;
@@ -472,6 +507,61 @@
   function bindDetail(root) {
     if (!root) return;
     const q = s => root.querySelector(s);
+    // 可编辑详情：添加/删除分镜行
+    const addSbRow = q('#tcAddSbRow');
+    if (addSbRow) addSbRow.onclick = () => {
+      const box = q('#tcEditStoryboards');
+      const i = box ? box.children.length : 0;
+      box?.insertAdjacentHTML('beforeend', `<div class="tc-sb-row" data-sbrow>
+        <input class="sb-seq" value="${i + 1}" style="width:42px">
+        <input class="sb-content" placeholder="拍摄内容"><input class="sb-need" placeholder="拍摄需求">
+        <input class="sb-link" placeholder="对标分镜链接"><button type="button" class="tc-sb-del tc-link" title="删除分镜">×</button></div>`);
+      bindSbDel(root);
+    };
+    if (root.querySelector('#tcEditStoryboards')) bindSbDel(root);
+    // 可编辑详情：保存全部
+    const editForm = q('#tcEditForm');
+    if (editForm) editForm.onsubmit = e => {
+      e.preventDefault();
+      const list = all(), r = list.find(x => x.id === editForm.dataset.req); if (!r) return;
+      const fd = new FormData(editForm);
+      const val = k => (fd.get(k) ?? '').toString().trim();
+      const split = v => String(v || '').split(/[、,，]/).map(s => s.trim()).filter(Boolean);
+      const storyboards = [...root.querySelectorAll('#tcEditStoryboards [data-sbrow]')].map(row => ({
+        seq: row.querySelector('.sb-seq')?.value || '', content: row.querySelector('.sb-content')?.value || '',
+        need: row.querySelector('.sb-need')?.value || '', link: row.querySelector('.sb-link')?.value || ''
+      })).filter(s => s.content || s.need || s.link);
+      Object.assign(r, {
+        title: val('title') || r.title, scriptTitle: val('scriptTitle'), team: val('team'), group: val('group'),
+        scriptKind: val('scriptKind') || '脚本', category: val('category'), publicTags: split(val('publicTags')),
+        personalTags: split(val('personalTags')), originScript: val('originScript'),
+        status: val('status') || r.status, priority: val('priority') || '常规', deliverType: val('deliverType'),
+        deadline: val('deadline'), target: Number(val('target')) || 0, brief: val('brief'),
+        benchmarks: val('benchmarks').split(/\r?\n/).map(s => s.trim()).filter(Boolean), storyboards,
+        models: fd.getAll('models'), done: Number(val('done')) || 0
+      });
+      const fb = val('feedback');
+      if (fb) r.feedback = { text: fb, by: me(), at: now() };
+      const cfg = config();
+      (r.benchmarks || []).forEach(u => { if (!cfg.benchmarks.includes(u)) cfg.benchmarks.push(u); });
+      if (val('asTemplate') === 'on' && val('templateName')) {
+        cfg.templates.push({ name: val('templateName'), title: r.title, scriptTitle: r.scriptTitle, scriptKind: r.scriptKind, category: r.category, deliverType: r.deliverType, target: r.target, brief: r.brief, benchmarks: r.benchmarks, storyboards });
+      }
+      saveConfig(cfg);
+      // 若已转排班，同步进度到关联任务
+      if (r.linkedTaskId) {
+        const tasks = read(TASKS_KEY, []);
+        const t = tasks.find(x => x.id === r.linkedTaskId);
+        if (t) { t.actual = r.done; t.target = r.target; t.deadline = r.deadline; t.status = r.status; t.priority = r.priority; write(TASKS_KEY, tasks); }
+      }
+      (r.history ??= []).push({ by: me(), at: now(), text: '编辑任务（任务中心）', readBy: [], kind: 'mid' });
+      saveAll(list);
+      const st = editForm.querySelector('[role="status"]'); if (st) st.textContent = '✓ 已保存';
+    };
+    // 跳转工作安排
+    const goSched = q('#tcGoSchedule');
+    if (goSched) goSched.onclick = () => { location.hash = '#/schedule'; };
+    // 转为工作安排（复用 bindDetail 已有的 tcToSchedule 在下方）
     const addComment = q('#tcAddComment');
     if (addComment) addComment.onclick = () => {
       const input = q('#tcComment'), text = (input?.value || '').trim();
@@ -584,6 +674,23 @@
 
   function bindMisc(main) {
     const qa = s => [...main.querySelectorAll(s)];
+    // 用模板下发：以模板内容新建一个任务并打开编辑
+    qa('[data-use-template]').forEach(b => b.onclick = () => {
+      const t = config().templates[Number(b.dataset.useTemplate)]; if (!t) return;
+      const list = all();
+      const r = {
+        id: uid(), creator: me(), createdAt: now(), status: '待处理', done: 0, history: [], comments: [],
+        title: (t.title || t.name || '模板任务'), scriptTitle: t.scriptTitle || '', scriptKind: t.scriptKind || '脚本',
+        team: settings().leader || '', group: isOps() ? myGroup() : '', category: t.category || '',
+        deliverType: t.deliverType || DELIVER[0], target: t.target || 0, brief: t.brief || '',
+        benchmarks: t.benchmarks || [], storyboards: (t.storyboards || []).map(s => ({ ...s })), models: [], publicTags: [], personalTags: [], originScript: ''
+      };
+      (r.history ??= []).push({ by: me(), at: now(), text: '由模板「' + (t.name || '任务') + '」创建', readBy: [] });
+      list.push(r); saveAll(list);
+      if (isOps()) { opsTab = 'detail'; opsDetailId = r.id; }
+      else { centerTab = 'detail'; centerDetailId = r.id; }
+      render(document.querySelector('#main'));
+    });
     qa('[data-copy-req]').forEach(b => b.onclick = () => {
       const r = requests().find(x => x.id === b.dataset.copyReq); if (!r) return;
       opsTab = 'new';
