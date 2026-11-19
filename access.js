@@ -208,7 +208,7 @@
     btn.id = 'ai-assistant-btn';
     btn.innerHTML = '✨ 中台小秘书';
     btn.setAttribute('aria-label', '打开中台小秘书');
-    btn.style.cssText = 'position:fixed;right:18px;top:64px;z-index:8500;padding:13px 20px;border:2px solid #fff8;border-radius:26px;background:linear-gradient(135deg,#a76bf0,#e05fa8,#5c98f4);background-size:200% auto;color:#fff;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 30px #000c,0 0 22px #c56bff66;letter-spacing:.02em;animation:secGlow 3s linear infinite';
+    btn.style.cssText = 'position:fixed;right:18px;top:108px;z-index:8500;padding:13px 20px;border:2px solid #fff8;border-radius:26px;background:linear-gradient(135deg,#a76bf0,#e05fa8,#5c98f4);background-size:200% auto;color:#fff;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 8px 30px #000c,0 0 22px #c56bff66;letter-spacing:.02em;animation:secGlow 3s linear infinite';
     var st = document.createElement('style');
     st.textContent = '@keyframes secGlow{0%{background-position:0% center}100%{background-position:200% center}}';
     document.head.appendChild(st);
@@ -226,7 +226,7 @@
       '<div class="ai-input-row"><label class="ai-upload" title="添加产品图／参考图">＋<input id="ai-file" type="file" accept="image/*" hidden></label><input id="ai-q" placeholder="问我点什么…"><button id="ai-send">发送</button></div>';
     var style = document.createElement('style');
     style.textContent =
-      '#ai-box{position:fixed;right:18px;top:112px;z-index:8001;width:min(420px,calc(100vw - 36px));height:min(580px,calc(100vh - 140px));background:#15131c;border:1px solid #5a456e;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 60px #000c,0 0 30px #a76bf033}' +
+      '#ai-box{position:fixed;right:18px;top:158px;z-index:8001;width:min(420px,calc(100vw - 36px));height:min(580px,calc(100vh - 140px));background:#15131c;border:1px solid #5a456e;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 16px 60px #000c,0 0 30px #a76bf033}' +
       '.ai-head{padding:12px 16px;background:linear-gradient(135deg,#3a2450,#242044);color:#f3eaff;font-weight:800}' +
       '.ai-tabs{display:flex;border-bottom:1px solid #3a3348;background:#1b1826}' +
       '.ai-tab{flex:1;padding:10px 4px;background:none;border:0;color:#9b8fb0;font-size:12px;cursor:pointer;border-bottom:2px solid transparent}' +
