@@ -304,6 +304,13 @@ main:not(.home-page) h1 {
 .rref-item { padding:6px 0; border-bottom:1px solid #ffffff12; }
 .rref-meta { font-size:11px; color:#c9b3f5; margin-bottom:3px; }
 .rref-text { font-size:12px; color:#cdd8e8; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.5; }
+.rref-line { display:flex; gap:6px; align-items:flex-start; margin-top:4px; font-size:11px; line-height:1.5; }
+.rref-line em { flex:none; font-style:normal; color:#8fb6e8; background:#1c365a; padding:1px 6px; border-radius:4px; white-space:nowrap; }
+.rref-line span { color:#f0b429; overflow-wrap:anywhere; }
+.rref-links { margin-top:5px; display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+.rref-links > span { font-size:11px; color:#8fb6e8; background:#1c365a; padding:1px 6px; border-radius:4px; }
+.rref-links .reference-links { display:inline-flex; flex-wrap:wrap; gap:5px; }
+.rref-links .reference-jump { font-size:11px; padding:2px 7px; }
 .rref-copy { margin-top:4px; padding:2px 9px; border:1px solid #6d7fa5; background:transparent; color:#bcd0f5; border-radius:6px; cursor:pointer; font-size:11px; }
 .rref-copy:hover { background:#6d7fa533; }
 .rref-tip { margin:6px 0 0; color:#7d8ba8; font-size:10px; line-height:1.4; }
@@ -546,15 +553,27 @@ function recentNotesRef(task){
  if(!leads.length)return '';
  const d=new Date(task.date+'T00:00:00');
  if(isNaN(d.getTime()))return '';
- const targets=[1,2].map(n=>{const x=new Date(d);x.setDate(x.getDate()-n);return x.toISOString().slice(0,10)});
- const refs=tasks.filter(t=>t.id!==task.id&&targets.includes(t.date)&&members(t.lead).some(n=>leads.includes(n))&&(t.notes||'').trim())
+ // 今日 / 昨日 / 前天（相对本任务日期）
+ const targets=[0,1,2].map(n=>{const x=new Date(d);x.setDate(x.getDate()-n);return x.toISOString().slice(0,10)});
+ const labelOf=day=>day===targets[0]?'今日':day===targets[1]?'昨日':'前天';
+ const hasContent=t=>(t.notes||'').trim()||(Array.isArray(t.dailyBreakdown)&&t.dailyBreakdown.length)||(t.unfinishedReason||'').trim()||(t.link||'').trim();
+ const refs=tasks.filter(t=>t.id!==task.id&&targets.includes(t.date)&&members(t.lead).some(n=>leads.includes(n))&&hasContent(t))
   .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
  if(!refs.length)return '';
  const body=refs.map(t=>{
-  const day=t.date, who=members(t.lead).join('、');
-  return '<div class="rref-item"><div class="rref-meta"><b>'+esc(day)+'</b> · '+esc(who)+(t.product?' · '+esc(t.product):'')+'</div><div class="rref-text">'+esc((t.notes||'').trim())+'</div><button type="button" class="rref-copy" data-copy-notes="'+esc(t.id)+'">复制这段</button></div>';
+  const day=t.date,who=members(t.lead).join('、');
+  const notesTxt=(t.notes||'').trim();
+  // 当天填报的拍摄说明：当日拍摄明细 + 备注
+  const bd=Array.isArray(t.dailyBreakdown)?t.dailyBreakdown.filter(b=>b&&((b.category||'').trim()||(b.type||'').trim()||b.count!=='')).map(b=>(b.urgent?'⚡':'')+[(b.category||'').trim(),(b.type||'').trim()].filter(Boolean).join('·')+' '+count(Number(b.count)||0)+'条'+(b.urgent?'（加急）':'')).join('、'):'';
+  const unr=(t.unfinishedReason||'').trim();
+  const explain=(bd?'<div class="rref-line"><em>拍摄说明</em><span>'+esc(bd)+'</span></div>':'')+(unr?'<div class="rref-line"><em>备注</em><span>'+esc(unr)+'</span></div>':'');
+  const links=referenceLinks(t,true);
+  return '<div class="rref-item"><div class="rref-meta"><b>'+labelOf(day)+' · '+esc(day)+'</b> · '+esc(who)+(t.product?' · '+esc(t.product):'')+'</div>'+
+   (notesTxt?'<div class="rref-text">'+esc(notesTxt)+'</div>':'')+explain+
+   (links?'<div class="rref-links"><span>对标链接</span>'+links+'</div>':'')+
+   '<button type="button" class="rref-copy" data-copy-notes="'+esc(t.id)+'">复制这段</button></div>';
  }).join('');
- return '<details class="rref"><summary>📋 参考前两天运营要求 <span class="rref-count">'+refs.length+' 条</span></summary><div class="rref-body">'+body+'<p class="rref-tip">点「复制这段」可粘贴到上方运营要求里，相似需求改一改就能用。</p></div></details>';
+ return '<details class="rref"><summary>📋 今日/昨日/前天的拍摄任务需求 <span class="rref-count">'+refs.length+' 条</span></summary><div class="rref-body">'+body+'<p class="rref-tip">拍摄说明、备注与对标链接供参考；点「复制这段」可把运营要求粘贴到上方，相似需求改一改就能用。</p></div></details>';
 }
 function notesEditor(task,formId){
  const marks=typeof task.noteMarks==='string'?readNoteMarks(task.noteMarks):task.noteMarks||{};
@@ -1016,7 +1035,7 @@ function schedule(){
     refresh();
    };
   });
-  // 参考前两天运营要求：复制该段文字到剪贴板
+  // 参考今日/昨日/前天拍摄任务：复制该段文字到剪贴板
   editor.querySelectorAll('[data-copy-notes]').forEach(button=>{
    button.onclick=()=>{
     const src=tasks.find(t=>t.id===button.dataset.copyNotes);
