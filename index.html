@@ -2081,8 +2081,20 @@ function managementView(period,outputRows,[from,to],daily){
   if(!items.length)return '';
   return '<details class="metric-notes" open><summary>📝 备注／说明 <span>'+items.length+' 项</span></summary><ul class="overview-reasons">'+items.join('')+'</ul></details>';
  };
+ // 未完成任务：按工单/产品关联，查后续日期是否已交付（最终完成了，只是当天未完成）
+ const laterDeliveryDate=t=>{
+  if(!t||!t.date)return '';
+  const name=(t.product||t.title||'').trim();
+  const later=tasks.filter(x=>x.id!==t.id&&x.date>t.date)
+   .filter(x=>(t.requestId&&x.requestId===t.requestId)||(name&&(x.product||x.title||'').trim()===name))
+   .filter(x=>x.delivery||statuses.slice(3).includes(x.status));
+  const dates=later.map(x=>(x.delivery||'').slice(0,10)||x.date).filter(Boolean).sort();
+  return dates.length?dates[0]:(t.delivery?(t.delivery||'').slice(0,10):'');
+ };
  const incompleteDetail=incompleteTasks.length?'<ul class="overview-reasons">'+incompleteTasks.map(t=>{
   const lines=reasonLinesOf(t);
+  const later=laterDeliveryDate(t);
+  if(later)lines.push({who:'后续交付',text:later+' 已交付（最终完成，当天未完成）'});
   const body=lines.length
    ? lines.map(l=>'<div class="ov-reason-line"><em>'+esc(l.who)+'</em><span>'+esc(l.text)+'</span></div>').join('')
    : '<button type="button" class="reason-jump" data-jump-reason="'+esc(t.id)+'">未填写原因 · 点击填写</button>';
