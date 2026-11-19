@@ -545,10 +545,10 @@ function recentNotesRef(task){
  if(!task||!task.date)return '';
  const leads=members(task.lead).filter(Boolean);
  if(!leads.length)return '';
- const d=new Date(task.date+'T00:00:00');
+ const d=new Date(task.date+'T00:00:00Z');
  if(isNaN(d.getTime()))return '';
- // 今日 / 昨日 / 前天（相对本任务日期）
- const targets=[0,1,2].map(n=>{const x=new Date(d);x.setDate(x.getDate()-n);return x.toISOString().slice(0,10)});
+ // 今日 / 昨日 / 前天（相对本任务日期，UTC 避免时区差一天）
+ const targets=[0,1,2].map(n=>{const x=new Date(d.getTime());x.setUTCDate(x.getUTCDate()-n);return x.toISOString().slice(0,10)});
  const labelOf=day=>day===targets[0]?'今日':day===targets[1]?'昨日':'前天';
  const hasContent=t=>(t.notes||'').trim()||(Array.isArray(t.dailyBreakdown)&&t.dailyBreakdown.length)||(t.unfinishedReason||'').trim()||(t.link||'').trim();
  const refs=tasks.filter(t=>t.id!==task.id&&targets.includes(t.date)&&members(t.lead).some(n=>leads.includes(n))&&hasContent(t))
@@ -753,7 +753,23 @@ function updateMultiSummary(input){
  value.textContent=selected.join('、')||picker.dataset.placeholder;
  value.dataset.empty=String(!selected.length);
 }
-function assignmentHint(name,date,id){return tasks.filter(t=>t.date===date&&t.id!==id&&participates(t,name)).map(t=>'已安排：'+(t.lead||'摄影师待定')+' · '+(t.product||t.title||'任务')).join('；')}
+function assignmentHint(name,date,id){
+ if(!date)return '';
+ const shift=(d,n)=>{const x=new Date(d+'T00:00:00Z');x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10)};
+ const yest=shift(date,-1),before=shift(date,-2);
+ // 某人某天搭配的摄影师（去重）
+ const leadsOn=d=>[...new Set(tasks.filter(t=>t.date===d&&t.id!==id&&participates(t,name)).map(t=>members(t.lead).join('、')||'摄影师待定'))];
+ const today=leadsOn(date),y1=leadsOn(yest),y2=leadsOn(before);
+ const parts=[];
+ if(today.length)parts.push('今:'+today.join('、'));
+ if(y1.length)parts.push('昨:'+y1.join('、'));
+ // 连续两天/三天同一摄影师，轻提醒
+ const repeat=y1.filter(x=>today.includes(x));
+ const repeat3=y2.filter(x=>y1.includes(x)&&today.includes(x));
+ if(repeat3.length)parts.push('⚠连3天');
+ else if(repeat.length)parts.push('⚠连2天');
+ return parts.join('  ');
+}
 function staffingSummary(date){
  if(!date)return '';
  const off=readRest(),available=restStaff.filter(p=>!resting(off,date,p.name));
