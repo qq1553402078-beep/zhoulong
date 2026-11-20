@@ -1,5 +1,5 @@
 /* 中台拍摄工作台 PWA Service Worker */
-const CACHE = 'zhoulong-pwa-v9';
+const CACHE = 'zhoulong-pwa-v10';
 const PRECACHE = [
   './',
   './index.html',
@@ -14,7 +14,7 @@ const PRECACHE = [
   './product-straight.webp',
   './studio-ai-triptych.webp',
   './studio-art-backdrop.webp',
-  './cover-bg.webm',
+  './cover-bg.mp4',
   './cover-poster.jpg'
 ];
 
