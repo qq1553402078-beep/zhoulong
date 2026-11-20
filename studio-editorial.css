@@ -148,3 +148,6 @@ body:has(.studio-cover) header{background:#000!important}
 /* 恢复首次放视频时的首屏高度（右侧字标撑起的约374px） */
 .studio-cover{min-height:374px!important}
 @media(max-width:760px){.studio-cover{min-height:0!important}}
+/* 首屏视频满屏（仿影视飓风：铺满视口宽高） */
+.studio-cover{width:100vw!important;max-width:none!important;margin-left:calc(50% - 50vw)!important;margin-right:calc(50% - 50vw)!important;height:100vh!important;min-height:100vh!important;border-radius:0!important;margin-bottom:24px!important}
+.studio-cover .cover-video{height:100%!important}
