@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='10';
+ var V='11';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -2133,7 +2133,7 @@ function managementView(period,outputRows,[from,to],daily){
    const lines=reasonLinesOf(t);
    const bd=Array.isArray(t.dailyBreakdown)?t.dailyBreakdown.filter(b=>b&&((b.category||'').trim()||(b.type||'').trim()||b.count!=='')).map(b=>(b.urgent?'⚡':'')+[(b.category||'').trim(),(b.type||'').trim()].filter(Boolean).join('·')+' '+count(Number(b.count)||0)+'条'+(b.urgent?'（加急）':'')).join('、'):'';
    if(bd)lines.push({who:'当日明细',text:bd});
-   if(lines.length)items.push('<li><strong>'+esc(t.product||t.title||'未命名项目')+'</strong><span>'+lines.map(l=>'<span class="ov-reason-line"><em>'+esc(l.who)+'</em><span>'+esc(l.text)+'</span></span>').join('')+'</span></li>');
+   if(lines.length)items.push('<li><strong>'+esc(t.product||t.title||'未命名项目')+(members(t.lead).length?' <small style="font-weight:400;color:#9fc4f0">· '+esc(members(t.lead).join('、'))+'</small>':'')+'</strong><span>'+lines.map(l=>'<span class="ov-reason-line"><em>'+esc(l.who)+'</em><span>'+esc(l.text)+'</span></span>').join('')+'</span></li>');
   });
   if(!items.length)return '';
   return '<details class="metric-notes" open><summary>📝 备注／说明 <span>'+items.length+' 项</span></summary><ul class="overview-reasons">'+items.join('')+'</ul></details>';
@@ -2155,7 +2155,7 @@ function managementView(period,outputRows,[from,to],daily){
   const body=lines.length
    ? lines.map(l=>'<div class="ov-reason-line"><em>'+esc(l.who)+'</em><span>'+esc(l.text)+'</span></div>').join('')
    : '<button type="button" class="reason-jump" data-jump-reason="'+esc(t.id)+'">未填写原因 · 点击填写</button>';
-  return '<li><strong>'+esc(t.product||t.title||'未命名项目')+'</strong><span>'+body+'</span></li>';
+  return '<li><strong>'+esc(t.product||t.title||'未命名项目')+(members(t.lead).length?' <small style="font-weight:400;color:#9fc4f0">· '+esc(members(t.lead).join('、'))+'</small>':'')+'</strong><span>'+body+'</span></li>';
  }).join('')+'</ul>':'<p>全部项目均已完成</p>';
  const focusRings=progressMetric('拍摄完成度',captured.length,periodTasks.length,
   '拍摄中 '+periodTasks.filter(t=>t.status==='拍摄中'&&!captured.includes(t)).length+' 项 · 待拍 '+periodTasks.filter(t=>!captured.includes(t)&&t.status!=='拍摄中').length+' 项','blue')+
