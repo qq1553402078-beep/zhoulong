@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='11';
+ var V='12';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -940,10 +940,10 @@ function home(){
   const v=main.querySelector('.cover-video');
   const photo=main.querySelector('.cover-photo');
   if(!cover)return;
-  // 手机端：不加载视频（省流量防卡），用静态封面图+文字，跳过片头动画
+  // 手机端：不加载视频（省流量防卡），恢复最初「左文案 + 右静态图」两栏布局
   if(matchMedia('(max-width:760px)').matches){
    if(v){v.querySelectorAll('source').forEach(s=>s.remove());v.removeAttribute('src');v.load();}
-   if(photo)photo.style.display='none';
+   if(photo)photo.style.visibility='visible';
    cover.classList.remove('art-in');
    return;
   }

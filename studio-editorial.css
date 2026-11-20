@@ -184,3 +184,20 @@ body:has(.studio-cover) header{background:#000!important}
 @media(min-width:761px){
  .studio-cover .cover-shade{background:linear-gradient(90deg,rgba(6,8,7,.82) 0%,rgba(6,8,7,.42) 11%,rgba(6,8,7,.1) 22%,transparent 34%)!important}
 }
+/* 手机端：恢复最初「左文案 + 右無限進步图」两栏（原静态版本） */
+@media(max-width:760px){
+ .studio-cover{display:grid!important;grid-template-columns:1.15fr .85fr!important;gap:8px;background:#0b0b0b!important;min-height:0!important;height:auto!important;padding:14px 12px!important;border-radius:12px!important}
+ .studio-cover:not(.art-in){background:#0b0b0b!important}
+ .studio-cover .cover-video{display:none!important}
+ .studio-cover .cover-heading{display:block!important;opacity:1!important;pointer-events:auto!important;position:relative!important}
+ .studio-cover .cover-shade{display:none!important}
+ .studio-cover .cover-text{padding:4px 0!important}
+ .studio-cover .cover-title-text{font-size:clamp(20px,6vw,30px)!important;margin:8px 0 10px!important}
+ .studio-cover .cover-text p{font-size:11px!important;line-height:1.7!important;margin-bottom:14px!important}
+ .studio-cover .cover-actions{gap:6px!important}
+ .studio-cover .cover-actions button{font-size:10px!important;padding:8px 9px!important}
+ .studio-cover .cover-foot{display:none!important}
+ .studio-cover .cover-art{display:none!important}
+ .studio-cover .cover-photo{position:relative!important;inset:auto!important;display:flex!important;align-items:center!important;justify-content:center!important;visibility:visible!important;width:100%!important;aspect-ratio:1/1!important;background:transparent!important}
+ .studio-cover .cover-photo img{position:static!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:contain!important;opacity:1!important}
+}
