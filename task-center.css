@@ -173,13 +173,15 @@ a.tc-bench-jump:hover,a.bench-jump:hover{transform:translateY(-1px);box-shadow:0
 .tc-sh-line b{color:#3d2b63}
 /* 运营人员与项目组：两级布局 */
 .tc-og-layout{display:grid;grid-template-columns:minmax(200px,280px) minmax(0,1fr);gap:16px;margin-top:12px}
-.tc-og-side,.tc-og-main{border:1px solid #e2dcef;border-radius:10px;padding:12px;background:#faf8ff}
-.tc-og-title{font-weight:750;color:#3d2b63;margin-bottom:10px;font-size:14px}
+.tc-og-side,.tc-og-main{border:1px solid #e2dcef;border-radius:10px;padding:12px;background:#faf8ff;color-scheme:light}
+.tc-og-main .tc-muted,.tc-og-side .tc-muted{color:#5a4f70;font-weight:600}
+.tc-og-title{font-weight:750;color:#2b2340;margin-bottom:10px;font-size:15px}
 .tc-og-list{display:grid;gap:5px;max-height:360px;overflow:auto}
-.tc-og-item{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px;border:1px solid #e2dcef;border-radius:8px;background:#fff;cursor:pointer;color:#4a3c66}
+.tc-og-item{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px;border:1px solid #e2dcef;border-radius:8px;background:#ffffff;cursor:pointer;color:#1f1633;font-size:14px;color-scheme:light}
 .tc-og-item:hover{border-color:#b9a6e6}
-.tc-og-item.active{border-color:#8a6fd4;background:#f0eaff;color:#5b3fb0;font-weight:700}
-.tc-og-item small{color:#9587ad;font-weight:400}
+.tc-og-item.active{border-color:#5b3fb0;background:#5b3fb0;color:#ffffff;font-weight:700}
+.tc-og-item.active small{color:#e6dcff}
+.tc-og-item small{color:#6a5b86;font-weight:400}
 .tc-og-del{border:0;background:transparent;color:#a99bc0;cursor:pointer;font-size:15px;line-height:1;padding:0 3px}
 .tc-og-del:hover{color:#c0392b}
 .tc-og-add{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}

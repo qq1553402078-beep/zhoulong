@@ -498,7 +498,7 @@
       <td style="text-align:left">${esc(roles[n] || '运营')}</td>
       <td><button type="button" class="tc-link" data-om-edit="${esc(n)}">编辑</button> <button type="button" class="tc-link tc-danger" data-om-del="${esc(n)}">删除</button></td>
     </tr>`).join('') : '<tr><td colspan="3" class="tc-muted">这个组还没有成员，在下面添加。</td></tr>';
-    return `<div class="panel" style="padding:18px"><h2>运营人员与项目组</h2>
+    return `<div class="panel" style="padding:18px;color-scheme:light"><h2>运营人员与项目组</h2>
       <p class="tc-muted">左侧先建项目组，点选组后在右侧添加成员和角色。登记后该姓名登录即进入「运营视角」，只能看到本组任务。</p>
       <div class="tc-og-layout">
         <div class="tc-og-side">
