@@ -643,6 +643,13 @@ function bindAcceptanceButtons(){
 const sum=(rows,field)=>rows.reduce((n,t)=>n+Number(t[field]||0),0);
 const count=n=>Number(n).toLocaleString('zh-CN',{maximumFractionDigits:2});
 const card=(name,v)=>'<div class="card">'+name+'<b>'+v+'</b></div>';
+// 当日拍摄明细合计（含加急/加拍行）——单独加拍的条数也要计入人效
+const breakdownSumOf=task=>Array.isArray(task?.dailyBreakdown)?task.dailyBreakdown.reduce((s,b)=>s+(Number(b&&b.count)||0),0):0;
+// 普通组单任务个人产出：手填当日拍摄量 + 当日拍摄明细全部条数（加拍累计到人效）
+const taskShotOf=task=>{
+ const manual=task?.dailyShotCount!=null&&task.dailyShotCount!==''?Number(task.dailyShotCount):Number(task?.actual||0);
+ return (Number.isFinite(manual)?manual:0)+breakdownSumOf(task);
+};
 const newId=()=>globalThis.crypto?.randomUUID?.()||Date.now()+'-'+Math.random();
 const statuses=['待拍摄','拍摄中','后期中','已交付','已验收'];
 const defaultInnovationDeliverables=['脚本拆解','AI素材／生成','完整视频','拍摄方案','创新剪辑','其他创新交付','找创新框架'];
@@ -1695,7 +1702,8 @@ function people(){
      const own=Object.values(t.memberShotCounts[name]).reduce((a,b)=>a+(Number(b)||0),0);
      if(own>0)return own;
     }
-    return t.dailyShotCount!=null&&t.dailyShotCount!==''?t.dailyShotCount:t.actual;
+    // 普通组：手填当日拍摄量 + 当日拍摄明细（含加拍）全部计入个人产出
+    return taskShotOf(t);
    })
    .filter(value=>value!=null&&value!=='');
   return recorded.length||dayTotals.length?recorded.reduce((total,value)=>total+Number(value),0)+dayTotals.reduce((total,[,values])=>total+Number(values[name]),0):'—';
@@ -2049,7 +2057,7 @@ function managementView(period,outputRows,[from,to],daily){
  const monthTasks=tasks.filter(t=>t.date.startsWith(period));
  const periodTasks=tasks.filter(t=>t.date>=from&&t.date<=to);
  const recorded=t=>t.actual!=null&&t.actual!=='';
- const shotOf=t=>t.dailyShotCount!=null&&t.dailyShotCount!==''?Number(t.dailyShotCount):Number(t.actual||0);
+ const shotOf=t=>taskShotOf(t);
  const recordedShot=t=>(t.dailyShotCount!=null&&t.dailyShotCount!=='')||(t.actual!=null&&t.actual!=='');
  const teamRows=[['拍摄组',monthTasks.filter(t=>roleNames.lead.includes(members(t.lead)[0])&&!roster['创新组'].includes(members(t.lead)[0]))]];
  const innovationTasks=monthTasks.filter(isInnovationTask);
@@ -2436,17 +2444,29 @@ function dailyTaskReports(assignments){
  const removableDeliverables=innovationDeliverables.filter(name=>!defaultInnovationDeliverables.includes(name));
  const removableShotTypes=innovationShotTypes.filter(name=>!defaultInnovationShotTypes.includes(name));
  const removable=(items,attribute,empty)=>items.length?'<div class="managed-option-list">'+items.map(name=>'<span>'+esc(name)+'<button type="button" '+attribute+'="'+esc(name)+'" aria-label="删除 '+esc(name)+'">删除</button></span>').join('')+'</div>':'<small>'+empty+'</small>';
+ // 品类/拍摄类型选项：所有人填过的都汇总（tasks 团队同步→全员共享同一套）
+ const sharedProducts=new Set(Array.isArray(settings.products)?settings.products:[]);
+ const sharedTypes=new Set([...(Array.isArray(settings.types)?settings.types:[]),...(Array.isArray(settings.products)?settings.products:[])]);
+ tasks.forEach(t=>{
+  if(t.product&&String(t.product).trim())sharedProducts.add(String(t.product).trim());
+  if(t.type&&String(t.type).trim())sharedTypes.add(String(t.type).trim());
+  (Array.isArray(t.dailyBreakdown)?t.dailyBreakdown:[]).forEach(b=>{
+   if(b&&(b.category||'').trim())sharedProducts.add(b.category.trim());
+   if(b&&(b.type||'').trim())sharedTypes.add(b.type.trim());
+  });
+ });
+ const sharedDataLists='<datalist id="bdProductOpts">'+[...sharedProducts].map(t=>'<option value="'+esc(t)+'">').join('')+'</datalist><datalist id="bdTypeOpts">'+[...sharedTypes].map(t=>'<option value="'+esc(t)+'">').join('')+'</datalist>';
  return '<div class="report-meta daily-task-reports"><h3>当天任务填报</h3><details class="daily-option-fold"><summary>⚙ 分类 / 类型设置 <small>新增或删除填报分类、交付类型、条数类型</small></summary><div class="daily-option-managers"><form id="dailyGroupEditor" class="daily-group-editor"><label>新增填报分类<input name="group" maxlength="30" placeholder="例如：后期剪辑"></label><button type="submit">添加分类</button>'+removable(removableGroups,'data-remove-daily-group','暂无可删除的自定义填报分类。')+'</form><form id="innovationDeliverableEditor" class="daily-group-editor"><label>新增创新交付类型<input name="deliverable" maxlength="30" placeholder="例如：AI分镜"></label><button type="submit">添加类型</button>'+removable(removableDeliverables,'data-remove-innovation-deliverable','暂无可删除的自定义创新交付类型。')+'</form><form id="innovationShotTypeEditor" class="daily-group-editor"><label>新增条数类型<input name="shotType" maxlength="30" placeholder="例如：广告成片"></label><button type="submit">添加</button>'+removable(removableShotTypes,'data-remove-innovation-shot-type','暂无可删除的自定义条数类型。')+'</form></div></details>'+ 
- '<p>每个任务由主拍填一次，同组成员查看同一份记录。累计拍摄量已包含当日拍摄量。</p>'+ 
+ sharedDataLists+'<p>每个任务由主拍填一次，同组成员查看同一份记录。累计拍摄量已包含当日拍摄量。</p>'+ 
  (assignments.length?classified.map(([group,items])=>{
   const groupCls=group==='拍摄组'?'shooting':group==='创新组'?'innovation':'custom';
   const groupIcon=group==='创新组'?'✨':group==='拍摄组'?'📷':'📋';
   const groupStyle=group==='创新组'?'background:linear-gradient(90deg,#4a2d78,#2d1f52);border-left:4px solid #b06bff;color:#f0e2ff;padding:10px 14px;border-radius:10px;font-size:16px;box-shadow:0 4px 18px #a76bf033':'';
   return '<section class="daily-task-group daily-task-group--'+groupCls+'"><h4 style="'+groupStyle+'">'+groupIcon+' '+esc(group)+(group==='创新组'?' · 创新交付':'')+' <span style="opacity:.8;font-size:13px">'+items.length+' 项</span></h4>'+items.map(task=>{
   const innovation=isInnovationTask(task);
-  // 当日拍摄明细：一天里同一任务可能拍多种类型（含临时加急），逐行登记，合计=当日拍摄量
-  const shotTypeOptions=[...new Set([...(Array.isArray(settings.types)?settings.types:[]),...(Array.isArray(settings.products)?settings.products:[])])];
-  const productOptions=Array.isArray(settings.products)?settings.products:[];
+  // 当日拍摄明细：选项用全员汇总的共享集合（见上方 sharedDataLists）
+  const shotTypeOptions=[...sharedTypes];
+  const productOptions=[...sharedProducts];
   const breakdownRow=(b)=>'<div class="bd-row"><input class="bd-category" list="bdProductOpts" value="'+esc(b&&b.category||'')+'" placeholder="品类（如 秘与洗液）"><input class="bd-type" list="bdTypeOpts" value="'+esc(b&&b.type||'')+'" placeholder="拍摄类型（如 口播 / 除臭贴痛点展示）"><input class="bd-count" type="number" min="0" step="1" value="'+esc(b&&b.count!=null?b.count:'')+'" placeholder="条数"><label class="bd-urgent"><input type="checkbox"'+(b&&b.urgent?' checked':'')+'>加急</label><button type="button" class="bd-del" title="删除此行">×</button></div>';
   const bdList=Array.isArray(task.dailyBreakdown)?task.dailyBreakdown:[];
   const bdSum=bdList.reduce((s,b)=>s+(Number(b&&b.count)||0),0);
@@ -2469,7 +2489,7 @@ function dailyTaskReports(assignments){
   const statusText=task.status||'待拍摄';
   const normalFields='<label>任务下发量（条）<input type="number" min="1" step="1" name="target" value="'+esc(task.target)+'"></label><label>累计拍摄量（条）<input type="number" min="0" step="1" name="cumulative" value="'+esc(task.actual)+'" placeholder="可直接修正累计量"></label><label>当日拍摄量（条）<input type="number" min="0" step="1" name="shotBatch" value="'+esc(task.dailyShotCount)+'" placeholder="填写当天拍摄总数（手动）"></label>';
   // 当日拍摄明细区（仅普通组）：逐行登记各类型条数，合计仅作参考，当日拍摄量手动填
-  const breakdownFields='<details class="daily-breakdown"><summary class="bd-summary"><span class="bd-caret">▸</span><strong>当日拍摄明细</strong><span class="bd-head-note">'+bdHeadNote+'</span><b data-bd-total>'+(bdSum>0?('明细共 '+bdSum+' 条'+(bdUrgentSum>0?'（含加急 '+bdUrgentSum+' 条）':'')+' · 正常 '+bdNet+' 条（参考）'):'')+'</b></summary><div class="bd-body"><datalist id="bdProductOpts">'+productOptions.map(t=>'<option value="'+esc(t)+'">').join('')+'</datalist><datalist id="bdTypeOpts">'+shotTypeOptions.map(t=>'<option value="'+esc(t)+'">').join('')+'</datalist><div class="bd-rows">'+(bdList.length?bdList.map(breakdownRow).join(''):breakdownRow({}))+'</div><button type="button" class="bd-add">＋ 添加一种类型</button><p class="bd-tip">这里逐行登记当天拍了什么（品类·类型·条数），勾「加急」的临时素材会单独标注。<b>上面的「当日拍摄量」请手动填写</b>，这里只作参考核对。</p></div></details>';
+  const breakdownFields='<details class="daily-breakdown"><summary class="bd-summary"><span class="bd-caret">▸</span><strong>当日拍摄明细</strong><span class="bd-head-note">'+bdHeadNote+'</span><b data-bd-total>'+(bdSum>0?('明细共 '+bdSum+' 条'+(bdUrgentSum>0?'（含加急 '+bdUrgentSum+' 条）':'')+' · 正常 '+bdNet+' 条（参考）'):'')+'</b></summary><div class="bd-body"><div class="bd-rows">'+(bdList.length?bdList.map(breakdownRow).join(''):breakdownRow({}))+'</div><button type="button" class="bd-add">＋ 添加一种类型</button><p class="bd-tip">这里逐行登记当天拍了什么（品类·类型·条数），勾「加急」的临时素材会单独标注。<b>上面的「当日拍摄量」请手动填写</b>，这里只作参考核对。</p></div></details>';
   // 创新组：协作成员。必须是数组：无创新组成员时退回 lead 成员列表，再退回空数组（字符串会导致 .map 报错中断渲染）
   const shotCrew=members(task.lead).filter(n=>roster['创新组']?.includes(n));
   const reportCrew=shotCrew.length?shotCrew:(members(task.lead).length?members(task.lead):[]);
