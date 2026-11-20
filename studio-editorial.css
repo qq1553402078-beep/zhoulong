@@ -121,7 +121,8 @@ body{background:#111112!important;background-image:linear-gradient(#111112aa,#11
 
 /* Keep the homepage masthead and its original wordmark on the same black. */
 body:has(.studio-cover){background:#000!important}
-.studio-cover{background:#000!important}
+.studio-cover{background:#0b0b0b url('./cover-poster.jpg') center/cover no-repeat!important}
+.studio-cover.art-in{background:#000!important}
 body:has(.studio-cover) header{background:#000!important}
 
 /* Match the cover copy to the monochrome wordmark. */
@@ -134,9 +135,13 @@ body:has(.studio-cover) header{background:#000!important}
 .studio-cover #openPeople{border:1px solid #444;color:#eee;background:transparent}
 .studio-cover #openPeople:hover{border-color:#aaa}
 
-/* 首页片头：無限進步字标居中渐显 */
-.studio-cover .cover-photo{position:absolute!important;inset:0;display:flex;align-items:center;justify-content:center;background:transparent!important;border:0!important;box-shadow:none!important;aspect-ratio:auto!important;overflow:visible;z-index:2;pointer-events:none;animation:none!important}
+/* 首页片头：無限進步字标居中渐显（视频播放期整块隐藏，杜绝黑底占位） */
+.studio-cover .cover-photo{position:absolute!important;inset:0;display:flex;align-items:center;justify-content:center;background:transparent!important;border:0!important;box-shadow:none!important;aspect-ratio:auto!important;overflow:visible;z-index:2;pointer-events:none;animation:none!important;visibility:hidden;color-scheme:light}
+.studio-cover.art-in .cover-photo{visibility:visible}
 .studio-cover .cover-photo img{width:auto!important;height:auto!important;max-width:min(380px,36vw);max-height:52%;object-fit:contain;opacity:0;transition:opacity 2.4s ease;filter:none!important;border:0}
 .studio-cover.art-in .cover-photo img{opacity:1}
 .studio-cover.art-in .cover-heading{opacity:0;transition:opacity 1s ease;pointer-events:none}
 .studio-cover.art-in .cover-photo img{max-width:min(560px,52vw)!important;max-height:66%!important}
+/* 终极：片头背景——播放期首帧图，结束纯黑 */
+.studio-cover:not(.art-in){background:#0b0b0b url('./cover-poster.jpg') center/cover no-repeat!important}
+.studio-cover.art-in{background:#000!important}
