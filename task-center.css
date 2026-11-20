@@ -102,6 +102,14 @@ body:has(.tasks-page) .tc-tabs{border-color:#e2dcef}
 .tc-tpl-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .tc-tpl-head b{color:#3d2b63;font-size:15px}
 .tc-tpl-meta{color:#8a8199;font-size:12px;margin:6px 0}
+.tc-tpl-desc{color:#5a4f70;font-size:13px;line-height:1.6;margin:6px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.tc-tpl-desc b{color:#7a5fc0}
+.tc-tpl-addwrap{display:flex;gap:4px;align-items:stretch}
+.tc-tpl-addwrap input{flex:1;min-width:0}
+.tc-tpl-add{flex:none;width:30px;padding:0;border:1px solid #c9b8ec;border-radius:7px;background:#f3edff;color:#6b46c1;font-weight:800;cursor:pointer}
+.tc-tpl-add:hover{background:#e8dbff}
+.tc-tpl-textarea{width:100%;box-sizing:border-box;min-height:90px;max-height:420px;padding:10px;border:1px solid #d8cfe8;border-radius:8px;color:#2b2340;font-size:14px;line-height:1.5;background:#fff;resize:vertical}
+.tc-tpl-textarea:focus{outline:none;border-color:#8a6fd4;box-shadow:0 0 0 3px #8a6fd422}
 /* 可编辑详情内联输入 */
 .tc-inline{display:inline-block;width:auto;min-width:90px;padding:5px 9px;border:1px solid #d8cfe8;border-radius:7px;font:inherit;font-size:14px;color:#2b2340;background:#fff}
 .tc-inline:focus{outline:none;border-color:#8a6fd4;box-shadow:0 0 0 3px #8a6fd422}

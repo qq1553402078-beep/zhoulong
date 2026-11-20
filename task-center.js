@@ -249,26 +249,28 @@
   let tplFormOpen = false; // 模板页：是否展开新建模板表单
   let tplFormEditIndex = -1; // -1=新建，否则编辑该模板
   function renderCenter(main) {
+    if (centerTab === 'board') centerTab = 'pending';
+    if (centerTab === 'perm') centerTab = isAdmin() ? 'other' : 'pending';
+    if (centerTab === 'other' && !isAdmin()) centerTab = 'pending';
     const allReqs = requests();
     const pending = allReqs.filter(r => !['已交付', '已终止'].includes(r.status)).length;
     const bell = notices().length;
     const bar = `<div class="tc-hero tc-hero-center"><div><div class="tc-eyebrow">STUDIO / 需求接收</div><h1>任务中心</h1><p>运营下发的需求汇总在这里，接收后转为工作安排，拍摄反馈回写给运营。</p></div><div class="tc-hero-stat">待处理 <b>${pending}</b> 项 · 消息 <b>${bell}</b></div></div>`;
+    const pendingCount = config().permRequests.filter(p => p.status === '待审批').length;
     const tabs = `<div class="tc-tabs" role="tablist">
       <button type="button" data-center-tab="pending" aria-pressed="${centerTab === 'pending'}">待处理 / 全部任务</button>
-      <button type="button" data-center-tab="board" aria-pressed="${centerTab === 'board'}">交付看板</button>
       <button type="button" data-center-tab="templates" aria-pressed="${centerTab === 'templates'}">任务模板</button>
       <button type="button" data-center-tab="benchmarks" aria-pressed="${centerTab === 'benchmarks'}">对标库</button>
       <button type="button" data-center-tab="ops" aria-pressed="${centerTab === 'ops'}">运营与项目组</button>
-      <button type="button" data-center-tab="perm" aria-pressed="${centerTab === 'perm'}">权限申请审批 ${config().permRequests.filter(p => p.status === '待审批').length ? `<span class="tc-dot">${config().permRequests.filter(p => p.status === '待审批').length}</span>` : ''}</button>
+      ${isAdmin() ? `<button type="button" data-center-tab="other" aria-pressed="${centerTab === 'other'}">其他${pendingCount ? ` <span class="tc-dot">${pendingCount}</span>` : ''}</button>` : ''}
     </div>`;
     const bellBox = `<div class="tc-bell-wrap"><button type="button" class="tc-bell" id="tcBell">🔔 消息 <span class="tc-bell-count">${bell}</span></button><div class="tc-bell-list" id="tcBellList" hidden></div></div>`;
     let body = '';
-    if (centerTab === 'pending') body = centerList(allReqs);
-    else if (centerTab === 'board') body = boardView(allReqs, false);
+    if (centerTab === 'pending') body = centerList(allReqs) + '<div class="tc-board-block"><h3 style="margin:18px 0 8px;color:#3d2b63">交付看板</h3>' + boardView(allReqs, false) + '</div>';
     else if (centerTab === 'templates') body = templatesView();
     else if (centerTab === 'benchmarks') body = benchmarksView();
     else if (centerTab === 'ops') body = opsManageView();
-    else if (centerTab === 'perm') body = permApproveView();
+    else if (centerTab === 'other') body = isAdmin() ? permApproveView() : '<div class="panel tc-empty">无权查看。</div>';
     main.innerHTML = bar + tabs + bellBox + body;
   }
 
@@ -333,7 +335,7 @@
         <label>项目组（运营组） <select name="group">${opts(['', ...groups], r?.group || (isOps() ? myGroup() : ''))}</select></label>
         <label>所属团队 <input name="team" value="${esc(r?.team || '')}" placeholder="例如：内容团队"></label>
         <label>脚本标签 <select name="scriptKind">${opts(['脚本', '视频', '素材', '成片'], r?.scriptKind || '脚本')}</select></label>
-        <label>品类标签 <input name="category" value="${esc(r?.category || '')}" placeholder="例如：食品/山药葛根玉米粉"></label>
+        <label>品类 <input name="category" value="${esc(r?.category || '')}" placeholder="例如：秘与洗液"></label>
         <label>交付类型 <select name="deliverType">${opts(DELIVER, r?.deliverType || DELIVER[0])}</select></label>
         <label>截止日期 <input type="date" name="deadline" value="${esc(r?.deadline || '')}"></label>
         <label>优先级 <select name="priority">${opts(PRIORITY, r?.priority || '常规')}</select></label>
@@ -389,7 +391,7 @@
       <div class="panel tc-script-card">
         <div class="tc-script-head"><div class="tc-sh-main">
           <div class="tc-sh-author"><span class="tc-avatar">${esc((r.creator || me()).slice(0, 1))}</span><div><b>${esc(r.creator || me())}</b> / <input name="team" class="tc-inline" value="${esc(r.team || '')}" placeholder="团队"> / <input name="group" class="tc-inline" value="${esc(r.group || '')}" placeholder="运营组"><br><small>发布时间：${esc((r.createdAt || '').replace('T', ' '))}</small></div></div>
-          <div class="tc-sh-tags"><select name="scriptKind" class="tc-inline">${opts(['脚本', '视频', '素材', '成片'], r.scriptKind || '脚本')}</select><input name="category" class="tc-inline" value="${esc(r.category || '')}" placeholder="品类标签"></div>
+          <div class="tc-sh-tags"><select name="scriptKind" class="tc-inline">${opts(['脚本', '视频', '素材', '成片'], r.scriptKind || '脚本')}</select><input name="category" class="tc-inline" value="${esc(r.category || '')}" placeholder="品类"></div>
           <div class="tc-sh-line">任务名称 <input name="title" class="tc-inline tc-inline-wide" value="${esc(r.title || '')}" placeholder="任务名称"></div>
           <div class="tc-sh-line">公共标签 <input name="publicTags" class="tc-inline tc-inline-wide" value="${esc((r.publicTags || []).join('、'))}" placeholder="平台:抖音、平台:小红书"></div>
           <div class="tc-sh-line">个人标签 <input name="personalTags" class="tc-inline tc-inline-wide" value="${esc((r.personalTags || []).join('、'))}" placeholder="个人标签"></div>
@@ -433,38 +435,37 @@
     const form = tplFormOpen ? tplForm(tplFormEditIndex >= 0 ? t[tplFormEditIndex] : null) : '';
     const list = t.length ? `<div class="tc-tpl-grid" style="margin-top:14px">${t.map((x, i) => `<div class="tc-tpl-card">
         <div class="tc-tpl-head"><b>${esc(x.name)}</b><span class="tc-tag">${esc(x.deliverType || '任务')}</span></div>
-        <div class="tc-tpl-meta">${esc(x.scriptTitle || x.title || '')}${x.category ? ' · ' + esc(x.category) : ''}${x.target ? ' · 目标 ' + esc(x.target) + ' 条' : ''}</div>
-        ${(x.storyboards || []).length ? `<table class="tc-table tc-storyboard" style="margin:8px 0 0"><thead><tr><th>序号</th><th style="text-align:left">拍摄内容</th><th style="text-align:left">拍摄需求</th><th>对标分镜</th></tr></thead><tbody>${x.storyboards.map(s => `<tr><td>${esc(s.seq || '')}</td><td style="text-align:left">${esc(s.content || '')}</td><td style="text-align:left">${esc(s.need || '')}</td><td>${s.link ? `<a class="tc-linktag" href="${esc(s.link)}" target="_blank" rel="noopener">链接 ↗</a>` : '—'}</td></tr>`).join('')}</tbody></table>` : '<p class="tc-muted" style="font-size:12px;margin:8px 0">（无分镜）</p>'}
+        <div class="tc-tpl-meta">${esc(x.scriptKind || x.scriptTitle || '')}${x.category ? ' · ' + esc(x.category) : ''}${x.target ? ' · 目标 ' + esc(x.target) + ' 条' : ''}</div>
+        ${x.brief ? `<div class="tc-tpl-desc"><b>拍摄内容：</b>${esc(x.brief)}</div>` : ''}
+        ${x.need ? `<div class="tc-tpl-desc"><b>拍摄需求：</b>${esc(x.need)}</div>` : ''}
+        ${benchmarkLinks(x)}
         <div class="bar"><button type="button" data-use-template="${i}" class="tc-btn tc-primary">用此模板下发</button><button type="button" data-edit-template="${i}" class="tc-btn">编辑</button><button type="button" data-del-template="${i}" class="tc-btn tc-danger">删除</button></div>
       </div>`).join('')}</div>` : (tplFormOpen ? '' : '<p class="tc-muted" style="margin-top:14px">还没有模板，点右上角「＋ 新建模板」创建第一个。</p>');
     return `<div class="panel" style="padding:18px">${head}${form}${list}</div>`;
   }
+  const DEFAULT_TPL_CATEGORIES = ['秘与紧致丹', '秘与洗液', '山药秘与葛根粉', '除臭贴', 'LILIA二硫化硒洗发水', 'LILOO紧致丹', '毛囊炎洗发水'];
+  function tplCategories() { const c = config(); return Array.isArray(c.tplCategories) && c.tplCategories.length ? c.tplCategories : DEFAULT_TPL_CATEGORIES.slice(); }
+  function tplDeliverTypes() { const c = config(); return Array.isArray(c.tplDeliverTypes) && c.tplDeliverTypes.length ? c.tplDeliverTypes : DELIVER.slice(); }
+  function tplScriptKinds() { const c = config(); return Array.isArray(c.tplScriptKinds) && c.tplScriptKinds.length ? c.tplScriptKinds : ['脚本', '视频', '素材', '成片']; }
+  function tplDatalist(id, list) { return `<datalist id="${id}">${list.map(v => `<option value="${esc(v)}"></option>`).join('')}</datalist>`; }
   function tplForm(tpl) {
     const x = tpl || {};
-    const sb = (x.storyboards && x.storyboards.length) ? x.storyboards : [{ seq: 1, content: '', need: '', link: '' }];
     return `<form id="tcTplForm" class="tc-tpl-form" data-index="${tplFormEditIndex}" style="margin-top:14px;padding:14px;border:1px solid #d8cfe8;border-radius:10px;background:#faf8ff">
+      ${tplDatalist('tcTplCatOpts', tplCategories())}${tplDatalist('tcTplDeliverOpts', tplDeliverTypes())}${tplDatalist('tcTplScriptOpts', tplScriptKinds())}
       <div class="tc-grid">
-        <label>模板名称 <input name="name" required value="${esc(x.name || '')}" placeholder="例如：玉米糊对标"></label>
-        <label>交付类型 <select name="deliverType">${opts(DELIVER, x.deliverType || DELIVER[0])}</select></label>
-        <label>脚本标签 <select name="scriptKind">${opts(['脚本', '视频', '素材', '成片'], x.scriptKind || '脚本')}</select></label>
-        <label>品类标签 <input name="category" value="${esc(x.category || '')}" placeholder="例如：食品/山药葛根玉米粉"></label>
+        <label>模板名称（这个模板是干嘛的） <input name="name" required value="${esc(x.name || '')}" placeholder="例如：玉米粉对标模板"></label>
+        <label>品类 <span class="tc-tpl-addwrap"><input name="category" list="tcTplCatOpts" value="${esc(x.category || '')}" placeholder="选择或输入新品"><button type="button" class="tc-tpl-add" data-tpl-add="tplCategories" data-for="category" title="添加为常用品类">＋</button></span></label>
         <label>目标条数 <input type="number" min="0" name="target" value="${esc(x.target || '')}" placeholder="例如：30"></label>
+        <label>交付类型 <span class="tc-tpl-addwrap"><input name="deliverType" list="tcTplDeliverOpts" value="${esc(x.deliverType || '')}" placeholder="选择或输入"><button type="button" class="tc-tpl-add" data-tpl-add="tplDeliverTypes" data-for="deliverType" title="添加为常用交付类型">＋</button></span></label>
+        <label>脚本标签 <span class="tc-tpl-addwrap"><input name="scriptKind" list="tcTplScriptOpts" value="${esc(x.scriptKind || '')}" placeholder="选择或输入"><button type="button" class="tc-tpl-add" data-tpl-add="tplScriptKinds" data-for="scriptKind" title="添加为常用脚本标签">＋</button></span></label>
       </div>
       ${benchEditor(benchList(x))}
-      <div class="tc-sb-headline"><span class="tc-sb-bar"></span><b>分镜脚本</b><button type="button" id="tcTplAddSb" class="tc-btn" style="margin-left:auto">＋ 添加分镜</button></div>
-      <p class="tc-field-hint">按镜头逐行填写拍摄内容、拍摄需求；对标链接可点击跳转。</p>
-      <div id="tcTplStoryboards">${sb.map((s, i) => tplSbRow(s, i)).join('')}</div>
+      <div class="tc-tpl-fields">
+        <label style="display:block;margin-top:10px">拍摄内容 <textarea name="brief" class="tc-tpl-textarea" rows="4" placeholder="这个模板要拍什么内容、怎么拍">${esc(x.brief || '')}</textarea></label>
+        <label style="display:block;margin-top:8px">拍摄需求 <textarea name="need" class="tc-tpl-textarea" rows="4" placeholder="拍摄要求、注意事项、复刻要点等">${esc(x.need || '')}</textarea></label>
+      </div>
       <div class="bar"><button type="submit" class="tc-btn tc-primary">保存模板</button><button type="button" id="tcTplCancel" class="tc-btn">取消</button></div>
     </form>`;
-  }
-  function tplSbRow(s, i) {
-    return `<div class="tc-sb-row" data-tplsb>
-      <input class="sb-seq" value="${esc(s.seq || i + 1)}" style="width:42px" placeholder="序号">
-      <input class="sb-content" value="${esc(s.content || '')}" placeholder="拍摄内容，如：产品摆桌特写">
-      <input class="sb-need" value="${esc(s.need || '')}" placeholder="拍摄需求，如：1:1 复刻">
-      <input class="sb-link" value="${esc(s.link || '')}" placeholder="对标链接（可留空）">
-      <button type="button" class="tc-sb-del tc-link" title="删除分镜">×</button>
-    </div>`;
   }
   function benchmarksView() {
     const b = config().benchmarks;
@@ -732,8 +733,8 @@
         id: uid(), creator: me(), createdAt: now(), status: '待处理', done: 0, history: [], comments: [],
         title: (t.title || t.name || '模板任务'), scriptTitle: t.scriptTitle || '', scriptKind: t.scriptKind || '脚本',
         team: settings().leader || '', group: isOps() ? myGroup() : '', category: t.category || '',
-        deliverType: t.deliverType || DELIVER[0], target: t.target || 0, brief: t.brief || '',
-        benchmarks: t.benchmarks || [], storyboards: (t.storyboards || []).map(s => ({ ...s })), models: [], publicTags: [], personalTags: [], originScript: ''
+        deliverType: t.deliverType || DELIVER[0], target: t.target || 0, brief: t.brief || '', need: t.need || '',
+        benchmarks: t.benchmarks || [], storyboards: [], models: [], publicTags: [], personalTags: [], originScript: ''
       };
       (r.history ??= []).push({ by: me(), at: now(), text: '由模板「' + (t.name || '任务') + '」创建', readBy: [] });
       list.push(r); saveAll(list);
@@ -746,12 +747,14 @@
     if (tplNew) tplNew.onclick = () => { tplFormOpen = true; tplFormEditIndex = -1; render(main); };
     const tplCancel = main.querySelector('#tcTplCancel');
     if (tplCancel) tplCancel.onclick = () => { tplFormOpen = false; tplFormEditIndex = -1; render(main); };
-    const tplAddSb = main.querySelector('#tcTplAddSb');
-    if (tplAddSb) tplAddSb.onclick = () => {
-      const box = main.querySelector('#tcTplStoryboards'); const i = box ? box.children.length : 0;
-      box?.insertAdjacentHTML('beforeend', `<div class="tc-sb-row" data-tplsb><input class="sb-seq" value="${i+1}" style="width:42px"><input class="sb-content" placeholder="拍摄内容"><input class="sb-need" placeholder="拍摄需求"><input class="sb-link" placeholder="对标分镜链接"><button type="button" class="tc-sb-del tc-link" title="删除分镜">×</button></div>`);
-      bindSbDel(main);
-    };
+    qa('[data-tpl-add]').forEach(b => b.onclick = () => {
+      const form = main.querySelector('#tcTplForm'); if (!form) return;
+      const input = form.querySelector('[name="' + b.dataset.for + '"]');
+      const val = (input?.value || '').trim(); if (!val) { input?.focus(); return; }
+      const key = b.dataset.tplAdd; const cfg = config();
+      const list = Array.isArray(cfg[key]) ? cfg[key] : [];
+      if (!list.includes(val)) { list.push(val); cfg[key] = list; saveConfig(cfg); render(main); }
+    });
     qa('[data-edit-template]').forEach(b => b.onclick = () => { tplFormOpen = true; tplFormEditIndex = Number(b.dataset.editTemplate); render(main); });
     const tplFormEl = main.querySelector('#tcTplForm');
     if (tplFormEl) {
@@ -760,15 +763,10 @@
         ev.preventDefault();
         const fd = new FormData(tplFormEl);
         const name = (fd.get('name') || '').trim(); if (!name) return;
-        const split = v => String(v || '').split(/[、,，]/).map(s => s.trim()).filter(Boolean);
-        const storyboards = [...main.querySelectorAll('#tcTplStoryboards [data-tplsb]')].map(row => ({
-          seq: row.querySelector('.sb-seq')?.value || '', content: row.querySelector('.sb-content')?.value || '',
-          need: row.querySelector('.sb-need')?.value || '', link: row.querySelector('.sb-link')?.value || ''
-        })).filter(s => s.content || s.need || s.link);
         const tpl = {
-          name, deliverType: fd.get('deliverType'), scriptTitle: '',
-          scriptKind: fd.get('scriptKind'), category: (fd.get('category')||'').trim(), target: Number(fd.get('target'))||0,
-          brief: '', benchmarks: readBench(tplFormEl), storyboards
+          name, deliverType: (fd.get('deliverType') || '').trim(), scriptTitle: '',
+          scriptKind: (fd.get('scriptKind') || '').trim(), category: (fd.get('category') || '').trim(), target: Number(fd.get('target'))||0,
+          brief: (fd.get('brief') || '').trim(), need: (fd.get('need') || '').trim(), benchmarks: readBench(tplFormEl)
         };
         const cfg = config();
         const idx = Number(tplFormEl.dataset.index);
