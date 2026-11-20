@@ -145,3 +145,6 @@ body:has(.studio-cover) header{background:#000!important}
 .studio-cover:not(.art-in){background:#0b0b0b url('./cover-poster.jpg') center/cover no-repeat!important}
 .studio-cover.art-in{background:#000!important}
 .studio-cover .cover-photo img{object-fit:cover!important;object-position:center!important}
+/* 首屏视频区域加高，让16:9视频完整显示不被裁 */
+.studio-cover{min-height:clamp(420px,46vw,620px)!important}
+@media(max-width:760px){.studio-cover{min-height:0!important}}
