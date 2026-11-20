@@ -158,3 +158,11 @@ body:has(.studio-cover) header{background:#000!important}
 .home-page{padding-left:5%!important}
 /* 标题区黑色渐变遮罩，让白字在视频上凸显 */
 .studio-cover .cover-shade{background:linear-gradient(90deg,rgba(6,8,7,.92) 0%,rgba(6,8,7,.78) 28%,rgba(6,8,7,.35) 55%,rgba(6,8,7,.12) 100%)!important}
+/* 手机端：回到静态封面图，不加载视频、无片头动画（防卡） */
+@media(max-width:760px){
+ .studio-cover .cover-video{display:none!important}
+ .studio-cover .cover-photo{display:none!important}
+ .studio-cover:not(.art-in){background:#0b0b0b url('./cover-poster.jpg') center/cover no-repeat!important}
+ .studio-cover .cover-heading{opacity:1!important;pointer-events:auto!important}
+ .studio-cover{height:auto!important;min-height:300px!important}
+}

@@ -57,7 +57,7 @@ body:has(.people-page){background:#071326;color:#edf4ff}body:has(.people-page) h
 @media(max-width:760px){header,body:has(.schedule-page) header{padding:12px 4%;gap:8px}header nav{width:100%;overflow-x:auto;padding-bottom:4px}header nav button{flex:none;white-space:nowrap}.schedule-page{padding:14px 4%}.schedule-hero{padding:17px;border-radius:14px}.schedule-hero h1{font-size:30px}.schedule-hero time{font-size:17px}.schedule-page .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0}.schedule-page .card{padding:9px 10px}.schedule-page .card b{font-size:21px;margin-top:3px}.schedule-tools{gap:7px;margin:10px 0}.schedule-tools .search{min-width:100%;order:2}.mobile-schedule,.mobile-edit-toggle{display:block}.schedule-page .worksheet.edit-grid{display:none}.schedule-page.mobile-editing .worksheet.edit-grid{display:block}.schedule-page.mobile-editing .mobile-schedule{display:none}.mobile-editing .edit-grid table{min-width:900px}.schedule-page .capture{overflow:auto}.schedule-page .capture table{min-width:640px}}
 </style><style>.schedule-dates,.date-options{display:flex;align-items:flex-start;flex-wrap:wrap;gap:8px}.schedule-dates{margin:0 0 18px}.date-options{margin-top:8px}.schedule-dates button,.schedule-dates summary{padding:9px 12px;border:1px solid #554362;border-radius:8px;background:#211c29;color:#efe7fa}.schedule-dates summary{cursor:pointer}.schedule-dates button[aria-pressed="true"]{outline:2px solid #d4b3ff;outline-offset:1px}.schedule-dates .date-today button{background:#d8c0ff;color:#21152e;border-color:#d8c0ff}</style>
 <link rel="stylesheet" href="./studio-theme.css?v=v3">
-<link rel="stylesheet" href="./studio-editorial.css?v=v4">
+<link rel="stylesheet" href="./studio-editorial.css?v=v5">
 <link rel="stylesheet" href="./task-center.css?v=tc-5">
 <style id="innovation-fold">
 /* 折叠态：把标记为「空值」的类型项/列隐藏 */
@@ -917,6 +917,13 @@ function home(){
   const v=main.querySelector('.cover-video');
   const photo=main.querySelector('.cover-photo');
   if(!cover)return;
+  // 手机端：不加载视频（省流量防卡），用静态封面图+文字，跳过片头动画
+  if(matchMedia('(max-width:760px)').matches){
+   if(v){v.querySelectorAll('source').forEach(s=>s.remove());v.removeAttribute('src');v.load();}
+   if(photo)photo.style.display='none';
+   cover.classList.remove('art-in');
+   return;
+  }
   let revealed=false;
   // JS 兜底：播放期彻底隐藏字标容器（防旧 CSS 缓存导致黑块）
   if(photo){photo.style.visibility='hidden';}
