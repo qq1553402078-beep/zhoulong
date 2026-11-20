@@ -166,3 +166,17 @@ body:has(.studio-cover) header{background:#000!important}
  .studio-cover .cover-heading{opacity:1!important;pointer-events:auto!important}
  .studio-cover{height:auto!important;min-height:300px!important}
 }
+/* 收窄左侧遮罩：视频更多显示，标题仍可读（终极覆盖） */
+.studio-cover .cover-shade{background:linear-gradient(90deg,rgba(6,8,7,.88) 0%,rgba(6,8,7,.55) 16%,rgba(6,8,7,.18) 34%,transparent 52%)!important}
+/* 手机端：用指定的黑底無限進步静态图（最开始无视频的样子） */
+@media(max-width:760px){
+ .studio-cover:not(.art-in){background:#000 url('./wuxian-final.jpg') center/cover no-repeat!important}
+ .studio-cover .cover-shade{background:linear-gradient(180deg,rgba(0,0,0,.45) 0%,transparent 45%)!important}
+}
+/* 手机端：静态图已含大字，隐藏重叠的标题文案，只保留背景图片头观感 */
+@media(max-width:760px){
+ .studio-cover .cover-heading{display:none!important}
+ .studio-cover .cover-shade{display:none!important}
+ .studio-cover .cover-foot{display:none!important}
+ .studio-cover{min-height:240px!important}
+}
