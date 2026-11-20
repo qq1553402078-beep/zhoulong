@@ -114,6 +114,9 @@ body:has(.tasks-page) .tc-tabs{border-color:#e2dcef}
 .tc-tag-field > input{flex:1;min-width:0}
 .tc-tag-panel{display:block;position:absolute;z-index:30;left:0;right:0;margin-top:4px;padding:9px;background:#fff;border:1px solid #c9b8ec;border-radius:9px;box-shadow:0 6px 20px #3d2b6322}
 .tc-tag-panel[hidden]{display:none}
+.tc-tag-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;color:#5b3fb0;font-size:13px}
+.tc-tag-panel-close{border:0;background:transparent;color:#8a70c4;font-size:18px;line-height:1;cursor:pointer;padding:0 3px}
+.tc-tag-panel-close:hover{color:#c0392b}
 .tc-tag-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
 .tc-tag-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 4px 3px 9px;border-radius:999px;background:#f0eaff;color:#5b4690;font-size:12px;cursor:pointer}
 .tc-tag-chip:hover{background:#e6dbff}

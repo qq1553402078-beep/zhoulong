@@ -453,6 +453,7 @@
   function tagField(name, label, key, list, value, placeholder, datalistId) {
     return `<label class="tc-tag-label">${label} <span class="tc-tag-field"><input name="${name}" list="${datalistId}" value="${esc(value || '')}" placeholder="${placeholder}"><button type="button" class="tc-tpl-add" data-tag-open="${key}" title="管理标签">＋</button></span>
       <span class="tc-tag-panel" data-tag-panel="${key}" hidden>
+        <span class="tc-tag-panel-head"><b>管理标签</b><button type="button" class="tc-tag-panel-close" title="关闭">×</button></span>
         <span class="tc-tag-chips">${list.map(v => `<span class="tc-tag-chip" data-tag-pick="${esc(v)}">${esc(v)}<button type="button" class="tc-tag-chip-del" data-tag-del="${esc(v)}" title="删除">×</button></span>`).join('')}</span>
         <span class="tc-tag-new"><input class="tc-tag-new-input" placeholder="输入新标签后按回车或点添加"><button type="button" class="tc-tag-new-add">添加</button></span>
       </span></label>`;
@@ -777,12 +778,22 @@
     // 标签面板：点＋展开，点选/增删标签就地操作，不重绘表单（避免丢失已填内容）
     const tagInputName = { tplCategories: 'category', tplDeliverTypes: 'deliverType', tplScriptKinds: 'scriptKind' };
     const tagDatalistId = { tplCategories: 'tcTplCatOpts', tplDeliverTypes: 'tcTplDeliverOpts', tplScriptKinds: 'tcTplScriptOpts' };
-    qa('[data-tag-open]').forEach(b => b.onclick = () => {
+    qa('[data-tag-open]').forEach(b => b.onclick = ev => {
+      ev.stopPropagation();
       const panel = main.querySelector('[data-tag-panel="' + b.dataset.tagOpen + '"]');
       if (!panel) return;
       qa('[data-tag-panel]').forEach(p => { if (p !== panel) p.hidden = true; });
       panel.hidden = !panel.hidden;
     });
+    qa('.tc-tag-panel-close').forEach(b => b.onclick = ev => { ev.stopPropagation(); b.closest('[data-tag-panel]').hidden = true; });
+    if (!window.__tcTagOutsideBound) {
+      window.__tcTagOutsideBound = true;
+      document.addEventListener('click', function tagOutside(ev) {
+        if (!ev.target.closest('[data-tag-panel]') && !ev.target.closest('[data-tag-open]')) {
+          document.querySelectorAll('[data-tag-panel]').forEach(p => p.hidden = true);
+        }
+      });
+    }
     qa('[data-tag-pick]').forEach(chip => chip.onclick = ev => {
       if (ev.target.closest('[data-tag-del]')) return;
       const panel = chip.closest('[data-tag-panel]'); if (!panel) return;
@@ -795,7 +806,7 @@
       const key = btn.closest('[data-tag-panel]').dataset.tagPanel;
       const val = btn.dataset.tagDel; const cfg = config();
       cfg[key] = (cfg[key] || []).filter(v => v !== val); saveConfig(cfg);
-      btn.closest('[data-tag-chip]')?.remove();
+      btn.closest('.tc-tag-chip')?.remove();
       const dl = main.querySelector('#' + tagDatalistId[key]);
       dl?.querySelector('option[value="' + CSS.escape(val) + '"]')?.remove();
     });
