@@ -168,7 +168,21 @@ a.tc-bench-jump:hover,a.bench-jump:hover{transform:translateY(-1px);box-shadow:0
 .tc-sb-headline{font-size:16px;color:#2b2340;letter-spacing:.02em}
 .tc-sb-bar{background:linear-gradient(180deg,#8a6fd4,#5b3fb0)}
 .tc-sh-line b{color:#3d2b63}
+/* 运营人员与项目组：两级布局 */
+.tc-og-layout{display:grid;grid-template-columns:minmax(200px,280px) minmax(0,1fr);gap:16px;margin-top:12px}
+.tc-og-side,.tc-og-main{border:1px solid #e2dcef;border-radius:10px;padding:12px;background:#faf8ff}
+.tc-og-title{font-weight:750;color:#3d2b63;margin-bottom:10px;font-size:14px}
+.tc-og-list{display:grid;gap:5px;max-height:360px;overflow:auto}
+.tc-og-item{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px;border:1px solid #e2dcef;border-radius:8px;background:#fff;cursor:pointer;color:#4a3c66}
+.tc-og-item:hover{border-color:#b9a6e6}
+.tc-og-item.active{border-color:#8a6fd4;background:#f0eaff;color:#5b3fb0;font-weight:700}
+.tc-og-item small{color:#9587ad;font-weight:400}
+.tc-og-del{border:0;background:transparent;color:#a99bc0;cursor:pointer;font-size:15px;line-height:1;padding:0 3px}
+.tc-og-del:hover{color:#c0392b}
+.tc-og-add{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.tc-og-add input{flex:1;min-width:110px;padding:7px 9px;border:1px solid #d8cfe8;border-radius:7px;font-size:13px;color:#2b2340}
 @media(max-width:760px){
+  .tc-og-layout{grid-template-columns:1fr}
   .tc-sb-row{grid-template-columns:1fr 1fr;gap:5px}
   .tc-sb-row .sb-link{grid-column:1/-1}
   .tc-grid{grid-template-columns:1fr}

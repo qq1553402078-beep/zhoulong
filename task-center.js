@@ -246,6 +246,7 @@
 
   /* ---------- 中台视图 ---------- */
   let centerTab = 'pending';
+  let centerOpsGroup = ''; // 运营与项目组：当前选中的项目组
   let tplFormOpen = false; // 模板页：是否展开新建模板表单
   let tplFormEditIndex = -1; // -1=新建，否则编辑该模板
   function renderCenter(main) {
@@ -483,15 +484,33 @@
   }
   function opsManageView() {
     const cfg = config();
-    const members = Object.entries(cfg.opsMembers);
+    const groups = Array.isArray(cfg.opsGroups) ? cfg.opsGroups : [];
+    const roles = cfg.opsRoles || {};
+    if (!centerOpsGroup || !groups.includes(centerOpsGroup)) centerOpsGroup = groups[0] || '';
+    const groupList = groups.length ? groups.map(g => {
+      const cnt = Object.values(cfg.opsMembers).filter(x => x === g).length;
+      return `<div class="tc-og-item${g === centerOpsGroup ? ' active' : ''}" data-og-pick="${esc(g)}"><span>${esc(g)} <small>(${cnt})</small></span><button type="button" class="tc-og-del" data-og-del="${esc(g)}" title="删除项目组">×</button></div>`;
+    }).join('') : '<p class="tc-muted" style="font-size:12px">还没有项目组，先在下面添加一个。</p>';
+    const members = centerOpsGroup ? Object.entries(cfg.opsMembers).filter(([, g]) => g === centerOpsGroup) : [];
+    const memberRows = members.length ? members.map(([n]) => `<tr>
+      <td style="text-align:left"><b>${esc(n)}</b></td>
+      <td style="text-align:left">${esc(roles[n] || '运营')}</td>
+      <td><button type="button" class="tc-link" data-om-edit="${esc(n)}">编辑</button> <button type="button" class="tc-link tc-danger" data-om-del="${esc(n)}">删除</button></td>
+    </tr>`).join('') : '<tr><td colspan="3" class="tc-muted">这个组还没有成员，在下面添加。</td></tr>';
     return `<div class="panel" style="padding:18px"><h2>运营人员与项目组</h2>
-      <p class="tc-muted">在这里登记运营人员及其所属项目组。登记后，该姓名登录即进入「运营视角」，只能看到本组任务。</p>
-      <div class="tc-grid">
-        <label>项目组列表（每行一个）<textarea id="tcGroups" rows="4">${esc(cfg.opsGroups.join('\n'))}</textarea></label>
-        <label>运营名单（每行：姓名 | 项目组）<textarea id="tcOpsMembers" rows="4">${esc(members.map(([n, g]) => n + ' | ' + g).join('\n'))}</textarea></label>
+      <p class="tc-muted">左侧先建项目组，点选组后在右侧添加成员和角色。登记后该姓名登录即进入「运营视角」，只能看到本组任务。</p>
+      <div class="tc-og-layout">
+        <div class="tc-og-side">
+          <div class="tc-og-title">项目组</div>
+          <div class="tc-og-list">${groupList}</div>
+          <div class="tc-og-add"><input id="tcOgNew" placeholder="新项目组名称"><button type="button" id="tcOgAdd" class="tc-btn tc-primary">＋ 添加组</button></div>
+        </div>
+        <div class="tc-og-main">
+          <div class="tc-og-title">${centerOpsGroup ? esc(centerOpsGroup) + ' · 成员' : '成员（请先选项目组）'}</div>
+          <table class="tc-table"><thead><tr><th style="text-align:left">姓名</th><th style="text-align:left">角色</th><th>操作</th></tr></thead><tbody>${memberRows}</tbody></table>
+          <div class="tc-og-add" style="margin-top:10px"><input id="tcOmName" placeholder="成员姓名"><input id="tcOmRole" placeholder="角色（如 运营/组长/模特）"><button type="button" id="tcOmAdd" class="tc-btn tc-primary" ${centerOpsGroup ? '' : 'disabled'}>＋ 添加成员</button></div>
+        </div>
       </div>
-      <div class="bar"><button type="button" id="tcSaveOps" class="tc-btn tc-primary">保存运营配置</button><span role="status"></span></div>
-      <h3>当前运营</h3>${members.map(([n, g]) => `<div class="tc-cfg-row"><b>${esc(n)}</b> → ${esc(g)} <button type="button" data-del-op="${esc(n)}" class="tc-link tc-danger">移除</button></div>`).join('') || '<p class="tc-muted">暂无</p>'}
     </div>`;
   }
   function permView() {
@@ -851,18 +870,40 @@
       (r.history ??= []).push({ by: me(), at: now(), text: '打回修改：' + reason, readBy: [] });
       saveAll(list); render(main);
     });
-    // 配置
-    const saveOps = main.querySelector('#tcSaveOps');
-    if (saveOps) saveOps.onclick = () => {
-      const groups = main.querySelector('#tcGroups').value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-      const members = {};
-      main.querySelector('#tcOpsMembers').value.split(/\r?\n/).forEach(line => {
-        const [n, g] = line.split('|').map(s => (s || '').trim()); if (n && g) members[n] = g;
-      });
-      const cfg = config(); cfg.opsGroups = groups; cfg.opsMembers = members; saveConfig(cfg); render(main);
+    // 配置：运营人员与项目组（两级：组 → 成员/角色）
+    qa('[data-og-pick]').forEach(b => b.onclick = () => { centerOpsGroup = b.dataset.ogPick; render(main); });
+    const ogAdd = main.querySelector('#tcOgAdd');
+    if (ogAdd) ogAdd.onclick = () => {
+      const inp = main.querySelector('#tcOgNew'); const name = (inp.value || '').trim(); if (!name) return;
+      const cfg = config(); cfg.opsGroups = cfg.opsGroups || [];
+      if (!cfg.opsGroups.includes(name)) { cfg.opsGroups.push(name); centerOpsGroup = name; saveConfig(cfg); render(main); }
     };
-    qa('[data-del-op]').forEach(b => b.onclick = () => {
-      const cfg = config(); delete cfg.opsMembers[b.dataset.delOp]; saveConfig(cfg); render(main);
+    qa('[data-og-del]').forEach(b => b.onclick = ev => {
+      ev.stopPropagation(); const g = b.dataset.ogDel; const cfg = config();
+      cfg.opsGroups = (cfg.opsGroups || []).filter(x => x !== g);
+      Object.keys(cfg.opsMembers).forEach(n => { if (cfg.opsMembers[n] === g) delete cfg.opsMembers[n]; });
+      if (centerOpsGroup === g) centerOpsGroup = '';
+      saveConfig(cfg); render(main);
+    });
+    const omAdd = main.querySelector('#tcOmAdd');
+    if (omAdd) omAdd.onclick = () => {
+      if (!centerOpsGroup) return;
+      const nInp = main.querySelector('#tcOmName'), rInp = main.querySelector('#tcOmRole');
+      const name = (nInp.value || '').trim(), role = (rInp.value || '').trim();
+      if (!name) return;
+      const cfg = config(); cfg.opsMembers[name] = centerOpsGroup;
+      cfg.opsRoles = cfg.opsRoles || {}; cfg.opsRoles[name] = role || '运营';
+      saveConfig(cfg); render(main);
+    };
+    qa('[data-om-edit]').forEach(b => b.onclick = () => {
+      const name = b.dataset.omEdit; const cfg = config(); cfg.opsRoles = cfg.opsRoles || {};
+      const role = prompt('编辑「' + name + '」的角色：', cfg.opsRoles[name] || '运营');
+      if (role != null) { cfg.opsRoles[name] = role.trim() || '运营'; saveConfig(cfg); render(main); }
+    });
+    qa('[data-om-del]').forEach(b => b.onclick = () => {
+      const name = b.dataset.omDel; const cfg = config();
+      delete cfg.opsMembers[name]; if (cfg.opsRoles) delete cfg.opsRoles[name];
+      saveConfig(cfg); render(main);
     });
     const benchAdd = main.querySelector('#tcBenchAdd');
     if (benchAdd) benchAdd.onclick = () => {
