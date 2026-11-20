@@ -180,3 +180,7 @@ body:has(.studio-cover) header{background:#000!important}
  .studio-cover .cover-foot{display:none!important}
  .studio-cover{min-height:240px!important}
 }
+/* PC遮罩再收窄：仅最左侧一小条，视频最大化显示 */
+@media(min-width:761px){
+ .studio-cover .cover-shade{background:linear-gradient(90deg,rgba(6,8,7,.82) 0%,rgba(6,8,7,.42) 11%,rgba(6,8,7,.1) 22%,transparent 34%)!important}
+}
