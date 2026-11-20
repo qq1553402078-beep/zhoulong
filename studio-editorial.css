@@ -151,3 +151,10 @@ body:has(.studio-cover) header{background:#000!important}
 /* 首屏视频满屏（仿影视飓风：铺满视口宽高） */
 .studio-cover{width:100vw!important;max-width:none!important;margin-left:calc(50% - 50vw)!important;margin-right:calc(50% - 50vw)!important;height:100vh!important;min-height:100vh!important;border-radius:0!important;margin-bottom:24px!important}
 .studio-cover .cover-video{height:100%!important}
+/* 快捷目录移到右侧+透明毛玻璃浮层，不挡左侧标题 */
+.home-directory{left:auto!important;right:12px!important;top:25vh!important;background:rgba(20,18,24,.45)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:rgba(255,255,255,.18)!important;box-shadow:0 8px 32px rgba(0,0,0,.35)}
+@media(max-width:1049px){.home-directory{left:auto!important;right:6px!important}}
+/* 取消首页左侧留白（目录已移到右） */
+.home-page{padding-left:5%!important}
+/* 标题区黑色渐变遮罩，让白字在视频上凸显 */
+.studio-cover .cover-shade{background:linear-gradient(90deg,rgba(6,8,7,.92) 0%,rgba(6,8,7,.78) 28%,rgba(6,8,7,.35) 55%,rgba(6,8,7,.12) 100%)!important}
