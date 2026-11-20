@@ -2204,11 +2204,18 @@ function managementView(period,outputRows,[from,to],daily){
  // 「其他／待确认」明细：列出任务，可点跳转工作安排去补填拍摄类型
  const unknownMixTasks=basisRows.filter(t=>category(t)==='其他／待确认');
  const unknownMixList=unknownMixTasks.length?'<details class="mix-unknown"><summary>查看这 '+unknownMixTasks.length+' 项待确认任务</summary><ul>'+unknownMixTasks.map(t=>'<li><span>'+esc(t.date||'')+' · '+esc(t.product||t.title||'未命名任务')+(t.type?' · 类型:'+esc(t.type):' · <b>类型为空</b>')+'</span><button type="button" data-goto-task="'+esc(t.id)+'">去补填 ↗</button></li>').join('')+'</ul><p>点「去补填」跳到工作安排，给任务选好拍摄类型后，这里就会重新归类。</p></details>':'';
- const mix=categories.map(label=>{
+ // 先算每类条数，再按从高到低排序（其他／待确认始终排最后）
+ const mixRowsData=categories.map(label=>{
   const items=basisRows.filter(t=>category(t)===label);
   const amount=mixBasis==='volume'?sum(items,'actual'):items.length;
+  return {label,amount,isUnknown:label==='其他／待确认'};
+ });
+ mixRowsData.sort((a,b)=>{
+  if(a.isUnknown!==b.isUnknown)return a.isUnknown?1:-1; // 待确认最后
+  return b.amount-a.amount; // 其余从高到低
+ });
+ const mix=mixRowsData.map(({label,amount,isUnknown})=>{
   const ratio=total?100*amount/total:0;
-  const isUnknown=label==='其他／待确认';
   return '<div class="mix-row'+(isUnknown?' mix-row-unknown':'')+'"><span>'+label+'</span><div class="chart-track" aria-hidden="true"><div class="chart-bar" style="width:'+ratio+'%"></div></div><strong>'+count(amount)+(mixBasis==='volume'?' 条':' 项')+' · '+(total?count(ratio)+'%':'—')+'</strong></div>'+(isUnknown?unknownMixList:'');
  }).join('');
  const missing=periodTasks.filter(t=>!recorded(t));
