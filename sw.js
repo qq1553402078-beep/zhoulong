@@ -1,5 +1,5 @@
 /* 中台拍摄工作台 PWA Service Worker */
-const CACHE = 'zhoulong-pwa-v2';
+const CACHE = 'zhoulong-pwa-v3';
 const PRECACHE = [
   './',
   './index.html',
@@ -13,7 +13,9 @@ const PRECACHE = [
   './apple-touch-icon.png',
   './product-straight.webp',
   './studio-ai-triptych.webp',
-  './studio-art-backdrop.webp'
+  './studio-art-backdrop.webp',
+  './cover-bg.webm',
+  './cover-poster.jpg'
 ];
 
 self.addEventListener('install', (event) => {
