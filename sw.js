@@ -1,5 +1,5 @@
 /* 中台拍摄工作台 PWA Service Worker */
-const CACHE = 'zhoulong-pwa-v12';
+const CACHE = 'zhoulong-pwa-v13';
 const PRECACHE = [
   './',
   './index.html',
@@ -14,7 +14,6 @@ const PRECACHE = [
   './product-straight.webp',
   './studio-ai-triptych.webp',
   './studio-art-backdrop.webp',
-  './cover-bg.mp4',
   './cover-poster.jpg'
 ];
 
@@ -52,7 +51,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 静态资源：缓存优先 + 后台更新（stale-while-revalidate）
+  // 视频/图片等媒体资源：直接走网络（CDN），不缓存——避免大文件拖慢SW安装、避免旧缓存卡死
+  if (/\.(mp4|webm|png|jpe?g|webp|gif|svg)(\?|$)/i.test(url.pathname + url.search)) {
+    event.respondWith(fetch(req));
+    return;
+  }
+
+  // 其它静态资源：缓存优先 + 后台更新（stale-while-revalidate）
   event.respondWith(
     caches.match(req).then((cached) => {
       const network = fetch(req).then((res) => {
