@@ -758,7 +758,6 @@
     qa('[data-edit-template]').forEach(b => b.onclick = () => { tplFormOpen = true; tplFormEditIndex = Number(b.dataset.editTemplate); render(main); });
     const tplFormEl = main.querySelector('#tcTplForm');
     if (tplFormEl) {
-      if (main.querySelector('#tcTplStoryboards')) bindSbDel(main);
       tplFormEl.onsubmit = ev => {
         ev.preventDefault();
         const fd = new FormData(tplFormEl);
