@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='14';
+ var V='15';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -919,7 +919,7 @@ function home(){
  const off=restStaff.filter(p=>isRestShift(availability[p.name])).length;
  const title=(number,label,en)=>'<div class="section-heading"><span class="section-index">'+number+' / '+en+'</span><h2>'+label+'</h2></div>';
  const lens='<svg class="lens-art" viewBox="0 0 320 320" aria-hidden="true"><circle cx="160" cy="160" r="144"/><circle cx="160" cy="160" r="113"/><circle cx="160" cy="160" r="70"/><path d="M160 0v43M160 277v43M0 160h43M277 160h43M160 47l98 57v112l-98 57-98-57V104zM160 90l61 35v70l-61 35-61-35v-70z"/><circle cx="160" cy="160" r="4"/></svg>';
- main.innerHTML=directory+'<section class="studio-cover"><video class="cover-video" autoplay muted playsinline preload="metadata" poster="./cover-poster.jpg"><source src="./cover-bg.mp4" type="video/mp4"></video><div class="cover-shade"></div><div class="cover-heading"><div class="cover-text"><div class="eyebrow">'+esc(settings.brandLine)+' <span>'+esc(settings.brandSubtitle)+'</span></div><h1 class="cover-title-text">'+esc(settings.homeTitle)+'</h1><p>'+esc(settings.intro)+'</p><div class="cover-actions"><button class="primary" id="openSchedule">'+esc(settings.scheduleButton)+' <span aria-hidden="true">↗</span></button><button id="openPeople">'+esc(settings.peopleButton)+' <span aria-hidden="true">→</span></button></div></div><div class="cover-art">'+lens+'<span>FOCUS ON<br>WHAT MATTERS.</span></div></div><figure class="cover-photo"><img src="./wuxian-final.jpg" alt="無限進步" width="5120" height="2880"></figure><div class="cover-foot"><span><i></i> 创作从这里开始</span><a href="#services">探索中台 ↓</a></div></section>'+
+ main.innerHTML=directory+'<section class="studio-cover"><video class="cover-video" muted playsinline preload="metadata" poster="./cover-poster.jpg" style="display:none"></video><div class="cover-shade"></div><div class="cover-heading"><div class="cover-text"><div class="eyebrow">'+esc(settings.brandLine)+' <span>'+esc(settings.brandSubtitle)+'</span></div><h1 class="cover-title-text">'+esc(settings.homeTitle)+'</h1><p>'+esc(settings.intro)+'</p><div class="cover-actions"><button class="primary" id="openSchedule">'+esc(settings.scheduleButton)+' <span aria-hidden="true">↗</span></button><button id="openPeople">'+esc(settings.peopleButton)+' <span aria-hidden="true">→</span></button></div></div><div class="cover-art">'+lens+'<span>FOCUS ON<br>WHAT MATTERS.</span></div></div><figure class="cover-photo"><img src="./wuxian-final.jpg" alt="無限進步" width="5120" height="2880"></figure><div class="cover-foot"><span><i></i> 创作从这里开始</span><a href="#services">探索中台 ↓</a></div></section>'+
  '<div class="workspace-shortcuts"><button data-workspace="schedule"><span class="shortcut-icon" aria-hidden="true">▦</span><span><strong>工作安排</strong><small>今天 '+dailyTasks.length+' 项拍摄任务</small></span><span aria-hidden="true">↗</span></button><button data-workspace="people"><span class="shortcut-icon" aria-hidden="true">◔</span><span><strong>人效与产出</strong><small>日 / 周 / 月 · 目标与完成进度</small></span><span aria-hidden="true">↗</span></button><button data-workspace="rest"><span class="shortcut-icon" aria-hidden="true">◷</span><span><strong>出勤与调休</strong><small>今天已排 '+available+' 人上班 · '+off+' 人休息</small></span><span aria-hidden="true">↗</span></button></div>'+
  '<section class="home-products">'+title('01',esc(settings.productsTitle),'OUR PRODUCTS')+'<div class="chips">'+products.filter(p=>p!=='其他').map(p=>'<span class="tag">'+esc(p)+'</span>').join('')+'</div></section>'+
  '<section id="services" class="service-section">'+title('02',esc(settings.shootingTitle),'WHAT WE CREATE')+'<p class="art-caption">'+esc(settings.artCaption)+'</p><div class="service-list">'+shooting.map(([name,detail],i)=>'<article class="service-item">'+shootingArt(i)+'<span class="service-number">'+String(i+1).padStart(2,'0')+'</span><h3>'+esc(name)+'</h3><p>'+esc(detail)+'</p><button type="button" class="service-mark" data-service="'+esc(name)+'" aria-label="查看'+esc(name)+'安排">↗</button></article>').join('')+'</div></section>'+
@@ -934,21 +934,27 @@ function home(){
   section.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
  });
  bindTeamGallery();
- // 首页视频片头：自动播放→播完视频渐隐（露出黑底）→「無限進步」字标渐显
+ // 首页视频片头：仅严格桌面(宽屏+鼠标)才加载视频；手机/平板/触屏一律静态图，绝不播视频
  (()=>{
   const cover=main.querySelector('.studio-cover');
   const v=main.querySelector('.cover-video');
   const photo=main.querySelector('.cover-photo');
   if(!cover)return;
-  // 手机端：不加载视频（省流量防卡），恢复最初「左文案 + 右静态图」两栏布局
-  if(matchMedia('(max-width:760px)').matches){
-   if(v){v.querySelectorAll('source').forEach(s=>s.remove());v.removeAttribute('src');v.load();}
+  // 严格桌面判定：宽度≥1024 且 精确指针(鼠标) 且 非触屏
+  const isDesktop=matchMedia('(min-width:1024px) and (pointer:fine) and (hover:hover)').matches;
+  document.body.classList.toggle('desktop-video',isDesktop);
+  if(!isDesktop){
+   if(v){v.querySelectorAll('source').forEach(s=>s.remove());v.removeAttribute('src');v.style.display='none';try{v.load()}catch{}}
    if(photo)photo.style.visibility='visible';
    cover.classList.remove('art-in');
    return;
   }
+  // 桌面：注入视频源并显示
+  if(v){
+   if(!v.querySelector('source')){const s=document.createElement('source');s.src='./cover-bg.mp4';s.type='video/mp4';v.appendChild(s);}
+   v.style.display='';
+  }
   let revealed=false;
-  // JS 兜底：播放期彻底隐藏字标容器（防旧 CSS 缓存导致黑块）
   if(photo){photo.style.visibility='hidden';}
   const reveal=()=>{if(revealed)return;revealed=true;cover.classList.add('art-in');if(photo)photo.style.visibility='visible';};
   const fadeVideo=()=>{if(v)v.classList.add('is-faded');};
@@ -958,7 +964,6 @@ function home(){
   document.addEventListener('touchstart',tryPlay,{passive:true,once:true});
   document.addEventListener('click',tryPlay,{once:true});
   v.addEventListener('ended',()=>{fadeVideo();setTimeout(reveal,500);});
-  // 兜底：视频加载失败/无法播放时，3.5 秒后直接进入字标
   v.addEventListener('error',()=>{fadeVideo();reveal();});
   setTimeout(()=>{if(v.paused&&v.currentTime===0){fadeVideo();reveal();}},3500);
  })();
