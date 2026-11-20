@@ -108,8 +108,22 @@ body:has(.tasks-page) .tc-tabs{border-color:#e2dcef}
 .tc-tpl-addwrap input{flex:1;min-width:0}
 .tc-tpl-add{flex:none;width:30px;padding:0;border:1px solid #c9b8ec;border-radius:7px;background:#f3edff;color:#6b46c1;font-weight:800;cursor:pointer}
 .tc-tpl-add:hover{background:#e8dbff}
-.tc-tpl-textarea{width:100%;box-sizing:border-box;min-height:90px;max-height:420px;padding:10px;border:1px solid #d8cfe8;border-radius:8px;color:#2b2340;font-size:14px;line-height:1.5;background:#fff;resize:vertical}
+.tc-tpl-textarea{width:100%;box-sizing:border-box;min-height:60px;max-height:420px;padding:10px;border:1px solid #d8cfe8;border-radius:8px;color:#2b2340;font-size:14px;line-height:1.5;background:#fff;resize:vertical}
 .tc-tpl-textarea:focus{outline:none;border-color:#8a6fd4;box-shadow:0 0 0 3px #8a6fd422}
+.tc-tag-field{display:flex;gap:4px;align-items:stretch}
+.tc-tag-field > input{flex:1;min-width:0}
+.tc-tag-panel{display:block;position:absolute;z-index:30;left:0;right:0;margin-top:4px;padding:9px;background:#fff;border:1px solid #c9b8ec;border-radius:9px;box-shadow:0 6px 20px #3d2b6322}
+.tc-tag-panel[hidden]{display:none}
+.tc-tag-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+.tc-tag-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 4px 3px 9px;border-radius:999px;background:#f0eaff;color:#5b4690;font-size:12px;cursor:pointer}
+.tc-tag-chip:hover{background:#e6dbff}
+.tc-tag-chip-del{border:0;background:transparent;color:#8a70c4;font-size:14px;line-height:1;cursor:pointer;padding:0 2px}
+.tc-tag-chip-del:hover{color:#c0392b}
+.tc-tag-new{display:flex;gap:5px}
+.tc-tag-new-input{flex:1;min-width:0;padding:6px 8px;border:1px solid #d8cfe8;border-radius:6px;font-size:12px;color:#2b2340}
+.tc-tag-new-add{padding:6px 10px;border:1px solid #8a6fd4;border-radius:6px;background:#8a6fd4;color:#fff;font-size:12px;cursor:pointer}
+.tc-tag-new-add:hover{background:#7659c4}
+.tc-tag-label{position:relative}
 /* 可编辑详情内联输入 */
 .tc-inline{display:inline-block;width:auto;min-width:90px;padding:5px 9px;border:1px solid #d8cfe8;border-radius:7px;font:inherit;font-size:14px;color:#2b2340;background:#fff}
 .tc-inline:focus{outline:none;border-color:#8a6fd4;box-shadow:0 0 0 3px #8a6fd422}

@@ -448,21 +448,29 @@
   function tplDeliverTypes() { const c = config(); return Array.isArray(c.tplDeliverTypes) && c.tplDeliverTypes.length ? c.tplDeliverTypes : DELIVER.slice(); }
   function tplScriptKinds() { const c = config(); return Array.isArray(c.tplScriptKinds) && c.tplScriptKinds.length ? c.tplScriptKinds : ['脚本', '视频', '素材', '成片']; }
   function tplDatalist(id, list) { return `<datalist id="${id}">${list.map(v => `<option value="${esc(v)}"></option>`).join('')}</datalist>`; }
+  // 可管理标签的输入框：点「＋」展开面板，可点选已有标签、删除、新增（就地操作不重绘表单）
+  function tagField(name, label, key, list, value, placeholder, datalistId) {
+    return `<label class="tc-tag-label">${label} <span class="tc-tag-field"><input name="${name}" list="${datalistId}" value="${esc(value || '')}" placeholder="${placeholder}"><button type="button" class="tc-tpl-add" data-tag-open="${key}" title="管理标签">＋</button></span>
+      <span class="tc-tag-panel" data-tag-panel="${key}" hidden>
+        <span class="tc-tag-chips">${list.map(v => `<span class="tc-tag-chip" data-tag-pick="${esc(v)}">${esc(v)}<button type="button" class="tc-tag-chip-del" data-tag-del="${esc(v)}" title="删除">×</button></span>`).join('')}</span>
+        <span class="tc-tag-new"><input class="tc-tag-new-input" placeholder="输入新标签后按回车或点添加"><button type="button" class="tc-tag-new-add">添加</button></span>
+      </span></label>`;
+  }
   function tplForm(tpl) {
     const x = tpl || {};
     return `<form id="tcTplForm" class="tc-tpl-form" data-index="${tplFormEditIndex}" style="margin-top:14px;padding:14px;border:1px solid #d8cfe8;border-radius:10px;background:#faf8ff">
       ${tplDatalist('tcTplCatOpts', tplCategories())}${tplDatalist('tcTplDeliverOpts', tplDeliverTypes())}${tplDatalist('tcTplScriptOpts', tplScriptKinds())}
       <div class="tc-grid">
-        <label>模板名称（这个模板是干嘛的） <input name="name" required value="${esc(x.name || '')}" placeholder="例如：玉米粉对标模板"></label>
-        <label>品类 <span class="tc-tpl-addwrap"><input name="category" list="tcTplCatOpts" value="${esc(x.category || '')}" placeholder="选择或输入新品"><button type="button" class="tc-tpl-add" data-tpl-add="tplCategories" data-for="category" title="添加为常用品类">＋</button></span></label>
+        <label>模板名称 <input name="name" required value="${esc(x.name || '')}" placeholder="例如：玉米粉对标模板"></label>
+        ${tagField('category', '品类', 'tplCategories', tplCategories(), x.category, '选择或输入新品', 'tcTplCatOpts')}
         <label>目标条数 <input type="number" min="0" name="target" value="${esc(x.target || '')}" placeholder="例如：30"></label>
-        <label>交付类型 <span class="tc-tpl-addwrap"><input name="deliverType" list="tcTplDeliverOpts" value="${esc(x.deliverType || '')}" placeholder="选择或输入"><button type="button" class="tc-tpl-add" data-tpl-add="tplDeliverTypes" data-for="deliverType" title="添加为常用交付类型">＋</button></span></label>
-        <label>脚本标签 <span class="tc-tpl-addwrap"><input name="scriptKind" list="tcTplScriptOpts" value="${esc(x.scriptKind || '')}" placeholder="选择或输入"><button type="button" class="tc-tpl-add" data-tpl-add="tplScriptKinds" data-for="scriptKind" title="添加为常用脚本标签">＋</button></span></label>
+        ${tagField('deliverType', '交付类型', 'tplDeliverTypes', tplDeliverTypes(), x.deliverType, '选择或输入', 'tcTplDeliverOpts')}
+        ${tagField('scriptKind', '脚本标签', 'tplScriptKinds', tplScriptKinds(), x.scriptKind, '选择或输入', 'tcTplScriptOpts')}
       </div>
       ${benchEditor(benchList(x))}
       <div class="tc-tpl-fields">
-        <label style="display:block;margin-top:10px">拍摄内容 <textarea name="brief" class="tc-tpl-textarea" rows="4" placeholder="这个模板要拍什么内容、怎么拍">${esc(x.brief || '')}</textarea></label>
-        <label style="display:block;margin-top:8px">拍摄需求 <textarea name="need" class="tc-tpl-textarea" rows="4" placeholder="拍摄要求、注意事项、复刻要点等">${esc(x.need || '')}</textarea></label>
+        <label style="display:block;margin-top:10px">拍摄内容 <textarea name="brief" class="tc-tpl-textarea" rows="2" placeholder="这个模板要拍什么内容、怎么拍">${esc(x.brief || '')}</textarea></label>
+        <label style="display:block;margin-top:8px">拍摄需求 <textarea name="need" class="tc-tpl-textarea" rows="2" placeholder="拍摄要求、注意事项、复刻要点等">${esc(x.need || '')}</textarea></label>
       </div>
       <div class="bar"><button type="submit" class="tc-btn tc-primary">保存模板</button><button type="button" id="tcTplCancel" class="tc-btn">取消</button></div>
     </form>`;
@@ -747,13 +755,52 @@
     if (tplNew) tplNew.onclick = () => { tplFormOpen = true; tplFormEditIndex = -1; render(main); };
     const tplCancel = main.querySelector('#tcTplCancel');
     if (tplCancel) tplCancel.onclick = () => { tplFormOpen = false; tplFormEditIndex = -1; render(main); };
-    qa('[data-tpl-add]').forEach(b => b.onclick = () => {
-      const form = main.querySelector('#tcTplForm'); if (!form) return;
-      const input = form.querySelector('[name="' + b.dataset.for + '"]');
-      const val = (input?.value || '').trim(); if (!val) { input?.focus(); return; }
-      const key = b.dataset.tplAdd; const cfg = config();
-      const list = Array.isArray(cfg[key]) ? cfg[key] : [];
-      if (!list.includes(val)) { list.push(val); cfg[key] = list; saveConfig(cfg); render(main); }
+    // 标签面板：点＋展开，点选/增删标签就地操作，不重绘表单（避免丢失已填内容）
+    const tagInputName = { tplCategories: 'category', tplDeliverTypes: 'deliverType', tplScriptKinds: 'scriptKind' };
+    const tagDatalistId = { tplCategories: 'tcTplCatOpts', tplDeliverTypes: 'tcTplDeliverOpts', tplScriptKinds: 'tcTplScriptOpts' };
+    qa('[data-tag-open]').forEach(b => b.onclick = () => {
+      const panel = main.querySelector('[data-tag-panel="' + b.dataset.tagOpen + '"]');
+      if (!panel) return;
+      qa('[data-tag-panel]').forEach(p => { if (p !== panel) p.hidden = true; });
+      panel.hidden = !panel.hidden;
+    });
+    qa('[data-tag-pick]').forEach(chip => chip.onclick = ev => {
+      if (ev.target.closest('[data-tag-del]')) return;
+      const panel = chip.closest('[data-tag-panel]'); if (!panel) return;
+      const input = main.querySelector('[name="' + (tagInputName[panel.dataset.tagPanel] || '') + '"]');
+      if (input) input.value = chip.dataset.tagPick;
+      panel.hidden = true;
+    });
+    qa('[data-tag-del]').forEach(btn => btn.onclick = ev => {
+      ev.stopPropagation();
+      const key = btn.closest('[data-tag-panel]').dataset.tagPanel;
+      const val = btn.dataset.tagDel; const cfg = config();
+      cfg[key] = (cfg[key] || []).filter(v => v !== val); saveConfig(cfg);
+      btn.closest('[data-tag-chip]')?.remove();
+      const dl = main.querySelector('#' + tagDatalistId[key]);
+      dl?.querySelector('option[value="' + CSS.escape(val) + '"]')?.remove();
+    });
+    qa('.tc-tag-new-add').forEach(add => add.onclick = () => {
+      const panel = add.closest('[data-tag-panel]'); const key = panel.dataset.tagPanel;
+      const input = panel.querySelector('.tc-tag-new-input'); const val = (input.value || '').trim();
+      if (!val) { input.focus(); return; }
+      const cfg = config(); const list = Array.isArray(cfg[key]) ? cfg[key] : [];
+      if (!list.includes(val)) {
+        list.push(val); cfg[key] = list; saveConfig(cfg);
+        panel.querySelector('.tc-tag-chips').insertAdjacentHTML('beforeend', `<span class="tc-tag-chip" data-tag-pick="${esc(val)}">${esc(val)}<button type="button" class="tc-tag-chip-del" data-tag-del="${esc(val)}" title="删除">×</button></span>`);
+        const dl = main.querySelector('#' + tagDatalistId[key]);
+        dl?.insertAdjacentHTML('beforeend', `<option value="${esc(val)}"></option>`);
+        const chip = panel.querySelector('.tc-tag-chips .tc-tag-chip:last-child');
+        chip.onclick = ev => { if (ev.target.closest('[data-tag-del]')) return; const p = chip.closest('[data-tag-panel]'); const inp = main.querySelector('[name="' + (tagInputName[p.dataset.tagPanel] || '') + '"]'); if (inp) inp.value = val; p.hidden = true; };
+        chip.querySelector('[data-tag-del]').onclick = ev => {
+          ev.stopPropagation(); const cfg2 = config(); cfg2[key] = (cfg2[key] || []).filter(v => v !== val); saveConfig(cfg2); chip.remove();
+          main.querySelector('#' + tagDatalistId[key])?.querySelector('option[value="' + CSS.escape(val) + '"]')?.remove();
+        };
+      }
+      input.value = ''; input.focus();
+    });
+    qa('.tc-tag-new-input').forEach(inp => inp.onkeydown = ev => {
+      if (ev.key === 'Enter') { ev.preventDefault(); inp.closest('.tc-tag-panel').querySelector('.tc-tag-new-add').click(); }
     });
     qa('[data-edit-template]').forEach(b => b.onclick = () => { tplFormOpen = true; tplFormEditIndex = Number(b.dataset.editTemplate); render(main); });
     const tplFormEl = main.querySelector('#tcTplForm');
