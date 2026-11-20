@@ -133,3 +133,10 @@ body:has(.studio-cover) header{background:#000!important}
 .studio-cover .cover-actions button{min-height:44px;border-radius:3px}
 .studio-cover #openPeople{border:1px solid #444;color:#eee;background:transparent}
 .studio-cover #openPeople:hover{border-color:#aaa}
+
+/* 首页片头：無限進步字标居中渐显 */
+.studio-cover .cover-photo{position:absolute!important;inset:0;display:flex;align-items:center;justify-content:center;background:transparent!important;border:0!important;box-shadow:none!important;aspect-ratio:auto!important;overflow:visible;z-index:2;pointer-events:none;animation:none!important}
+.studio-cover .cover-photo img{width:auto!important;height:auto!important;max-width:min(380px,36vw);max-height:52%;object-fit:contain;opacity:0;transition:opacity 2.4s ease;filter:none!important;border:0}
+.studio-cover.art-in .cover-photo img{opacity:1}
+.studio-cover.art-in .cover-heading{opacity:0;transition:opacity 1s ease;pointer-events:none}
+.studio-cover.art-in .cover-photo img{max-width:min(560px,52vw)!important;max-height:66%!important}
