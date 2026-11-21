@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='15';
+ var V='16';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -940,8 +940,8 @@ function home(){
   const v=main.querySelector('.cover-video');
   const photo=main.querySelector('.cover-photo');
   if(!cover)return;
-  // 严格桌面判定：宽度≥1024 且 精确指针(鼠标) 且 非触屏
-  const isDesktop=matchMedia('(min-width:1024px) and (pointer:fine) and (hover:hover)').matches;
+  // 桌面判定：仅按屏幕宽度(≥1024px)。避免 pointer/hover 判定在触屏笔记本/远程桌面失效导致PC无视频；手机(含横屏一般<1024)不播。
+  const isDesktop=matchMedia('(min-width:1024px)').matches;
   document.body.classList.toggle('desktop-video',isDesktop);
   if(!isDesktop){
    if(v){v.querySelectorAll('source').forEach(s=>s.remove());v.removeAttribute('src');v.style.display='none';try{v.load()}catch{}}
