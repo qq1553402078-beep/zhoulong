@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='20';
+ var V='21';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -207,6 +207,8 @@ main:not(.home-page) h1 {
 .multi-options label[hidden] { display:none !important; }
 .multi-options label[data-equip-used] > span { color:#f0b429; }
 .busy-hint.equip-busy { display:block; color:#f0b429; font-size:10px; line-height:1.3; opacity:.95; }
+.busy-hint.booking-busy { display:block; color:#ff8a8a; font-size:10px; line-height:1.3; opacity:1; font-weight:700; }
+.multi-picker label[data-booked="1"] > span { color:#ff9b9b; }
 .multi-options input[type=checkbox]:disabled + span { opacity:.55; }
 .multi-options input[type=checkbox]:disabled { cursor:not-allowed; }
 .staff-no-results { display:block; padding:6px; }
@@ -715,6 +717,8 @@ const dailyGroupKey='studio-daily-task-groups-v1';
 const defaultDailyGroups=['拍摄组','创新组'];
 let dailyGroups=[];
 let innovationDeliverables=[];
+// 已确认"重复安排"的模特/手模（本次会话内）：key=日期|字段|任务|姓名，确认过的不再重复弹窗
+const confirmedReuse=new Set();
 let innovationShotTypes=[];
 // 记录每个作用域（unified / member:人名）用户主动添加的数量类型，render 重建时保持显示
 const shotInputChosen={};
@@ -1294,8 +1298,13 @@ function taskRow(t,index){
  const isEquip=k==='equipment';
  const equipUsed=isEquip?equipmentUsage(name,t.date,t.id):'';
  const equipOff=isEquip&&!!equipUsed&&!chosen.includes(name); // 已被别处占用且本任务未选 → 禁用
+ // 模特/手模：检测当天是否已被安排到其它任务（显示占用+重复安排需确认）
+ const isBookableField=k==='model'||k==='handModel';
+ const booking=isBookableField&&!chosen.includes(name)?staffBookingUsage(name,t.date,t.id,k):'';
+ const reuseKey=isBookableField?(t.date+'|'+k+'|'+t.id+'|'+name):'';
  const disabled=(off&&!chosen.includes(name))||equipOff;
- return '<label'+(isStaff?' data-staff-role="'+esc(sp?'特殊':roleByName.get(name))+'"':'')+(isEquip&&equipUsed?' data-equip-used="1"':'')+'><input type="checkbox" '+(isStaff?'data-staff-picker ':'')+'form="'+formId+'" name="'+k+'" value="'+esc(name)+'" '+(chosen.includes(name)?'checked ':'')+(disabled?'disabled ':'')+' onchange="updateMultiSummary(this)"><span>'+esc(name)+(retired?' · 离职':off?' · 休息':'')+(equipUsed?'<small class="busy-hint equip-busy">'+esc(equipUsed)+'</small>':hint?'<small class="busy-hint">'+esc(hint)+'</small>':'')+'</span></label>';
+ const onChange=isBookableField?'onStaffPickerChange(this)':'updateMultiSummary(this)';
+ return '<label'+(isStaff?' data-staff-role="'+esc(sp?'特殊':roleByName.get(name))+'"':'')+(isEquip&&equipUsed?' data-equip-used="1"':'')+(booking?' data-booked="1"':'')+'><input type="checkbox" '+(isStaff?'data-staff-picker ':'')+'form="'+formId+'" name="'+k+'" value="'+esc(name)+'" '+(chosen.includes(name)?'checked ':'')+(disabled?'disabled ':'')+(booking?' data-booked="'+esc(booking)+'" data-reuse-key="'+esc(reuseKey)+'"':'')+' onchange="'+onChange+'"><span>'+esc(name)+(retired?' · 离职':off?' · 休息':'')+(booking?'<small class="busy-hint booking-busy">⚠'+esc(booking)+'</small>':equipUsed?'<small class="busy-hint equip-busy">'+esc(equipUsed)+'</small>':hint?'<small class="busy-hint">'+esc(hint)+'</small>':'')+'</span></label>';
  }).join('')+'</div>'+(isStaff?'<small class="staff-no-results" hidden>没有匹配的姓名</small>':'')+'</details>';
  };
  const quantity='min="0" step="1" placeholder="—"';
@@ -1335,6 +1344,27 @@ function equipmentUsage(name,date,excludeId){
   return used.includes(name)?(members(t.lead).join('、')||'摄影师待定')+' · '+(t.product||t.title||'任务'):'';
  }).filter(Boolean);
  return parts.length?'已安排：'+parts.join('；'):'';
+}
+// 模特/手模当天是否已被安排到其它任务（返回占用说明，空=未被占用）
+function staffBookingUsage(name,date,excludeId,field){
+ if(!name||!date)return '';
+ const parts=tasks.filter(t=>t.id!==excludeId&&t.date===date).map(t=>{
+  const used=members(t[field]||'');
+  return used.includes(name)?((members(t.lead).join('、')||'摄影师待定')+' · '+(t.product||t.title||'任务')):'';
+ }).filter(Boolean);
+ return parts.length?'已安排：'+parts.join('；'):'';
+}
+// 勾选被占用的模特/手模时：需确认才允许重复安排
+function onStaffPickerChange(input){
+ const booked=input.dataset.booked||'';
+ if(input.checked&&booked){
+  const key=input.dataset.reuseKey||'';
+  if(key&&!confirmedReuse.has(key)){
+   if(!confirm('【'+input.value+'】今天已经安排给其它任务：\n'+booked+'\n\n确定要重复安排吗？')){input.checked=false;}
+   else{confirmedReuse.add(key);}
+  }
+ }
+ updateMultiSummary(input);
 }
 function equipmentConflict(t){
  const chosen=Array.isArray(t.equipment)?t.equipment:members(t.equipment||'');
