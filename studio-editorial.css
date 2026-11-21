@@ -201,7 +201,7 @@ body:has(.studio-cover) header{background:#000!important}
  .studio-cover .cover-photo{position:relative!important;inset:auto!important;display:flex!important;align-items:center!important;justify-content:center!important;visibility:visible!important;width:100%!important;aspect-ratio:1/1!important;background:transparent!important}
  .studio-cover .cover-photo img{position:static!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:contain!important;opacity:1!important}
 }
-/* ===== 终极总开关：默认静态两栏(手机/平板)；仅 body.desktop-video 全屏视频 ===== */
+/* ===== 终极：默认(手机/窄屏)静态两栏；PC(>=1024px)全屏视频。纯CSS媒体查询，不依赖JS ===== */
 .studio-cover{display:grid!important;grid-template-columns:1.15fr .85fr!important;gap:8px;background:#0b0b0b!important;min-height:0!important;height:auto!important;padding:14px 12px!important;border-radius:12px!important;margin:0 0 18px!important;width:auto!important}
 .studio-cover:not(.art-in){background:#0b0b0b!important}
 .studio-cover .cover-video{display:none!important}
@@ -212,14 +212,16 @@ body:has(.studio-cover) header{background:#000!important}
 .studio-cover .cover-photo{position:relative!important;inset:auto!important;display:flex!important;width:100%!important;aspect-ratio:1/1!important;visibility:visible!important;background:transparent!important}
 .studio-cover .cover-photo img{position:static!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:contain!important;opacity:1!important}
 .studio-cover .cover-foot,.studio-cover .cover-art{display:none!important}
-body.desktop-video .studio-cover{display:grid!important;grid-template-columns:minmax(240px,.82fr) minmax(0,1.4fr)!important;width:100vw!important;max-width:none!important;margin-left:calc(50% - 50vw)!important;margin-right:calc(50% - 50vw)!important;height:100vh!important;min-height:100vh!important;padding:0!important;border-radius:0!important;background:#000!important}
-body.desktop-video .studio-cover:not(.art-in){background:#0b0b0b url('./cover-poster.jpg') center/cover no-repeat!important}
-body.desktop-video .studio-cover .cover-video{display:block!important;position:absolute!important;inset:0;width:100%!important;height:100%!important;z-index:0}
-body.desktop-video .studio-cover .cover-heading{display:block!important}
-body.desktop-video .studio-cover .cover-text{padding:clamp(24px,4vw,58px)!important}
-body.desktop-video .studio-cover .cover-title-text{font-size:clamp(30px,4vw,48px)!important}
-body.desktop-video .studio-cover .cover-shade{display:block!important;z-index:1}
-body.desktop-video .studio-cover .cover-photo{position:absolute!important;inset:0!important;width:auto!important;aspect-ratio:auto!important;z-index:2;visibility:visible}
-body.desktop-video .studio-cover .cover-photo img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important}
-body.desktop-video .studio-cover .cover-foot{display:block!important}
-body.desktop-video .studio-cover.art-in .cover-heading{opacity:0!important;transition:opacity 1s ease}
+@media(min-width:1024px){
+ .studio-cover{display:grid!important;grid-template-columns:minmax(240px,.82fr) minmax(0,1.4fr)!important;width:100vw!important;max-width:none!important;margin-left:calc(50% - 50vw)!important;margin-right:calc(50% - 50vw)!important;height:100vh!important;min-height:100vh!important;padding:0!important;border-radius:0!important;background:#000!important}
+ .studio-cover:not(.art-in){background:#0b0b0b url("./cover-poster.jpg") center/cover no-repeat!important}
+ .studio-cover .cover-video{display:block!important;position:absolute!important;inset:0;width:100%!important;height:100%!important;z-index:0}
+ .studio-cover .cover-heading{display:block!important}
+ .studio-cover .cover-text{padding:clamp(24px,4vw,58px)!important}
+ .studio-cover .cover-title-text{font-size:clamp(30px,4vw,48px)!important}
+ .studio-cover .cover-shade{display:block!important;z-index:1}
+ .studio-cover .cover-photo{position:absolute!important;inset:0!important;width:auto!important;aspect-ratio:auto!important;z-index:2;visibility:visible}
+ .studio-cover .cover-photo img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important}
+ .studio-cover .cover-foot{display:block!important}
+ .studio-cover.art-in .cover-heading{opacity:0!important;transition:opacity 1s ease}
+}

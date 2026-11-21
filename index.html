@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='16';
+ var V='17';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -73,7 +73,7 @@ body:has(.people-page){background:#071326;color:#edf4ff}body:has(.people-page) h
 @media(max-width:760px){header,body:has(.schedule-page) header{padding:12px 4%;gap:8px}header nav{width:100%;overflow-x:auto;padding-bottom:4px}header nav button{flex:none;white-space:nowrap}.schedule-page{padding:14px 4%}.schedule-hero{padding:17px;border-radius:14px}.schedule-hero h1{font-size:30px}.schedule-hero time{font-size:17px}.schedule-page .cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0}.schedule-page .card{padding:9px 10px}.schedule-page .card b{font-size:21px;margin-top:3px}.schedule-tools{gap:7px;margin:10px 0}.schedule-tools .search{min-width:100%;order:2}.mobile-schedule,.mobile-edit-toggle{display:block}.schedule-page .worksheet.edit-grid{display:none}.schedule-page.mobile-editing .worksheet.edit-grid{display:block}.schedule-page.mobile-editing .mobile-schedule{display:none}.mobile-editing .edit-grid table{min-width:900px}.schedule-page .capture{overflow:auto}.schedule-page .capture table{min-width:640px}}
 </style><style>.schedule-dates,.date-options{display:flex;align-items:flex-start;flex-wrap:wrap;gap:8px}.schedule-dates{margin:0 0 18px}.date-options{margin-top:8px}.schedule-dates button,.schedule-dates summary{padding:9px 12px;border:1px solid #554362;border-radius:8px;background:#211c29;color:#efe7fa}.schedule-dates summary{cursor:pointer}.schedule-dates button[aria-pressed="true"]{outline:2px solid #d4b3ff;outline-offset:1px}.schedule-dates .date-today button{background:#d8c0ff;color:#21152e;border-color:#d8c0ff}</style>
 <link rel="stylesheet" href="./studio-theme.css?v=v3">
-<link rel="stylesheet" href="./studio-editorial.css?v=v5">
+<link rel="stylesheet" href="./studio-editorial.css?v=v6">
 <link rel="stylesheet" href="./task-center.css?v=tc-5">
 <style id="innovation-fold">
 /* 折叠态：把标记为「空值」的类型项/列隐藏 */
@@ -919,7 +919,7 @@ function home(){
  const off=restStaff.filter(p=>isRestShift(availability[p.name])).length;
  const title=(number,label,en)=>'<div class="section-heading"><span class="section-index">'+number+' / '+en+'</span><h2>'+label+'</h2></div>';
  const lens='<svg class="lens-art" viewBox="0 0 320 320" aria-hidden="true"><circle cx="160" cy="160" r="144"/><circle cx="160" cy="160" r="113"/><circle cx="160" cy="160" r="70"/><path d="M160 0v43M160 277v43M0 160h43M277 160h43M160 47l98 57v112l-98 57-98-57V104zM160 90l61 35v70l-61 35-61-35v-70z"/><circle cx="160" cy="160" r="4"/></svg>';
- main.innerHTML=directory+'<section class="studio-cover"><video class="cover-video" muted playsinline preload="metadata" poster="./cover-poster.jpg" style="display:none"></video><div class="cover-shade"></div><div class="cover-heading"><div class="cover-text"><div class="eyebrow">'+esc(settings.brandLine)+' <span>'+esc(settings.brandSubtitle)+'</span></div><h1 class="cover-title-text">'+esc(settings.homeTitle)+'</h1><p>'+esc(settings.intro)+'</p><div class="cover-actions"><button class="primary" id="openSchedule">'+esc(settings.scheduleButton)+' <span aria-hidden="true">↗</span></button><button id="openPeople">'+esc(settings.peopleButton)+' <span aria-hidden="true">→</span></button></div></div><div class="cover-art">'+lens+'<span>FOCUS ON<br>WHAT MATTERS.</span></div></div><figure class="cover-photo"><img src="./wuxian-final.jpg" alt="無限進步" width="5120" height="2880"></figure><div class="cover-foot"><span><i></i> 创作从这里开始</span><a href="#services">探索中台 ↓</a></div></section>'+
+ main.innerHTML=directory+'<section class="studio-cover"><video class="cover-video" autoplay muted playsinline preload="metadata" poster="./cover-poster.jpg"><source src="./cover-bg.mp4" type="video/mp4" media="(min-width: 1024px)"></video><div class="cover-shade"></div><div class="cover-heading"><div class="cover-text"><div class="eyebrow">'+esc(settings.brandLine)+' <span>'+esc(settings.brandSubtitle)+'</span></div><h1 class="cover-title-text">'+esc(settings.homeTitle)+'</h1><p>'+esc(settings.intro)+'</p><div class="cover-actions"><button class="primary" id="openSchedule">'+esc(settings.scheduleButton)+' <span aria-hidden="true">↗</span></button><button id="openPeople">'+esc(settings.peopleButton)+' <span aria-hidden="true">→</span></button></div></div><div class="cover-art">'+lens+'<span>FOCUS ON<br>WHAT MATTERS.</span></div></div><figure class="cover-photo"><img src="./wuxian-final.jpg" alt="無限進步" width="5120" height="2880"></figure><div class="cover-foot"><span><i></i> 创作从这里开始</span><a href="#services">探索中台 ↓</a></div></section>'+
  '<div class="workspace-shortcuts"><button data-workspace="schedule"><span class="shortcut-icon" aria-hidden="true">▦</span><span><strong>工作安排</strong><small>今天 '+dailyTasks.length+' 项拍摄任务</small></span><span aria-hidden="true">↗</span></button><button data-workspace="people"><span class="shortcut-icon" aria-hidden="true">◔</span><span><strong>人效与产出</strong><small>日 / 周 / 月 · 目标与完成进度</small></span><span aria-hidden="true">↗</span></button><button data-workspace="rest"><span class="shortcut-icon" aria-hidden="true">◷</span><span><strong>出勤与调休</strong><small>今天已排 '+available+' 人上班 · '+off+' 人休息</small></span><span aria-hidden="true">↗</span></button></div>'+
  '<section class="home-products">'+title('01',esc(settings.productsTitle),'OUR PRODUCTS')+'<div class="chips">'+products.filter(p=>p!=='其他').map(p=>'<span class="tag">'+esc(p)+'</span>').join('')+'</div></section>'+
  '<section id="services" class="service-section">'+title('02',esc(settings.shootingTitle),'WHAT WE CREATE')+'<p class="art-caption">'+esc(settings.artCaption)+'</p><div class="service-list">'+shooting.map(([name,detail],i)=>'<article class="service-item">'+shootingArt(i)+'<span class="service-number">'+String(i+1).padStart(2,'0')+'</span><h3>'+esc(name)+'</h3><p>'+esc(detail)+'</p><button type="button" class="service-mark" data-service="'+esc(name)+'" aria-label="查看'+esc(name)+'安排">↗</button></article>').join('')+'</div></section>'+
@@ -934,25 +934,18 @@ function home(){
   section.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
  });
  bindTeamGallery();
- // 首页视频片头：仅严格桌面(宽屏+鼠标)才加载视频；手机/平板/触屏一律静态图，绝不播视频
+ // 首页视频片头：视频是否加载由 HTML <source media="(min-width:1024px)"> 原生控制，显示由 CSS 媒体查询控制，均不依赖 JS。
+ // JS 仅负责桌面端播放与播完后的字标渐显；手机端跳过动画保持静态两栏。
  (()=>{
   const cover=main.querySelector('.studio-cover');
   const v=main.querySelector('.cover-video');
   const photo=main.querySelector('.cover-photo');
   if(!cover)return;
-  // 桌面判定：仅按屏幕宽度(≥1024px)。避免 pointer/hover 判定在触屏笔记本/远程桌面失效导致PC无视频；手机(含横屏一般<1024)不播。
-  const isDesktop=matchMedia('(min-width:1024px)').matches;
-  document.body.classList.toggle('desktop-video',isDesktop);
-  if(!isDesktop){
-   if(v){v.querySelectorAll('source').forEach(s=>s.remove());v.removeAttribute('src');v.style.display='none';try{v.load()}catch{}}
+  // 手机/窄屏：跳过片头，静态展示（CSS 已隐藏视频、显示两栏）
+  if(!matchMedia('(min-width:1024px)').matches){
    if(photo)photo.style.visibility='visible';
    cover.classList.remove('art-in');
    return;
-  }
-  // 桌面：注入视频源并显示
-  if(v){
-   if(!v.querySelector('source')){const s=document.createElement('source');s.src='./cover-bg.mp4';s.type='video/mp4';v.appendChild(s);}
-   v.style.display='';
   }
   let revealed=false;
   if(photo){photo.style.visibility='hidden';}
