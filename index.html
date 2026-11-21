@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='21';
+ var V='22';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -719,6 +719,8 @@ let dailyGroups=[];
 let innovationDeliverables=[];
 // 已确认"重复安排"的模特/手模（本次会话内）：key=日期|字段|任务|姓名，确认过的不再重复弹窗
 const confirmedReuse=new Set();
+// 填报分类临时覆盖（切换下拉即时预览模板用）：taskId -> 分类名
+const editingGroup={};
 let innovationShotTypes=[];
 // 记录每个作用域（unified / member:人名）用户主动添加的数量类型，render 重建时保持显示
 const shotInputChosen={};
@@ -1366,6 +1368,16 @@ function onStaffPickerChange(input){
  }
  updateMultiSummary(input);
 }
+// 切换填报分类：即时预览对应模板（拍摄组↔创新组），记住滚动位置并重新打开该卡片
+function onDailyGroupChange(select,taskId){
+ const val=select.value||'';
+ editingGroup[taskId]=val;
+ const scroll=window.scrollY;
+ render();
+ const card=document.querySelector('[data-daily-task-card="'+CSS.escape(taskId)+'"]');
+ if(card){card.open=true;const inp=card.querySelector('[name=dailyGroup]');if(inp)inp.value=val;}
+ window.scrollTo(0,scroll);
+}
 function equipmentConflict(t){
  const chosen=Array.isArray(t.equipment)?t.equipment:members(t.equipment||'');
  if(!chosen.length||!t.date)return '';
@@ -1965,6 +1977,7 @@ function people(){
    message.textContent='已有验收记录，请到工作安排修改交付状态和时间。';return;
   }
   if(save(tasks.map(task=>task.id===current.id?next:task))){
+   delete editingGroup[current.id]; // 已保存到任务，清除临时预览覆盖
    render();
    const saved=[...main.querySelectorAll('[data-daily-task]')].find(item=>item.dataset.dailyTask===current.id);
    saved.querySelector('[role="status"]').textContent='已保存任务填报。';
@@ -2461,6 +2474,7 @@ function shootingComplete(task){
 function dailyTaskReports(assignments){
  const crewRoles=[['lead','摄影师'],['model','模特'],['handModel','手模'],['assistant','摄助'],['retouch','修片']];
  const classify=task=>{
+  if(editingGroup[task.id])return editingGroup[task.id];
   const stored=task.dailyGroup==='AI素材／生成'?'':task.dailyGroup;
   return stored||(isInnovationTask(task)?'创新组':'拍摄组');
  };
@@ -2489,7 +2503,8 @@ function dailyTaskReports(assignments){
   const groupIcon=group==='创新组'?'✨':group==='拍摄组'?'📷':'📋';
   const groupStyle=group==='创新组'?'background:linear-gradient(90deg,#4a2d78,#2d1f52);border-left:4px solid #b06bff;color:#f0e2ff;padding:10px 14px;border-radius:10px;font-size:16px;box-shadow:0 4px 18px #a76bf033':'';
   return '<section class="daily-task-group daily-task-group--'+groupCls+'"><h4 style="'+groupStyle+'">'+groupIcon+' '+esc(group)+(group==='创新组'?' · 创新交付':'')+' <span style="opacity:.8;font-size:13px">'+items.length+' 项</span></h4>'+items.map(task=>{
-  const innovation=isInnovationTask(task);
+  const groupOverride=editingGroup[task.id];
+  const innovation=groupOverride?groupOverride==='创新组':isInnovationTask(task);
   // 当日拍摄明细：选项用全员汇总的共享集合（见上方 sharedDataLists）
   const shotTypeOptions=[...sharedTypes];
   const productOptions=[...sharedProducts];
@@ -2606,7 +2621,7 @@ function dailyTaskReports(assignments){
   return '<details class="daily-task-card daily-task-card--'+cardState+'" data-daily-task-card="'+esc(task.id)+'"'+((reported||innovationDone)?'':' open')+'><summary><strong class="daily-summary-product">'+esc(task.product||task.title||'拍摄任务')+'</strong><span class="daily-summary-crew"><em>摄影师：'+esc(leadName)+'</em><em>模特：'+esc(modelName)+'</em></span><span class="daily-summary-state">'+esc(summary)+' · '+esc(statusText)+'</span></summary>'+
    '<form class="daily-task-report" data-daily-task="'+esc(task.id)+'">'+
    '<p class="daily-task-meta"><span><strong>协作成员</strong> '+esc(crew||'待安排人员')+'</span><span><strong>'+(innovation?'创新交付':'拍摄进度')+'</strong> '+(innovation?'创新组按脚本、AI 素材、完整视频等交付记录。':'计划 '+esc(task.target==null||task.target===''?'—':task.target)+' 条 · 条数完成度 '+progress+' · '+(shootingComplete(task)?'已完成':'未完成'))+'</span></p>'+
-   '<div class="bar"><label>填报分类<select name="dailyGroup" title="切换后点保存，即按所选类型填报">'+options(groups,group)+'</select></label><small style="color:#9b8fb0;align-self:center">切换后点「保存」即变为对应填报</small>'+(innovation?innovationFields:normalFields)+
+   '<div class="bar"><label>填报分类<select name="dailyGroup" onchange="onDailyGroupChange(this,\''+esc(task.id)+'\')" title="切换后立即显示对应填报模板">'+options(groups,group)+'</select></label><small style="color:#7ec8a0;align-self:center">切换后立即切换填报模板</small>'+(innovation?innovationFields:normalFields)+
    (innovation?'':'<label>拍摄完成状态<select name="completion">'+[['auto','自动按数量判断'],['complete','已完成'],['incomplete','未完成']].map(([value,label])=>'<option value="'+value+'"'+((task.shootingCompletion||'auto')===value?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
    '<label>交付阶段<select name="status">'+options(task.status==='已验收'?statuses:statuses.slice(0,4),task.status||statuses[0])+'</select></label>'+
    '<label>首次交付时间<input type="datetime-local" name="delivery" value="'+esc(task.delivery)+'"></label>')+'</div>'+
