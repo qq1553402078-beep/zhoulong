@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='18';
+ var V='19';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -734,7 +734,9 @@ function saveManagedOptions(){
   innovationShotTypes:innovationShotTypes.filter(name=>!defaultInnovationShotTypes.includes(name))
  };
  localStorage.setItem(settingsKey,JSON.stringify(settings));
- window.dispatchEvent(new Event('focus'));
+ // 先让输入框失焦(否则team-sync会因"正在编辑"跳过同步)，再延迟触发同步，确保新增的自定义类型一定传到团队云端
+ try{if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}catch{}
+ setTimeout(()=>window.dispatchEvent(new Event('focus')),50);
 }
 let tab='home', day=tasks.some(t=>t.date===today())?today():(tasks.map(t=>t.date).filter(Boolean).sort().at(-1)||today()), month=day.slice(0,7), person='';
 let scheduleStatus='', scheduleQuery='';
