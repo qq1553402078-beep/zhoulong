@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='22';
+ var V='23';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -41,6 +41,7 @@
 .schedule-page .worksheet{border:1px solid #596453;box-shadow:0 12px 28px #222b211a}.schedule-page .worksheet th{background:#b8a271;color:#211f17;padding:16px 12px;letter-spacing:.04em}.schedule-page .worksheet td{padding:14px 12px}.schedule-page .worksheet .ops-requirement{width:43%;min-width:340px}.schedule-page .worksheet .ops-requirement textarea{min-height:126px;resize:vertical;line-height:1.65}.schedule-page .worksheet input,.schedule-page .worksheet select{min-height:36px}.reference-links{display:grid;gap:6px;margin-top:8px}.reference-links a{overflow-wrap:anywhere;font-size:12px}.daily-output{margin:18px 0 26px}.daily-output .bar{margin:0}.daily-output input[type=number]{max-width:160px}.daily-output .report-meta{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}.daily-output p{margin:0}
 .schedule-page .worksheet{max-height:none}.schedule-page{max-width:1640px;padding-inline:3%}.schedule-page .new-task td{background:#394738}.schedule-page .new-task .ops-requirement textarea{min-height:85px}.schedule-page .capture td{padding:9px 11px;min-width:0;vertical-align:middle;overflow-wrap:anywhere}.schedule-page .capture th{padding:9px 11px}.schedule-page .capture .capture-notes{width:44%;white-space:pre-wrap;line-height:1.35}.schedule-page .capture table{table-layout:fixed}.schedule-page .capture th:nth-child(4){white-space:normal}.schedule-page .capture-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.schedule-page .capture-heading h1{font-size:26px;margin:0}.capture-links{display:block;font-size:11px;overflow-wrap:anywhere}
 .output-chart{padding:18px clamp(14px,3vw,28px);border-bottom:1px solid #ded7c9;background:#f9f6ec}.output-chart .chart-switch{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}.chart-switch button{background:#ebe6d8;color:#394236}.chart-switch button[aria-pressed=true]{background:#344b38;color:#fff}.chart-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}.chart-row{display:grid;grid-template-columns:minmax(76px,120px) minmax(40px,1fr) 85px;gap:10px;align-items:center}.chart-track{height:13px;border-radius:10px;background:#e8e4d7;overflow:hidden}.chart-bar{height:100%;border-radius:10px;background:linear-gradient(90deg,#345341,#799267)}.chart-value{text-align:right;font-variant-numeric:tabular-nums}.output-chart .empty{text-align:left;padding:12px 0;margin:0}.chart-caption{color:#59685e;font-size:12px;margin-top:12px}
+.chart-person .chart-track{display:flex}.chart-track .seg{display:block;height:100%;transition:width .3s}.chart-track .seg-0{background:linear-gradient(90deg,#4f9d6b,#7ed3a0)}.chart-track .seg-1{background:linear-gradient(90deg,#c9a24a,#eccb6b)}.chart-track .seg-2{background:linear-gradient(90deg,#c96a5a,#f08a7a)}.grade-badge{font-style:normal;font-size:11px;font-weight:800;color:#1d2b20;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;box-shadow:0 1px 3px #0002}.grade-legend{margin-left:8px;color:#7a6e58;font-size:12px}.grade-legend b{font-size:11px}.chart-person-detail p{margin:6px 0;font-size:13px}
 .management{margin:20px 0 28px}.management h2{margin:0 0 6px}.management p{margin:6px 0}.management .cards{padding:0 18px;margin:14px 0}.management .card{background:#f3efe2}.management .card b{font-size:22px}.management details{padding:12px 18px;border-top:1px solid #ded7c9}.management summary{cursor:pointer;font-weight:650}.management .target-input{width:115px}.target-progress{display:flex;align-items:center;gap:8px;min-width:135px}.target-progress progress{width:90px;accent-color:#476747}.mix-row{display:grid;grid-template-columns:minmax(100px,165px) minmax(60px,1fr) minmax(76px,115px);gap:12px;align-items:center;margin:8px 0}.mix-row .chart-track{height:12px}.mix-row strong{text-align:right}
 .mix-row-unknown > span{color:#f0b429;cursor:pointer}
 .mix-unknown{margin:2px 0 12px;padding:8px 12px;border:1px solid #ffffff1e;border-radius:8px;background:#ffffff08}
@@ -670,9 +671,9 @@ const taskShotOf=task=>{
 };
 const newId=()=>globalThis.crypto?.randomUUID?.()||Date.now()+'-'+Math.random();
 const statuses=['待拍摄','拍摄中','后期中','已交付','已验收'];
-const defaultInnovationDeliverables=['脚本拆解','AI素材／生成','完整视频','拍摄方案','创新剪辑','其他创新交付','找创新框架'];
+const defaultInnovationDeliverables=['脚本拆解','AI素材／生成','完整视频','拍摄方案','创新剪辑','带教','其他创新交付','找创新框架'];
 // 数量类型铺开：保留原有分镜素材/创新视频，并把全部交付类型也纳入可填条数，用户自行选择填哪些
-const defaultInnovationShotTypes=['分镜素材','创新视频','脚本拆解','AI素材／生成','完整视频','拍摄方案','创新剪辑','其他创新交付','找创新框架'];
+const defaultInnovationShotTypes=['分镜素材','创新视频','脚本拆解','AI素材／生成','完整视频','拍摄方案','创新剪辑','带教','其他创新交付','找创新框架'];
 const innovationTypeList=task=>Array.isArray(task?.innovationDeliverable)?task.innovationDeliverable.filter(Boolean):(task?.innovationDeliverable?[task.innovationDeliverable]:[]);
 // 创新组按类型拆分的条数。可传成员名做分人统计；兼容旧数据。
 // 优先级：memberShotCounts[name]（分人）> shotCounts（任务级/旧填报）> dailyShotCount（历史遗留全部归第一种）
@@ -2382,6 +2383,57 @@ function bindManagement(period){
   setTimeout(()=>showSavedTask(t),0);
  });
 }
+/* ===== 加权人效当量（HRBP版）：按拍摄类型难度系数加权，不掺估算的可用率 ===== */
+// 拍摄类型 → 难度系数（日产出反推，基准产品展示=1.0）。按关键词匹配，取命中系数最大者。
+const DIFFICULTY_RULES=[
+ [/意识流/,1.77,'难'],[/口播/,8.52,'难'],
+ [/使用展示|使用演示|使用场景/,1.53,'中'],
+ [/产品.?内料/,1.28,'中'],
+ [/内料|成分/,1.77,'中'],
+ [/产品展示|产品/,1.0,'简']
+];
+function typeWeight(label){
+ const s=String(label||'');
+ for(const [re,w,level] of DIFFICULTY_RULES){if(re.test(s))return {w,level,label:s};}
+ return {w:1.0,level:'简',label:s||'未分类'};
+}
+// 创新组分项 → 当量系数（成片/脚本/带教/AI素材/分镜）
+const INNOVATION_WEIGHTS=[[/完整视频|成片|创新视频/,8.5],[/拆脚本|裂变脚本|脚本拆解|脚本/,3],[/带教/,4],[/AI素材|素材生成/,0.6],[/分镜/,0.4]];
+function innovationWeight(kind){
+ const s=String(kind||'');
+ for(const [re,w] of INNOVATION_WEIGHTS){if(re.test(s))return w;}
+ return 1.0;
+}
+// 计算某人在一批任务(entries)里的加权当量 + 构成明细（按难度分级累计）
+function weightedOutput(name,entries){
+ const own=entries.filter(t=>participates(t,name));
+ let total=0;const bucket={'简':0,'中':0,'难':0};const detail=new Map();
+ const add=(w,level,kind,n)=>{if(!(n>0))return;const v=w*n;total+=v;bucket[level]=(bucket[level]||0)+v;detail.set(kind,(detail.get(kind)||0)+n);};
+ for(const t of own){
+  // 创新组：按成员分项条数加权
+  const ms=t.memberShotCounts&&t.memberShotCounts[name];
+  if(ms&&typeof ms==='object'&&Object.keys(ms).length){
+   Object.keys(ms).forEach(kind=>{const w=innovationWeight(kind);const level=w>=4?'难':(w>=1.2?'中':'简');add(w,level,kind,Number(ms[kind])||0);});
+   continue;
+  }
+  // 普通组：当日拍摄明细逐行按类型加权
+  const bd=Array.isArray(t.dailyBreakdown)?t.dailyBreakdown:[];
+  if(bd.length){
+   bd.forEach(b=>{const tw=typeWeight([b.type,b.category].filter(Boolean).join(' '));add(tw.w,tw.level,tw.label||'拍摄',Number(b.count)||0);});
+   continue;
+  }
+  // 回退：按任务的拍摄类型 + 条数
+  const tw=typeWeight(members(t.type).join('、'));
+  add(tw.w,tw.level,tw.label||'拍摄',Number(taskShotOf(t))||0);
+ }
+ return {total:Math.round(total),bucket,detail:[...detail].sort((a,b)=>b[1]-a[1]),tasks:own.length};
+}
+// 同组内等级：相对组内中位数/均值，S≥1.3 A≥1.1 B≥0.9 C≥0.7 D<0.7
+function gradeOf(value,groupAvg){
+ if(!(value>0)||!(groupAvg>0))return null;
+ const r=value/groupAvg;
+ return r>=1.3?'S':r>=1.1?'A':r>=0.9?'B':r>=0.7?'C':'D';
+}
 function outputGroup(role){
  if(['基础摄影','摄影助理','拍剪助理','拍摄组','摄助'].includes(role))return '拍摄组';
  if(role==='模特')return '模特组';
@@ -2430,23 +2482,37 @@ function renderOutputChart(rows,ranges,estimateOctober,note){
  const estimated=estimateOctober&&chartPeriod<2;
  const [from,to]=ranges[estimated?2:chartPeriod];
  const entries=tasks.filter(t=>t.date>=from&&t.date<=to);
- const values=rows.map(row=>[row[0],row[1],row[chartPeriod+2]])
-  .filter(([name,,value])=>typeof value==='number'||entries.some(t=>participates(t,name)))
-  .sort((a,b)=>(typeof b[2]==='number'?b[2]:-1)-(typeof a[2]==='number'?a[2]:-1));
+ // 每人：[姓名, 岗位, 加权当量, 原始条数, 构成]
+ const values=rows.map(row=>{
+  const orig=row[chartPeriod+2];
+  const w=weightedOutput(row[0],entries);
+  return [row[0],row[1],w.total,typeof orig==='number'?orig:0,w];
+ }).filter(([name,,,orig,w])=>orig>0||w.total>0||entries.some(t=>participates(t,name)));
  const groups=['拍摄组','模特组','创新组','其他岗位'];
+ const gradeColor={S:'#ffd76a',A:'#9be08a',B:'#8fc4f5',C:'#e8b96b',D:'#e08a8a'};
  chart.innerHTML='<div class="chart-switch" role="group" aria-label="图表统计周期">'+periods.map((label,index)=>'<button type="button" data-chart-period="'+index+'" aria-pressed="'+(index===chartPeriod)+'">'+label+'</button>').join('')+'</div>'+
- '<p class="chart-caption">'+esc(estimated?note+' 姓名明细展示整月任务。':'点击姓名查看任务类型和协作情况。条形长度按组内最高值计算。')+'</p>'+
+ '<p class="chart-caption">按拍摄难度加权的人效当量排名（非单纯条数）。<span class="grade-legend"><b style="color:#7ee0b0">■</b>简单 <b style="color:#e8c46b">■</b>中等 <b style="color:#f08a8a">■</b>疑难</span>。等级为同岗位内相对水平（S/A/B/C/D）。点姓名看工作构成。</p>'+
  groups.map(group=>{
   const people=values.filter(([,role])=>outputGroup(role)===group);
   if(group==='其他岗位'&&!people.length)return '';
-  const max=Math.max(1,...people.map(([, ,value])=>typeof value==='number'?value:0));
+  people.sort((a,b)=>b[2]-a[2]);
+  const max=Math.max(1,...people.map(p=>p[2]));
+  const avg=people.length?people.reduce((s,p)=>s+p[2],0)/people.length:0;
   return '<section class="chart-group"><h3>'+group+'</h3>'+
-   (people.length?'<ul class="chart-list">'+people.map(([name,,value])=>{
-    const hasValue=typeof value==='number';
+   (people.length?'<ul class="chart-list">'+people.map(([name,,value,orig,w])=>{
+    const hasValue=value>0;
+    const grade=gradeOf(value,avg);
+    const pctTwo=(n)=>value?Math.round(100*n/value):0;
+    const stack=['简','中','难'].map((lv,i)=>'<i class="seg seg-'+i+'" style="width:'+(value?100*w.bucket[lv]/value:0)+'%"></i>').join('');
+    const topKinds=w.detail.slice(0,3).map(([k,n])=>esc(k)+' '+count(n)).join(' · ');
     return '<li><details class="chart-person"><summary class="chart-row"><strong>'+esc(name)+'</strong>'+
-     '<div class="chart-track" aria-hidden="true"><div class="chart-bar" style="width:'+(hasValue?100*value/max:0)+'%"></div></div>'+
-     '<span class="chart-value">'+(hasValue?(estimated?'约 ':'')+count(value)+' 条':'待记录')+'</span></summary>'+
-     '<div class="chart-person-detail">'+outputBreakdown(name,entries)+'</div></details></li>';
+     (grade?'<em class="grade-badge" style="background:'+gradeColor[grade]+'">'+grade+'</em>':'')+
+     '<div class="chart-track" aria-hidden="true">'+stack+'</div>'+
+     '<span class="chart-value">'+(hasValue?count(value)+' 当量':'待记录')+'</span></summary>'+
+     '<div class="chart-person-detail"><p><strong>人效当量</strong> '+count(value)+' · 原始条数 '+count(orig)+(grade?' · 同岗位等级 '+grade:'')+'</p>'+
+     '<p><strong>难度构成</strong> 简单 '+pctTwo(w.bucket['简'])+'% · 中等 '+pctTwo(w.bucket['中'])+'% · 疑难 '+pctTwo(w.bucket['难'])+'%</p>'+
+     (topKinds?'<p><strong>主要工作</strong> '+topKinds+'</p>':'')+
+     outputBreakdown(name,entries)+'</div></details></li>';
    }).join('')+'</ul>':'<p class="empty">所选周期暂无产出或任务记录。</p>')+'</section>';
  }).join('');
  chart.querySelectorAll('[data-chart-period]').forEach(button=>button.onclick=()=>{
