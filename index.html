@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='24';
+ var V='25';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -41,7 +41,7 @@
 .schedule-page .worksheet{border:1px solid #596453;box-shadow:0 12px 28px #222b211a}.schedule-page .worksheet th{background:#b8a271;color:#211f17;padding:16px 12px;letter-spacing:.04em}.schedule-page .worksheet td{padding:14px 12px}.schedule-page .worksheet .ops-requirement{width:43%;min-width:340px}.schedule-page .worksheet .ops-requirement textarea{min-height:126px;resize:vertical;line-height:1.65}.schedule-page .worksheet input,.schedule-page .worksheet select{min-height:36px}.reference-links{display:grid;gap:6px;margin-top:8px}.reference-links a{overflow-wrap:anywhere;font-size:12px}.daily-output{margin:18px 0 26px}.daily-output .bar{margin:0}.daily-output input[type=number]{max-width:160px}.daily-output .report-meta{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}.daily-output p{margin:0}
 .schedule-page .worksheet{max-height:none}.schedule-page{max-width:1640px;padding-inline:3%}.schedule-page .new-task td{background:#394738}.schedule-page .new-task .ops-requirement textarea{min-height:85px}.schedule-page .capture td{padding:9px 11px;min-width:0;vertical-align:middle;overflow-wrap:anywhere}.schedule-page .capture th{padding:9px 11px}.schedule-page .capture .capture-notes{width:44%;white-space:pre-wrap;line-height:1.35}.schedule-page .capture table{table-layout:fixed}.schedule-page .capture th:nth-child(4){white-space:normal}.schedule-page .capture-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.schedule-page .capture-heading h1{font-size:26px;margin:0}.capture-links{display:block;font-size:11px;overflow-wrap:anywhere}
 .output-chart{padding:18px clamp(14px,3vw,28px);border-bottom:1px solid #ded7c9;background:#f9f6ec}.output-chart .chart-switch{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}.chart-switch button{background:#ebe6d8;color:#394236}.chart-switch button[aria-pressed=true]{background:#344b38;color:#fff}.chart-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}.chart-row{display:grid;grid-template-columns:minmax(92px,140px) minmax(60px,1fr) 90px;gap:10px;align-items:center}.chart-track{height:13px;border-radius:10px;background:#e8e4d7;overflow:hidden}.chart-bar{height:100%;border-radius:10px;background:linear-gradient(90deg,#345341,#799267)}.chart-value{text-align:right;font-variant-numeric:tabular-nums}.output-chart .empty{text-align:left;padding:12px 0;margin:0}.chart-caption{font-size:13px;line-height:1.8;color:#c8d6ee;margin:12px 0 18px}
-.chart-person .chart-track{display:flex}.chart-track .seg{display:block;height:100%;flex-shrink:0;transition:width .3s}.chart-track .seg-0{background:linear-gradient(90deg,#4f9d6b,#7ed3a0)}.chart-track .seg-1{background:linear-gradient(90deg,#c9a24a,#eccb6b)}.chart-track .seg-2{background:linear-gradient(90deg,#c96a5a,#f08a7a)}.grade-badge{font-style:normal;font-size:11px;font-weight:800;color:#1d2b20;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;box-shadow:0 1px 3px #0002}.grade-legend{margin-left:8px;color:#7a6e58;font-size:12px}.grade-legend b{font-size:11px}.chart-person-detail p{margin:6px 0;font-size:13px}
+.chart-person .chart-track{display:flex}.chart-track .seg{display:block;height:100%;flex-shrink:0;transition:width .3s}.chart-track .seg-0{background:linear-gradient(90deg,#4f9d6b,#7ed3a0)}.chart-track .seg-1{background:linear-gradient(90deg,#c9a24a,#eccb6b)}.chart-track .seg-2{background:linear-gradient(90deg,#c96a5a,#f08a7a)}.grade-badge{font-style:normal;font-size:11px;font-weight:800;color:#1d2b20;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;box-shadow:0 1px 3px #0002}.grade-legend{margin-left:8px;color:#7a6e58;font-size:12px}.grade-legend b{font-size:11px}.chart-person-detail p{margin:6px 0;font-size:13px}.v-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.v-metric{background:#ffffff0a;border:1px solid #ffffff14;border-radius:8px;padding:8px 10px;text-align:center}.v-metric span{display:block;font-size:11px;color:#9b8fb0;margin-bottom:3px}.v-metric b{font-size:20px;color:#f0e2ff}.v-metric b.v-grade{font-size:26px;font-weight:900}.v-block{margin:10px 0}.v-block h5{margin:0 0 6px;font-size:12px;color:#bcd8ff;font-weight:700}.v-stack{display:flex;height:16px;border-radius:8px;overflow:hidden;background:#ffffff0c}.v-legend{display:flex;gap:12px;margin-top:5px;font-size:11px;color:#c8d6ee}.v-legend .dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:3px;vertical-align:middle}.v-legend .d0{background:#5fd39a}.v-legend .d1{background:#e8c46b}.v-legend .d2{background:#f08a8a}.v-bars{display:grid;gap:5px}.v-bar{display:grid;grid-template-columns:minmax(80px,150px) minmax(60px,1fr) 46px;gap:8px;align-items:center;font-size:12px}.v-bar-name{color:#dbe9fb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.v-bar-track{display:flex;height:11px;border-radius:6px;background:#ffffff0c;overflow:hidden}.v-bar b{color:#f0e2ff;text-align:right;font-variant-numeric:tabular-nums}.v-more{margin-top:10px;border-top:1px solid #ffffff14;padding-top:8px}.v-more summary{cursor:pointer;color:#9fc4f0;font-size:12px}
 .management{margin:20px 0 28px}.management h2{margin:0 0 6px}.management p{margin:6px 0}.management .cards{padding:0 18px;margin:14px 0}.management .card{background:#f3efe2}.management .card b{font-size:22px}.management details{padding:12px 18px;border-top:1px solid #ded7c9}.management summary{cursor:pointer;font-weight:650}.management .target-input{width:115px}.target-progress{display:flex;align-items:center;gap:8px;min-width:135px}.target-progress progress{width:90px;accent-color:#476747}.mix-row{display:grid;grid-template-columns:minmax(100px,165px) minmax(60px,1fr) minmax(76px,115px);gap:12px;align-items:center;margin:8px 0}.mix-row .chart-track{height:12px}.mix-row strong{text-align:right}
 .mix-row-unknown > span{color:#f0b429;cursor:pointer}
 .mix-unknown{margin:2px 0 12px;padding:8px 12px;border:1px solid #ffffff1e;border-radius:8px;background:#ffffff08}
@@ -2508,10 +2508,24 @@ function renderOutputChart(rows,ranges,estimateOctober,note){
     return '<li><details class="chart-person"><summary class="chart-row"><strong>'+esc(name)+(grade?'<em class="grade-badge" style="background:'+gradeColor[grade]+'">'+grade+'</em>':'')+'</strong>'+
      '<div class="chart-track" aria-hidden="true">'+stack+'</div>'+
      '<span class="chart-value">'+(hasValue?count(value)+' 当量':'待记录')+'</span></summary>'+
-     '<div class="chart-person-detail"><p><strong>人效当量</strong> '+count(value)+' · 原始条数 '+count(orig)+(grade?' · 同岗位等级 '+grade:'')+'</p>'+
-     '<p><strong>难度构成</strong> 简单 '+pctTwo(w.bucket['简'])+'% · 中等 '+pctTwo(w.bucket['中'])+'% · 疑难 '+pctTwo(w.bucket['难'])+'%</p>'+
-     (topKinds?'<p><strong>主要工作</strong> '+topKinds+'</p>':'')+
-     outputBreakdown(name,entries)+'</div></details></li>';
+     '<div class="chart-person-detail">'+
+     // 三个指标大卡
+     '<div class="v-metrics"><div class="v-metric"><span>人效当量</span><b>'+count(value)+'</b></div>'+
+     '<div class="v-metric"><span>同岗位等级</span><b class="v-grade" style="color:'+gradeColor[grade||'B']+'">'+(grade||'—')+'</b></div>'+
+     '<div class="v-metric"><span>原始条数</span><b>'+count(orig)+'</b></div></div>'+
+     // 难度构成可视化
+     '<div class="v-block"><h5>难度构成（干的活简单还是难）</h5><div class="v-stack">'+
+     ['简','中','难'].map((lv,i)=>'<i class="seg seg-'+i+'" style="width:'+(value?100*w.bucket[lv]/value:0)+'%"></i>').join('')+'</div>'+
+     '<div class="v-legend"><span><i class="dot d0"></i>简单 '+pctTwo(w.bucket['简'])+'%</span><span><i class="dot d1"></i>中等 '+pctTwo(w.bucket['中'])+'%</span><span><i class="dot d2"></i>疑难 '+pctTwo(w.bucket['难'])+'%</span></div></div>'+
+     // 工作分布条形图
+     (w.detail.length?'<div class="v-block"><h5>都在干什么（按条数）</h5><div class="v-bars">'+w.detail.slice(0,8).map(([k,n])=>{
+       const mx=Math.max(1,...w.detail.map(d=>d[1]));
+       const lv=typeWeight(k).level;const ci=lv==='难'?2:(lv==='中'?1:0);
+       return '<div class="v-bar"><span class="v-bar-name">'+esc(k)+'</span><div class="v-bar-track"><i class="seg seg-'+ci+'" style="width:'+(100*n/mx)+'%"></i></div><b>'+count(n)+'</b></div>';
+     }).join('')+'</div></div>':'')+
+     // 次要文字信息折叠
+     '<details class="v-more"><summary>查看任务/品类/协作明细</summary>'+outputBreakdown(name,entries)+'</details>'+
+     '</div></details></li>';
    }).join('')+'</ul>':'<p class="empty">所选周期暂无产出或任务记录。</p>')+'</section>';
  }).join('');
  chart.querySelectorAll('[data-chart-period]').forEach(button=>button.onclick=()=>{
