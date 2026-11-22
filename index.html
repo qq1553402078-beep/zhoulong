@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='25';
+ var V='26';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -2383,18 +2383,38 @@ function bindManagement(period){
   setTimeout(()=>showSavedTask(t),0);
  });
 }
-/* ===== 加权人效当量（HRBP版）：按拍摄类型难度系数加权，不掺估算的可用率 ===== */
-// 拍摄类型 → 难度系数（日产出反推，基准产品展示=1.0）。按关键词匹配，取命中系数最大者。
+/* ===== 加权人效当量（HRBP版）：品类系数 × 类型系数相乘，不掺估算的可用率 ===== */
+// 品类 → 难度系数：私户1.5 / 个护1.25 / 零食百货1.0
+const PRIVATE_RE=/秘与|紧致丹|洗液|LILOO|liloo/i;      // 私户（最难）
+const CARE_RE=/毛囊炎|二硫化硒|LILIA|lilia/i;          // 个护（第二难）
+function categoryWeight(cat){
+ const s=String(cat||'');
+ if(PRIVATE_RE.test(s))return {w:1.5,tier:'私户'};
+ if(CARE_RE.test(s))return {w:1.25,tier:'个护'};
+ return {w:1.0,tier:'零食百货'};
+}
+// 拍摄类型 → 基础难度系数（口播4.5，其余日产出反推，基准产品展示=1.0）
 const DIFFICULTY_RULES=[
- [/意识流/,1.77,'难'],[/口播/,8.52,'难'],
- [/使用展示|使用演示|使用场景/,1.53,'中'],
+ [/意识流/,1.77,'难'],[/口播/,4.5,'难'],
+ [/使用展示|使用演示|使用场景|美好展示|痛点展示/,1.53,'中'],
  [/产品.?内料/,1.28,'中'],
  [/内料|成分/,1.77,'中'],
  [/产品展示|产品/,1.0,'简']
 ];
-function typeWeight(label){
- const s=String(label||'');
- for(const [re,w,level] of DIFFICULTY_RULES){if(re.test(s))return {w,level,label:s};}
+function typeWeight(label,category){
+ const s=String(label||''),c=String(category||'');
+ for(const [re,w,level] of DIFFICULTY_RULES){
+  if(!re.test(s))continue;
+  let final=w;
+  // 品类细分特例
+  if(/口播/.test(s)&&w===4.5){/* 口播统一4.5 */}
+  if(/内料|成分/.test(s)){
+   if(CARE_RE.test(c))final=1.77;       // 个护内料：擦拭清洗复杂→难
+   else if(!PRIVATE_RE.test(c)&&!CARE_RE.test(c))final=1.0; // 零食内料(冲玉米糊)→简单
+  }
+  if(/美好展示|使用展示|使用演示|使用场景/.test(s)&&CARE_RE.test(c))final=1.77; // 个护人物美好(洗头冲头)→难
+  return {w:final,level:final>=1.77?'难':(final>=1.2?'中':'简'),label:s};
+ }
  return {w:1.0,level:'简',label:s||'未分类'};
 }
 // 创新组分项 → 当量系数（成片/脚本/带教/AI素材/分镜）
@@ -2404,7 +2424,7 @@ function innovationWeight(kind){
  for(const [re,w] of INNOVATION_WEIGHTS){if(re.test(s))return w;}
  return 1.0;
 }
-// 计算某人在一批任务(entries)里的加权当量 + 构成明细（按难度分级累计）
+// 计算某人在一批任务(entries)里的加权当量 + 构成明细
 function weightedOutput(name,entries){
  const own=entries.filter(t=>participates(t,name));
  let total=0;const bucket={'简':0,'中':0,'难':0};const detail=new Map();
@@ -2416,15 +2436,26 @@ function weightedOutput(name,entries){
    Object.keys(ms).forEach(kind=>{const w=innovationWeight(kind);const level=w>=4?'难':(w>=1.2?'中':'简');add(w,level,kind,Number(ms[kind])||0);});
    continue;
   }
-  // 普通组：当日拍摄明细逐行按类型加权
+  const isModel=members(t.model).includes(name); // 本任务是否担任模特
+  // 普通组：当日拍摄明细逐行按 品类×类型 加权
   const bd=Array.isArray(t.dailyBreakdown)?t.dailyBreakdown:[];
   if(bd.length){
-   bd.forEach(b=>{const tw=typeWeight([b.type,b.category].filter(Boolean).join(' '));add(tw.w,tw.level,tw.label||'拍摄',Number(b.count)||0);});
+   bd.forEach(b=>{
+    const cat=b.category||t.product||'';
+    const tw=typeWeight(b.type,cat),cw=categoryWeight(cat);
+    let w=tw.w*cw.w;
+    // 模特口播额外×1.5（只在口播加成）
+    if(isModel&&/口播/.test(String(b.type||'')))w*=1.5;
+    add(w,tw.level,(cw.tier==='零食百货'?b.type:(cw.tier+'·'+b.type))||'拍摄',Number(b.count)||0);
+   });
    continue;
   }
-  // 回退：按任务的拍摄类型 + 条数
-  const tw=typeWeight(members(t.type).join('、'));
-  add(tw.w,tw.level,tw.label||'拍摄',Number(taskShotOf(t))||0);
+  // 回退：按任务的品类 + 拍摄类型 + 条数
+  const cat=t.product||'';
+  const tw=typeWeight(members(t.type).join('、'),cat),cw=categoryWeight(cat);
+  let w=tw.w*cw.w;
+  if(isModel&&/口播/.test(String(t.type||'')))w*=1.5;
+  add(w,tw.level,(cw.tier==='零食百货'?members(t.type).join('、'):(cw.tier+'·'+members(t.type).join('、')))||'拍摄',Number(taskShotOf(t))||0);
  }
  return {total:Math.round(total),bucket,detail:[...detail].sort((a,b)=>b[1]-a[1]),tasks:own.length};
 }
