@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='28';
+ var V='29';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -379,7 +379,7 @@ main:not(.home-page) h1 {
 <a class="skip-link" href="#main">跳到主要内容</a><main id="main" tabindex="-1"></main><footer class="site-footer"><span>CENTRAL STUDIO</span><span>中台 · 拍摄与创作</span><a href="#main">回到顶部 ↑</a></footer>
 <script src="schedule-image.js"></script><script src="task-center.js?v=tc-5"></script><script>
 const defaultRoster={
- '基础摄影':['曹傲宇','陈丽娜','游苗'],'创新组':['杨建勋','勾应颖','刘意'],'拍剪助理':[],'摄影助理':['白炳锦','张亚涛'],'模特':['夏艺方','何雨馨','穆灿','张智','钱小蝶'],'修片':['何梓瑜']
+ '基础摄影':['曹傲宇','陈丽娜','游苗'],'创新组':['杨建勋','勾应颖','刘意','张智'],'拍剪助理':[],'摄影助理':['白炳锦','张亚涛'],'模特':['夏艺方','何雨馨','穆灿','钱小蝶'],'修片':['何梓瑜']
 };
 const settingsKey='studio-ops-settings-v1';
 const defaults={
@@ -424,6 +424,15 @@ let roster,products,types,staff,roleNames,restStaff,activeNames;
   }
   settings.roster['创新组']=[...new Set([...settings.roster['创新组'],'刘意'])];
   settings.rosterRevision=3;
+  try{localStorage.setItem(settingsKey,JSON.stringify(settings))}catch{}
+ }
+ // v4：张智（爱智）从模特调岗到创新组
+ if((settings.rosterRevision||0)<4){
+  for(const role of Object.keys(settings.roster)){
+   if(role!=='创新组')settings.roster[role]=settings.roster[role].filter(name=>name!=='张智');
+  }
+  settings.roster['创新组']=[...new Set([...settings.roster['创新组'],'张智'])];
+  settings.rosterRevision=4;
   try{localStorage.setItem(settingsKey,JSON.stringify(settings))}catch{}
  }
  ({roster,products,types}=settings);
