@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='26';
+ var V='27';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -41,7 +41,7 @@
 .schedule-page .worksheet{border:1px solid #596453;box-shadow:0 12px 28px #222b211a}.schedule-page .worksheet th{background:#b8a271;color:#211f17;padding:16px 12px;letter-spacing:.04em}.schedule-page .worksheet td{padding:14px 12px}.schedule-page .worksheet .ops-requirement{width:43%;min-width:340px}.schedule-page .worksheet .ops-requirement textarea{min-height:126px;resize:vertical;line-height:1.65}.schedule-page .worksheet input,.schedule-page .worksheet select{min-height:36px}.reference-links{display:grid;gap:6px;margin-top:8px}.reference-links a{overflow-wrap:anywhere;font-size:12px}.daily-output{margin:18px 0 26px}.daily-output .bar{margin:0}.daily-output input[type=number]{max-width:160px}.daily-output .report-meta{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}.daily-output p{margin:0}
 .schedule-page .worksheet{max-height:none}.schedule-page{max-width:1640px;padding-inline:3%}.schedule-page .new-task td{background:#394738}.schedule-page .new-task .ops-requirement textarea{min-height:85px}.schedule-page .capture td{padding:9px 11px;min-width:0;vertical-align:middle;overflow-wrap:anywhere}.schedule-page .capture th{padding:9px 11px}.schedule-page .capture .capture-notes{width:44%;white-space:pre-wrap;line-height:1.35}.schedule-page .capture table{table-layout:fixed}.schedule-page .capture th:nth-child(4){white-space:normal}.schedule-page .capture-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.schedule-page .capture-heading h1{font-size:26px;margin:0}.capture-links{display:block;font-size:11px;overflow-wrap:anywhere}
 .output-chart{padding:18px clamp(14px,3vw,28px);border-bottom:1px solid #ded7c9;background:#f9f6ec}.output-chart .chart-switch{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}.chart-switch button{background:#ebe6d8;color:#394236}.chart-switch button[aria-pressed=true]{background:#344b38;color:#fff}.chart-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}.chart-row{display:grid;grid-template-columns:minmax(92px,140px) minmax(60px,1fr) 90px;gap:10px;align-items:center}.chart-track{height:13px;border-radius:10px;background:#e8e4d7;overflow:hidden}.chart-bar{height:100%;border-radius:10px;background:linear-gradient(90deg,#345341,#799267)}.chart-value{text-align:right;font-variant-numeric:tabular-nums}.output-chart .empty{text-align:left;padding:12px 0;margin:0}.chart-caption{font-size:13px;line-height:1.8;color:#c8d6ee;margin:12px 0 18px}
-.chart-person .chart-track{display:flex}.chart-track .seg{display:block;height:100%;flex-shrink:0;transition:width .3s}.chart-track .seg-0{background:linear-gradient(90deg,#4f9d6b,#7ed3a0)}.chart-track .seg-1{background:linear-gradient(90deg,#c9a24a,#eccb6b)}.chart-track .seg-2{background:linear-gradient(90deg,#c96a5a,#f08a7a)}.grade-badge{font-style:normal;font-size:11px;font-weight:800;color:#1d2b20;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;box-shadow:0 1px 3px #0002}.grade-legend{margin-left:8px;color:#7a6e58;font-size:12px}.grade-legend b{font-size:11px}.chart-person-detail p{margin:6px 0;font-size:13px}.v-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.v-metric{background:#ffffff0a;border:1px solid #ffffff14;border-radius:8px;padding:8px 10px;text-align:center}.v-metric span{display:block;font-size:11px;color:#9b8fb0;margin-bottom:3px}.v-metric b{font-size:20px;color:#f0e2ff}.v-metric b.v-grade{font-size:26px;font-weight:900}.v-block{margin:10px 0}.v-block h5{margin:0 0 6px;font-size:12px;color:#bcd8ff;font-weight:700}.v-stack{display:flex;height:16px;border-radius:8px;overflow:hidden;background:#ffffff0c}.v-legend{display:flex;gap:12px;margin-top:5px;font-size:11px;color:#c8d6ee}.v-legend .dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:3px;vertical-align:middle}.v-legend .d0{background:#5fd39a}.v-legend .d1{background:#e8c46b}.v-legend .d2{background:#f08a8a}.v-bars{display:grid;gap:5px}.v-bar{display:grid;grid-template-columns:minmax(80px,150px) minmax(60px,1fr) 46px;gap:8px;align-items:center;font-size:12px}.v-bar-name{color:#dbe9fb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.v-bar-track{display:flex;height:11px;border-radius:6px;background:#ffffff0c;overflow:hidden}.v-bar b{color:#f0e2ff;text-align:right;font-variant-numeric:tabular-nums}.v-more{margin-top:10px;border-top:1px solid #ffffff14;padding-top:8px}.v-more summary{cursor:pointer;color:#9fc4f0;font-size:12px}
+.chart-person .chart-track{display:flex}.chart-track .seg{display:block;height:100%;flex-shrink:0;transition:width .3s}.chart-track .seg{display:flex;align-items:center;justify-content:center;color:#0c1a12;font-size:10px;font-weight:800;overflow:hidden;white-space:nowrap}.chart-track .seg-0{background:linear-gradient(90deg,#4f9d6b,#7ed3a0)}.chart-track .seg-1{background:linear-gradient(90deg,#c9a24a,#eccb6b)}.chart-track .seg-2{background:linear-gradient(90deg,#c96a5a,#f08a7a)}.grade-badge{font-style:normal;font-size:11px;font-weight:800;color:#1d2b20;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;box-shadow:0 1px 3px #0002}.grade-legend{margin-left:8px;color:#7a6e58;font-size:12px}.grade-legend b{font-size:11px}.chart-person-detail p{margin:6px 0;font-size:13px}.v-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.v-metric{background:#ffffff0a;border:1px solid #ffffff14;border-radius:8px;padding:8px 10px;text-align:center}.v-metric span{display:block;font-size:11px;color:#9b8fb0;margin-bottom:3px}.v-metric b{font-size:20px;color:#f0e2ff}.v-metric b.v-grade{font-size:26px;font-weight:900}.v-block{margin:10px 0}.v-block h5{margin:0 0 6px;font-size:12px;color:#bcd8ff;font-weight:700}.v-stack{display:flex;height:16px;border-radius:8px;overflow:hidden;background:#ffffff0c}.v-legend{display:flex;gap:12px;margin-top:5px;font-size:11px;color:#c8d6ee}.v-legend .dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:3px;vertical-align:middle}.v-legend .d0{background:#5fd39a}.v-legend .d1{background:#e8c46b}.v-legend .d2{background:#f08a8a}.v-bars{display:grid;gap:5px}.v-bar{display:grid;grid-template-columns:minmax(80px,150px) minmax(60px,1fr) 46px;gap:8px;align-items:center;font-size:12px}.v-bar-name{color:#dbe9fb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.v-bar-track{display:flex;height:11px;border-radius:6px;background:#ffffff0c;overflow:hidden}.v-bar b{color:#f0e2ff;text-align:right;font-variant-numeric:tabular-nums}.v-more{margin-top:10px;border-top:1px solid #ffffff14;padding-top:8px}.v-more summary{cursor:pointer;color:#9fc4f0;font-size:12px}
 .management{margin:20px 0 28px}.management h2{margin:0 0 6px}.management p{margin:6px 0}.management .cards{padding:0 18px;margin:14px 0}.management .card{background:#f3efe2}.management .card b{font-size:22px}.management details{padding:12px 18px;border-top:1px solid #ded7c9}.management summary{cursor:pointer;font-weight:650}.management .target-input{width:115px}.target-progress{display:flex;align-items:center;gap:8px;min-width:135px}.target-progress progress{width:90px;accent-color:#476747}.mix-row{display:grid;grid-template-columns:minmax(100px,165px) minmax(60px,1fr) minmax(76px,115px);gap:12px;align-items:center;margin:8px 0}.mix-row .chart-track{height:12px}.mix-row strong{text-align:right}
 .mix-row-unknown > span{color:#f0b429;cursor:pointer}
 .mix-unknown{margin:2px 0 12px;padding:8px 12px;border:1px solid #ffffff1e;border-radius:8px;background:#ffffff08}
@@ -2385,10 +2385,12 @@ function bindManagement(period){
 }
 /* ===== 加权人效当量（HRBP版）：品类系数 × 类型系数相乘，不掺估算的可用率 ===== */
 // 品类 → 难度系数：私户1.5 / 个护1.25 / 零食百货1.0
-const PRIVATE_RE=/秘与|紧致丹|洗液|LILOO|liloo/i;      // 私户（最难）
+// 注意："山药秘与葛根粉/玉米山药葛根粉"含"秘与"但是零食，必须排除
+const PRIVATE_RE=/秘与紧致丹|秘与洗液|LILOO紧致丹|liloo/i;
 const CARE_RE=/毛囊炎|二硫化硒|LILIA|lilia/i;          // 个护（第二难）
 function categoryWeight(cat){
  const s=String(cat||'');
+ if(/葛根粉|玉米/.test(s))return {w:1.0,tier:'零食百货'}; // 葛根粉类优先排除私户
  if(PRIVATE_RE.test(s))return {w:1.5,tier:'私户'};
  if(CARE_RE.test(s))return {w:1.25,tier:'个护'};
  return {w:1.0,tier:'零食百货'};
@@ -2466,7 +2468,8 @@ function gradeOf(value,groupAvg){
  return r>=1.3?'S':r>=1.1?'A':r>=0.9?'B':r>=0.7?'C':'D';
 }
 function outputGroup(role){
- if(['基础摄影','摄影助理','拍剪助理','拍摄组','摄助'].includes(role))return '拍摄组';
+ if(['摄影助理','拍剪助理','摄助'].includes(role))return '摄助/助理组';
+ if(['基础摄影','拍摄组'].includes(role))return '摄影师组';
  if(role==='模特')return '模特组';
  return role==='创新组'?'创新组':'其他岗位';
 }
@@ -2519,10 +2522,10 @@ function renderOutputChart(rows,ranges,estimateOctober,note){
   const w=weightedOutput(row[0],entries);
   return [row[0],row[1],w.total,typeof orig==='number'?orig:0,w];
  }).filter(([name,,,orig,w])=>orig>0||w.total>0||entries.some(t=>participates(t,name)));
- const groups=['拍摄组','模特组','创新组','其他岗位'];
+ const groups=['摄影师组','摄助/助理组','模特组','创新组','其他岗位'];
  const gradeColor={S:'#ffd76a',A:'#9be08a',B:'#8fc4f5',C:'#e8b96b',D:'#e08a8a'};
  chart.innerHTML='<div class="chart-switch" role="group" aria-label="图表统计周期">'+periods.map((label,index)=>'<button type="button" data-chart-period="'+index+'" aria-pressed="'+(index===chartPeriod)+'">'+label+'</button>').join('')+'</div>'+
- '<p class="chart-caption">📊 <b>怎么看：</b>条越长＝干得越多；颜色看活的难易 <span class="grade-legend"><b style="color:#5fd39a">■</b>简单 <b style="color:#e8c46b">■</b>中等 <b style="color:#f08a8a">■</b>疑难</span>；名字后 <b>S/A/B/C/D</b> 是同岗位内的档次。<b>点姓名</b>可看具体干了什么。难的活（如口播）算得更重，所以"少而难"不输"多而简单"。</p>'+
+ '<p class="chart-caption">📊 看得懂版：<b>条子越长＝人效越高</b>（已把难度算进去：难的活如口播、私户更值钱）。<b>条上的数字</b>是简单/中等/疑难各占多少。名字后 <b>S/A/B/C/D</b> 是同岗位档次。<b>点姓名</b>看这个人具体干了啥、当量怎么来的。</p>'+
  groups.map(group=>{
   const people=values.filter(([,role])=>outputGroup(role)===group);
   if(group==='其他岗位'&&!people.length)return '';
@@ -2534,7 +2537,7 @@ function renderOutputChart(rows,ranges,estimateOctober,note){
     const hasValue=value>0;
     const grade=gradeOf(value,avg);
     const pctTwo=(n)=>value?Math.round(100*n/value):0;
-    const stack=['简','中','难'].map((lv,i)=>'<i class="seg seg-'+i+'" style="width:'+(value?100*w.bucket[lv]/value:0)+'%"></i>').join('');
+    const stack=['简','中','难'].map((lv,i)=>{const pct=value?Math.round(100*w.bucket[lv]/value):0;return '<i class="seg seg-'+i+'" style="width:'+pct+'%">'+(pct>=12?'<span>'+pct+'%</span>':'')+'</i>';}).join('');
     const topKinds=w.detail.slice(0,3).map(([k,n])=>esc(k)+' '+count(n)).join(' · ');
     return '<li><details class="chart-person"><summary class="chart-row"><strong>'+esc(name)+(grade?'<em class="grade-badge" style="background:'+gradeColor[grade]+'">'+grade+'</em>':'')+'</strong>'+
      '<div class="chart-track" aria-hidden="true">'+stack+'</div>'+
