@@ -12,6 +12,19 @@
   try { savedName = localStorage.getItem(NAME_KEY) || ''; } catch (e) {}
   try { adminCode = localStorage.getItem(ADMIN_CODE_KEY) || ''; } catch (e) {}
 
+  // cookie 双保险：localStorage 被清/换存储时仍能记住名字（同一浏览器/域名内）
+  function setCookie(name, value, days) {
+    try { var d = new Date(); d.setTime(d.getTime() + days * 86400000); document.cookie = encodeURIComponent(name) + '=' + encodeURIComponent(value) + ';expires=' + d.toUTCString() + ';path=/;SameSite=Lax'; } catch (e) {}
+  }
+  function getCookie(name) {
+    try { var m = document.cookie.match(new RegExp('(?:^|; )' + encodeURIComponent(name) + '=([^;]*)')); return m ? decodeURIComponent(m[1]) : ''; } catch (e) { return ''; }
+  }
+  if (!savedName) savedName = getCookie(NAME_KEY); // localStorage 没有则从 cookie 恢复
+  function rememberName(name) {
+    try { localStorage.setItem(NAME_KEY, name); } catch (e) {}
+    setCookie(NAME_KEY, name, 365); // 存一年
+  }
+
   function esc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
   function canEdit() { return viewer && (viewer.role === 'editor' || viewer.role === 'admin') && viewer.status === 'approved'; }
   function isAdmin() { return viewer && viewer.role === 'admin' && viewer.status === 'approved'; }
@@ -36,7 +49,7 @@
       '<div class="access-brand">◈ CENTRAL STUDIO</div>' +
       '<h2>欢迎进入中台拍摄工作台</h2>' +
       '<p class="access-sub">请输入你的姓名后进入。你的访问会被记录，修改内容需要申请权限并经管理员批准。</p>' +
-      '<input id="access-name" type="text" maxlength="32" placeholder="请输入你的姓名" autocomplete="name">' +
+      '<input id="access-name" type="text" maxlength="32" placeholder="请输入你的姓名" autocomplete="name" value="' + esc(savedName) + '">' +
       '<div id="access-msg" class="access-msg"></div>' +
       '<button id="access-enter" class="access-btn">进入网站</button>' +
       '<p class="access-tip">首次进入默认为「只读」，如需编辑请在页面顶部申请权限。</p>' +
@@ -66,7 +79,8 @@
       post('/access/visit', { name: name }).then(function (data) {
         if (!data || !data.name) { msg.textContent = '进入失败，请重试'; btn.disabled = false; return; }
         viewer = { name: data.name, role: data.role, status: data.status };
-        try { localStorage.setItem(VIEWER_KEY, JSON.stringify(viewer)); localStorage.setItem(NAME_KEY, data.name); } catch (e) {}
+        try { localStorage.setItem(VIEWER_KEY, JSON.stringify(viewer)); } catch (e) {}
+        rememberName(data.name); // 名字写入 localStorage + cookie 双保险
         mask.remove();
         // 首次进入也要挂载悬浮按钮（否则手机第一次打开看不到 AI 助手/管理）
         addAIButton();
@@ -479,7 +493,8 @@
     post('/access/visit', { name: name }).then(function (data) {
       if (data && data.name) {
         viewer = { name: data.name, role: data.role, status: data.status };
-        try { localStorage.setItem(VIEWER_KEY, JSON.stringify(viewer)); localStorage.setItem(NAME_KEY, data.name); } catch (e) {}
+        try { localStorage.setItem(VIEWER_KEY, JSON.stringify(viewer)); } catch (e) {}
+        rememberName(data.name);
       }
       applyMode();
     }).catch(function () { applyMode(); });

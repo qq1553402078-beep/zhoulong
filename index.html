@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='27';
+ var V='28';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -3125,7 +3125,7 @@ document.addEventListener('focusout',()=>{
  if(!teamRefreshPending)return;
  setTimeout(()=>{if(!isEditingNow()){teamRefreshPending=false;renderPreserving()}},150);
 });
-</script><script src="access.js?v=access-12" defer></script><script src="team-sync.js?v=shared-settings-4" defer></script>
+</script><script src="access.js?v=access-13" defer></script><script src="team-sync.js?v=shared-settings-4" defer></script>
 <script>
 if('serviceWorker' in navigator && location.protocol==='https:'){
   window.addEventListener('load',function(){

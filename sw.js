@@ -1,12 +1,12 @@
 /* 中台拍摄工作台 PWA Service Worker */
-const CACHE = 'zhoulong-pwa-v27';
+const CACHE = 'zhoulong-pwa-v28';
 const PRECACHE = [
   './',
   './index.html',
   './manifest.webmanifest',
   './studio-theme.css?v=v3',
   './studio-editorial.css?v=v7',
-  './access.js?v=access-12',
+  './access.js?v=access-13',
   './team-sync.js?v=shared-settings-4',
   './icon-192.png',
   './icon-512.png',
