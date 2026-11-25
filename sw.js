@@ -1,5 +1,5 @@
 /* 中台拍摄工作台 PWA Service Worker */
-const CACHE = 'zhoulong-pwa-v29';
+const CACHE = 'zhoulong-pwa-v30';
 const PRECACHE = [
   './',
   './index.html',

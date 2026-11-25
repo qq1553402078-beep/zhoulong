@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='29';
+ var V='30';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -41,7 +41,7 @@
 .schedule-page .worksheet{border:1px solid #596453;box-shadow:0 12px 28px #222b211a}.schedule-page .worksheet th{background:#b8a271;color:#211f17;padding:16px 12px;letter-spacing:.04em}.schedule-page .worksheet td{padding:14px 12px}.schedule-page .worksheet .ops-requirement{width:43%;min-width:340px}.schedule-page .worksheet .ops-requirement textarea{min-height:126px;resize:vertical;line-height:1.65}.schedule-page .worksheet input,.schedule-page .worksheet select{min-height:36px}.reference-links{display:grid;gap:6px;margin-top:8px}.reference-links a{overflow-wrap:anywhere;font-size:12px}.daily-output{margin:18px 0 26px}.daily-output .bar{margin:0}.daily-output input[type=number]{max-width:160px}.daily-output .report-meta{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}.daily-output p{margin:0}
 .schedule-page .worksheet{max-height:none}.schedule-page{max-width:1640px;padding-inline:3%}.schedule-page .new-task td{background:#394738}.schedule-page .new-task .ops-requirement textarea{min-height:85px}.schedule-page .capture td{padding:9px 11px;min-width:0;vertical-align:middle;overflow-wrap:anywhere}.schedule-page .capture th{padding:9px 11px}.schedule-page .capture .capture-notes{width:44%;white-space:pre-wrap;line-height:1.35}.schedule-page .capture table{table-layout:fixed}.schedule-page .capture th:nth-child(4){white-space:normal}.schedule-page .capture-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.schedule-page .capture-heading h1{font-size:26px;margin:0}.capture-links{display:block;font-size:11px;overflow-wrap:anywhere}
 .output-chart{padding:18px clamp(14px,3vw,28px);border-bottom:1px solid #ded7c9;background:#f9f6ec}.output-chart .chart-switch{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}.chart-switch button{background:#ebe6d8;color:#394236}.chart-switch button[aria-pressed=true]{background:#344b38;color:#fff}.chart-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}.chart-row{display:grid;grid-template-columns:minmax(92px,140px) minmax(60px,1fr) 90px;gap:10px;align-items:center}.chart-track{height:13px;border-radius:10px;background:#e8e4d7;overflow:hidden}.chart-bar{height:100%;border-radius:10px;background:linear-gradient(90deg,#345341,#799267)}.chart-value{text-align:right;font-variant-numeric:tabular-nums}.output-chart .empty{text-align:left;padding:12px 0;margin:0}.chart-caption{font-size:13px;line-height:1.8;color:#c8d6ee;margin:12px 0 18px}
-.chart-person .chart-track{display:flex}.chart-track .seg{display:block;height:100%;flex-shrink:0;transition:width .3s}.chart-track .seg{display:flex;align-items:center;justify-content:center;color:#0c1a12;font-size:10px;font-weight:800;overflow:hidden;white-space:nowrap}.chart-track .seg-0{background:linear-gradient(90deg,#4f9d6b,#7ed3a0)}.chart-track .seg-1{background:linear-gradient(90deg,#c9a24a,#eccb6b)}.chart-track .seg-2{background:linear-gradient(90deg,#c96a5a,#f08a7a)}.grade-badge{font-style:normal;font-size:11px;font-weight:800;color:#1d2b20;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;box-shadow:0 1px 3px #0002}.grade-legend{margin-left:8px;color:#7a6e58;font-size:12px}.grade-legend b{font-size:11px}.chart-person-detail p{margin:6px 0;font-size:13px}.v-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.v-metric{background:#ffffff0a;border:1px solid #ffffff14;border-radius:8px;padding:8px 10px;text-align:center}.v-metric span{display:block;font-size:11px;color:#9b8fb0;margin-bottom:3px}.v-metric b{font-size:20px;color:#f0e2ff}.v-metric b.v-grade{font-size:26px;font-weight:900}.v-block{margin:10px 0}.v-block h5{margin:0 0 6px;font-size:12px;color:#bcd8ff;font-weight:700}.v-stack{display:flex;height:16px;border-radius:8px;overflow:hidden;background:#ffffff0c}.v-legend{display:flex;gap:12px;margin-top:5px;font-size:11px;color:#c8d6ee}.v-legend .dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:3px;vertical-align:middle}.v-legend .d0{background:#5fd39a}.v-legend .d1{background:#e8c46b}.v-legend .d2{background:#f08a8a}.v-bars{display:grid;gap:5px}.v-bar{display:grid;grid-template-columns:minmax(80px,150px) minmax(60px,1fr) 46px;gap:8px;align-items:center;font-size:12px}.v-bar-name{color:#dbe9fb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.v-bar-track{display:flex;height:11px;border-radius:6px;background:#ffffff0c;overflow:hidden}.v-bar b{color:#f0e2ff;text-align:right;font-variant-numeric:tabular-nums}.v-more{margin-top:10px;border-top:1px solid #ffffff14;padding-top:8px}.v-more summary{cursor:pointer;color:#9fc4f0;font-size:12px}
+.chart-person .chart-track{display:flex}.chart-track .seg{display:block;height:100%;flex-shrink:0;transition:width .3s}.chart-track .seg{display:flex;align-items:center;justify-content:center;color:#0c1a12;font-size:10px;font-weight:800;overflow:hidden;white-space:nowrap}.chart-track .seg-0{background:linear-gradient(90deg,#4f9d6b,#7ed3a0)}.chart-track .seg-1{background:linear-gradient(90deg,#c9a24a,#eccb6b)}.chart-track .seg-2{background:linear-gradient(90deg,#c96a5a,#f08a7a)}.grade-badge{font-style:normal;font-size:11px;font-weight:800;color:#1d2b20;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;box-shadow:0 1px 3px #0002}.grade-legend{margin-left:8px;color:#7a6e58;font-size:12px}.grade-legend b{font-size:11px}.chart-person-detail p{margin:6px 0;font-size:13px}.v-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.v-metric{background:#ffffff0a;border:1px solid #ffffff14;border-radius:8px;padding:8px 10px;text-align:center}.v-metric span{display:block;font-size:11px;color:#9b8fb0;margin-bottom:3px}.v-metric b{font-size:20px;color:#f0e2ff}.v-metric b.v-grade{font-size:26px;font-weight:900}.v-block{margin:10px 0}.v-block h5{margin:0 0 6px;font-size:12px;color:#bcd8ff;font-weight:700}.v-stack{display:flex;height:16px;border-radius:8px;overflow:hidden;background:#ffffff0c}.v-legend{display:flex;gap:12px;margin-top:5px;font-size:11px;color:#c8d6ee}.v-legend .dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:3px;vertical-align:middle}.v-legend .d0{background:#5fd39a}.v-legend .d1{background:#e8c46b}.v-legend .d2{background:#f08a8a}.v-bars{display:grid;gap:5px}.v-bar{display:grid;grid-template-columns:minmax(80px,150px) minmax(60px,1fr) 46px;gap:8px;align-items:center;font-size:12px}.v-bar-name{color:#dbe9fb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.v-bar-track{display:flex;height:11px;border-radius:6px;background:#ffffff0c;overflow:hidden}.v-bar b{color:#f0e2ff;text-align:right;font-variant-numeric:tabular-nums}.v-more{margin-top:10px;border-top:1px solid #ffffff14;padding-top:8px}.v-more summary{cursor:pointer;color:#9fc4f0;font-size:12px}.dayboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}.db-card{background:#ffffff08;border:1px solid #ffffff14;border-radius:10px;padding:11px 13px}.db-head{display:flex;align-items:center;gap:6px}.db-head strong{color:#f0e2ff;font-size:14px}.db-rank{margin-left:auto;color:#8fa8c8;font-size:11px}.db-rate{font-size:28px;font-weight:900;margin:6px 0 4px;line-height:1}.db-rate.good{color:#7ee0b0}.db-rate.warn{color:#e8c46b}.db-rate.bad{color:#f08a8a}.db-rate.na{color:#9b8fb0;font-size:17px}.db-track{height:8px;border-radius:5px;background:#ffffff0c;overflow:hidden}.db-fill{display:block;height:100%;border-radius:5px}.db-fill.good{background:linear-gradient(90deg,#4f9d6b,#7ed3a0)}.db-fill.warn{background:linear-gradient(90deg,#c9a24a,#eccb6b)}.db-fill.bad{background:linear-gradient(90deg,#c96a5a,#f08a7a)}.db-meta{display:flex;justify-content:space-between;gap:8px;margin-top:7px;font-size:11px;color:#bcd0e8}.db-lv{padding:1px 6px;border-radius:4px;font-weight:700}.db-lv.lv-难{background:#5a2b2b;color:#ffb0b0}.db-lv.lv-中{background:#5a4a2b;color:#f0d59a}.db-lv.lv-简{background:#2b5a44;color:#a8e8c4}.db-lv.lv-—{background:#ffffff12;color:#9b8fb0}.db-cats{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}.db-cats .tag{background:#2b4063;color:#cfe0ff;font-size:10px;padding:2px 6px}.db-why{margin-top:8px;border-top:1px solid #ffffff12;padding-top:6px}.db-why summary{cursor:pointer;color:#f0a0a0;font-size:11px}.db-why p{margin:5px 0;font-size:11px;color:#d8c9c9}.db-waived{color:#7ee0b0!important}.chart-foot{margin-top:14px;padding:9px 12px;background:#ffffff08;border-radius:8px;font-size:11px;color:#8fa8c8;line-height:1.6}
 .management{margin:20px 0 28px}.management h2{margin:0 0 6px}.management p{margin:6px 0}.management .cards{padding:0 18px;margin:14px 0}.management .card{background:#f3efe2}.management .card b{font-size:22px}.management details{padding:12px 18px;border-top:1px solid #ded7c9}.management summary{cursor:pointer;font-weight:650}.management .target-input{width:115px}.target-progress{display:flex;align-items:center;gap:8px;min-width:135px}.target-progress progress{width:90px;accent-color:#476747}.mix-row{display:grid;grid-template-columns:minmax(100px,165px) minmax(60px,1fr) minmax(76px,115px);gap:12px;align-items:center;margin:8px 0}.mix-row .chart-track{height:12px}.mix-row strong{text-align:right}
 .mix-row-unknown > span{color:#f0b429;cursor:pointer}
 .mix-unknown{margin:2px 0 12px;padding:8px 12px;border:1px solid #ffffff1e;border-radius:8px;background:#ffffff08}
@@ -328,6 +328,7 @@ main:not(.home-page) h1 {
 .daily-breakdown .bd-row .bd-urgent { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:#f0b429; white-space:nowrap; }
 .daily-breakdown .bd-row .bd-urgent input { width:auto; }
 .daily-breakdown .bd-row .bd-del { border:0; background:transparent; color:#e08a8a; cursor:pointer; font-size:16px; line-height:1; padding:0 4px; }
+.perf-goals{margin:10px 0;padding:10px 12px;border:1px solid var(--dash-border,#dcded3);border-radius:9px}.perf-goals legend{font-weight:700;color:var(--ink,#243a32);font-size:13px}.perf-goals legend small{font-weight:400;opacity:.7}.perf-goal-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0}.perf-goal-row .perf-name{min-width:72px;font-weight:700}.perf-goal-row label{display:flex;align-items:center;gap:6px;font-size:12px}.perf-goal-row input[type=number]{width:80px}.perf-goal-row select{width:80px}
 .daily-breakdown .bd-add { margin-top:8px; padding:5px 12px; border:1px dashed #6d7fa5; background:transparent; color:#bcd0f5; border-radius:7px; cursor:pointer; font-size:12px; }
 .daily-breakdown .bd-tip { margin:6px 0 0; color:#7d8ba8; font-size:11px; }
 .people-nav { display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:10px; }
@@ -1206,6 +1207,14 @@ function schedule(){
   next.noteMarks=Object.fromEntries(Object.entries(readNoteMarks(next.noteMarks)).filter(([phrase])=>phrase&&next.notes.includes(phrase)));
   if(!readReferenceNames(next,formData)){alert('请为每条对标填写一个有效的 HTTP 或 HTTPS 链接。');return}
   for(const k of [...roles,'handModel','product','type','equipment'])next[k]=formData.getAll(k).join('、');
+  // 个人目标与难度：把 perfTarget:姓名 / perfLevel:姓名 聚合成 perfGoals 对象
+  const perfGoals={};
+  for(const [k,v] of formData.entries()){
+   if(k.startsWith('perfTarget:')){const n=k.slice(11);if(n&&v!==''){(perfGoals[n]??={}).target=Number(v)||0;}}
+   else if(k.startsWith('perfLevel:')){const n=k.slice(10);if(n&&v){ (perfGoals[n]??={}).level=v; }}
+  }
+  if(Object.keys(perfGoals).length)next.perfGoals=perfGoals;
+  for(const k of Object.keys(next))if(k.startsWith('perfTarget:')||k.startsWith('perfLevel:'))delete next[k];
   const batchDates=formData.getAll('batchDate'),batchTimes=formData.getAll('batchTimes'),batchQuantities=formData.getAll('batchQuantity');
   next.acceptanceBatches=batchDates.map((date,index)=>({date,times:Number(batchTimes[index]),quantity:Number(batchQuantities[index])}));
   delete next.batchDate;delete next.batchTimes;delete next.batchQuantity;
@@ -1285,6 +1294,19 @@ function showSavedTask(task){
  document.querySelector('#scheduleSaved')?.scrollIntoView?.({block:'start'});
  document.querySelector('[data-saved-row]')?.scrollIntoView?.({block:'nearest'});
 }
+// 每个摄影师的当天目标数+难度（用于个人人效看板算完成率）
+function perfEditor(t,formId){
+ const leads=members(t.lead);
+ if(!leads.length)return '';
+ const goals=t.perfGoals||{};
+ return '<fieldset class="perf-goals"><legend>个人目标与难度 <small>填后个人人效看板会按此算完成率</small></legend>'+
+  leads.map(name=>{
+   const g=goals[name]||{};
+   return '<div class="perf-goal-row"><span class="perf-name">'+esc(name)+'</span>'+
+    '<label>计划数<input aria-label="'+esc(name)+'计划数" form="'+formId+'" name="perfTarget:'+esc(name)+'" type="number" min="0" step="1" value="'+esc(g.target??'')+'" placeholder="—"></label>'+
+    '<label>难度<select aria-label="'+esc(name)+'难度" form="'+formId+'" name="perfLevel:'+esc(name)+'">'+options(['','简','中','难'],g.level||'')+'</select></label></div>';
+  }).join('')+'</fieldset>';
+}
 function taskRow(t,index){
  t={...t,assignmentCount:t.assignmentCount??1,acceptanceCount:t.acceptanceCount??1};
  const formId='task-row-'+index;
@@ -1345,7 +1367,7 @@ function taskRow(t,index){
  '<td class="ops-content" data-label="品类 / 拍摄类型">'+staffSelect('product','品类',['',...new Set([...products,...(t.product?[t.product]:[])])])+staffSelect('type','拍摄类型',['',...new Set([...types,...(t.type?[t.type]:[])])])+'<div class="equipment-row" data-equipment-row title="拍摄设备（可多选，同日撞档会提示）"><span class="equipment-row-label">拍摄设备</span>'+staffSelect('equipment','拍摄设备',settings.equipmentOptions||[])+'<span class="equipment-conflict-hint" data-equipment-conflict></span></div></td>'+
  '<td class="ops-requirement" data-label="运营要求与对标链接">' +notesEditor(t,formId)+referenceEditor(t,formId)+referenceLinks(t,true,true)+
  '<div class="ops-actions"><form id="'+formId+'" data-row-form="'+esc(t.id)+'"><button class="primary">'+(t.id?'保存':'保存新安排')+'</button></form>'+(t.id?'<button type="button" data-delete="'+esc(t.id)+'">删除</button>':'<button type="button" data-cancel-row="'+index+'">取消</button>')+(safeLink(t.workOrder)?'<a target="_blank" rel="noopener noreferrer" href="'+esc(t.workOrder)+'">打开工单</a>':'')+overtime+'</div></td></tr>'+
- '<tr class="row-edit"><td colspan="6"><details><summary>工单与交付 · '+esc(t.status)+' · '+esc(t.title)+'</summary><div class="grid">'+detail.map(([label,field])=>'<label>'+label+field+'</label>').join('')+'</div>'+acceptanceEditor(t,formId)+'</details></td></tr>';
+ '<tr class="row-edit"><td colspan="6"><details><summary>工单与交付 · '+esc(t.status)+' · '+esc(t.title)+'</summary><div class="grid">'+detail.map(([label,field])=>'<label>'+label+field+'</label>').join('')+'</div>'+perfEditor(t,formId)+acceptanceEditor(t,formId)+'</details></td></tr>';
 }
 // 拍摄设备同日撞档检测：返回被重复安排的设备及对应任务描述，无冲突返回空字符串
 // 某设备当天被哪些其他任务占用：返回描述文本
@@ -2519,9 +2541,67 @@ function outputBreakdown(name,entries){
  '<p><strong>主要协作人员</strong>　'+(ranked(partners).slice(0,5).map(([partner,n])=>esc(partner)+' '+n+' 项').join(' · ')||'暂无搭档记录')+'</p>'+
  '<p><small>任务占比反映工作构成。现有记录未包含完整工时或产出偏低的直接原因。</small></p>';
 }
+// 当天人效看板：完成率为主(实际÷目标)+难度加权，含品类/未达标原因/组内等级排名
+function renderDayBoard(rows,entries){
+ const chart=document.querySelector('#outputChart');
+ const LEVEL_W={简:1,中:1.15,难:1.3};
+ const gradeColor={S:'#ffd76a',A:'#9be08a',B:'#8fc4f5',C:'#e8b96b',D:'#e08a8a'};
+ // 按人聚合：目标/完成/难度/品类/原因/视同达标
+ const people=new Map();
+ for(const [name,role] of rows.map(r=>[r[0],r[1]])){
+  let target=0,done=0,lvSum=0,lvN=0,hasGoal=false;const cats=new Set();let reason='',waived=false;
+  for(const t of entries){
+   if(!members(t.lead).includes(name))continue;
+   const g=t.perfGoals?.[name]||{};
+   const gt=Number(g.target)||0,lvl=g.level||'';
+   const actual=Number(t.dailyShotCount??t.actual)||0;
+   if(gt>0){target+=gt;done+=actual;hasGoal=true;if(lvl){lvSum+=LEVEL_W[lvl]||1;lvN++;}}
+   if(t.product)cats.add(t.product);
+   if(t.unfinishedReason)reason=t.unfinishedReason;
+   if(t.shootingCompletion==='complete')waived=true;
+  }
+  const avgLv=lvN?lvSum/lvN:1;
+  let rate=hasGoal&&target>0?(done/target)*avgLv:null;
+  if(waived&&rate!=null)rate=Math.max(rate,1);
+  people.set(name,{name,role,target,done,rate,cats:[...cats],reason,waived,lv:lvN?(lvSum/lvN>=1.25?'难':(lvSum/lvN>=1.08?'中':'简')):'—'});
+ }
+ // 分组、组内排名与等级
+ const groups=['摄影师组','摄助/助理组','模特组','创新组','其他岗位'];
+ const board=new Map(groups.map(g=>[g,[]]));
+ for(const p of people.values()){const g=outputGroup(p.role);if(board.has(g))board.get(g).push(p);}
+ const cap=n=>Number.isFinite(n)?Math.round(n*100):0;
+ chart.innerHTML='<div class="chart-switch" role="group" aria-label="图表统计周期">'+['日产出','周产出','月产出','当天看板'].map((label,index)=>'<button type="button" data-chart-period="'+index+'" aria-pressed="'+(index===chartPeriod)+'">'+label+'</button>').join('')+'</div>'+
+ '<p class="chart-caption">📊 <b>当天看板</b>：完成率＝当天完成÷计划目标（难的活算得更高）。没填计划目标的显示「未设目标」。特殊原因可标记视同达标。点「为什么」看未完成原因。</p>'+
+ groups.map(g=>{
+  const arr=board.get(g).sort((a,b)=>(b.rate??-1)-(a.rate??-1));
+  if(!arr.length)return '';
+  const rated=arr.filter(p=>p.rate!=null);
+  const avg=rated.length?rated.reduce((s,p)=>s+p.rate,0)/rated.length:0;
+  return '<section class="chart-group"><h3>'+g+'</h3><div class="dayboard">'+arr.map((p,i)=>{
+   const rate=p.rate;const pct=rate!=null?cap(rate):0;
+   const grade=rate!=null?gradeOf(pct,cap(avg)):null;
+   const cls=rate==null?'na':(rate>=1?'good':(rate>=0.6?'warn':'bad'));
+   const barW=rate!=null?Math.min(100,pct):0;
+   return '<div class="db-card" data-name="'+esc(p.name)+'"><div class="db-head"><strong>'+esc(p.name)+'</strong>'+(grade?'<em class="grade-badge" style="background:'+gradeColor[grade]+'">'+grade+'</em>':'')+'<span class="db-rank">#'+(i+1)+'</span></div>'+
+    '<div class="db-rate '+cls+'">'+(rate!=null?pct+'%':'未设目标')+'</div>'+
+    '<div class="db-track"><i class="db-fill '+cls+'" style="width:'+barW+'%"></i></div>'+
+    '<div class="db-meta"><span>完成 '+p.done+' / 目标 '+(p.target||'—')+'</span><span class="db-lv lv-'+p.lv+'">难度 '+p.lv+'</span></div>'+
+    (p.cats.length?'<div class="db-cats">'+p.cats.map(c=>'<span class="tag">'+esc(c)+'</span>').join('')+'</div>':'')+
+    (p.reason?'<details class="db-why"><summary>为什么没完成</summary><p>'+esc(p.reason)+'</p>'+(p.waived?'<p class="db-waived">已标记：特殊原因视同达标</p>':'')+'</details>':'')+
+    '</div>';
+  }).join('')+'</div></section>';
+ }).join('')+
+ '<p class="chart-foot">完成率口径：当天完成 ÷ 计划目标 × 难度系数（简1.0/中1.15/难1.3）；标记视同达标者按≥100%计。目标在工作安排→工单与交付里填写。</p>';
+ chart.querySelectorAll('[data-chart-period]').forEach(button=>button.onclick=()=>{
+  chartPeriod=Number(button.dataset.chartPeriod);
+  renderOutputChart(rows,ranges,estimateOctober,note);
+  chart.querySelector('[aria-pressed="true"]')?.focus();
+ });
+}
 function renderOutputChart(rows,ranges,estimateOctober,note){
  const chart=document.querySelector('#outputChart');
- const periods=['日产出','周产出','月产出'];
+ if(chartPeriod===3){renderDayBoard(rows,tasks.filter(t=>t.date===outputDay));return;}
+ const periods=['日产出','周产出','月产出','当天看板'];
  const estimated=estimateOctober&&chartPeriod<2;
  const [from,to]=ranges[estimated?2:chartPeriod];
  const entries=tasks.filter(t=>t.date>=from&&t.date<=to);
