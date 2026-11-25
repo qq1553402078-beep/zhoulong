@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='31';
+ var V='32';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -1239,14 +1239,6 @@ function schedule(){
   next.noteMarks=Object.fromEntries(Object.entries(readNoteMarks(next.noteMarks)).filter(([phrase])=>phrase&&next.notes.includes(phrase)));
   if(!readReferenceNames(next,formData)){alert('请为每条对标填写一个有效的 HTTP 或 HTTPS 链接。');return}
   for(const k of [...roles,'handModel','product','type','equipment'])next[k]=formData.getAll(k).join('、');
-  // 个人目标与难度：把 perfTarget:姓名 / perfLevel:姓名 聚合成 perfGoals 对象
-  const perfGoals={};
-  for(const [k,v] of formData.entries()){
-   if(k.startsWith('perfTarget:')){const n=k.slice(11);if(n&&v!==''){(perfGoals[n]??={}).target=Number(v)||0;}}
-   else if(k.startsWith('perfLevel:')){const n=k.slice(10);if(n&&v){ (perfGoals[n]??={}).level=v; }}
-  }
-  if(Object.keys(perfGoals).length)next.perfGoals=perfGoals;
-  for(const k of Object.keys(next))if(k.startsWith('perfTarget:')||k.startsWith('perfLevel:'))delete next[k];
   const batchDates=formData.getAll('batchDate'),batchTimes=formData.getAll('batchTimes'),batchQuantities=formData.getAll('batchQuantity');
   next.acceptanceBatches=batchDates.map((date,index)=>({date,times:Number(batchTimes[index]),quantity:Number(batchQuantities[index])}));
   delete next.batchDate;delete next.batchTimes;delete next.batchQuantity;
@@ -1327,18 +1319,6 @@ function showSavedTask(task){
  document.querySelector('[data-saved-row]')?.scrollIntoView?.({block:'nearest'});
 }
 // 每个摄影师的当天目标数+难度（用于个人人效看板算完成率）
-function perfEditor(t,formId){
- const leads=members(t.lead);
- if(!leads.length)return '';
- const goals=t.perfGoals||{};
- return '<fieldset class="perf-goals"><legend>个人目标与难度 <small>填后个人人效看板会按此算完成率</small></legend>'+
-  leads.map(name=>{
-   const g=goals[name]||{};
-   return '<div class="perf-goal-row"><span class="perf-name">'+esc(name)+'</span>'+
-    '<label>计划数<input aria-label="'+esc(name)+'计划数" form="'+formId+'" name="perfTarget:'+esc(name)+'" type="number" min="0" step="1" value="'+esc(g.target??'')+'" placeholder="—"></label>'+
-    '<label>难度<select aria-label="'+esc(name)+'难度" form="'+formId+'" name="perfLevel:'+esc(name)+'">'+options(['','简','中','难'],g.level||'')+'</select></label></div>';
-  }).join('')+'</fieldset>';
-}
 function taskRow(t,index){
  t={...t,assignmentCount:t.assignmentCount??1,acceptanceCount:t.acceptanceCount??1};
  const formId='task-row-'+index;
@@ -1395,10 +1375,11 @@ function taskRow(t,index){
  ];
  return '<tr data-task-id="'+esc(t.id)+'"'+(!t.id?' class="new-task"':savedTask?.id===t.id?' data-saved-row style="outline:2px solid #e0bd70;outline-offset:-2px"':'')+'><td class="ops-date" data-label="日期">'+input('date','排班日期','date','required')+'</td>'+
  '<td data-label="摄影师">'+staffSelect('lead','摄影师')+'</td><td data-label="手模">'+staffSelect('handModel','手模')+'</td><td data-label="模特">'+staffSelect('model','模特')+'</td>'+
- '<td class="ops-content" data-label="品类 / 拍摄类型">'+staffSelect('product','品类',['',...new Set([...products,...(t.product?[t.product]:[])])])+staffSelect('type','拍摄类型',['',...new Set([...types,...(t.type?[t.type]:[])])])+'<div class="equipment-row" data-equipment-row title="拍摄设备（可多选，同日撞档会提示）"><span class="equipment-row-label">拍摄设备</span>'+staffSelect('equipment','拍摄设备',settings.equipmentOptions||[])+'<span class="equipment-conflict-hint" data-equipment-conflict></span></div></td>'+
+ '<td class="ops-content" data-label="品类 / 拍摄类型">'+staffSelect('product','品类',['',...new Set([...products,...(t.product?[t.product]:[])])])+staffSelect('type','拍摄类型',['',...new Set([...types,...(t.type?[t.type]:[])])])+'<div class="equipment-row" data-equipment-row title="拍摄设备（可多选，同日撞档会提示）"><span class="equipment-row-label">拍摄设备</span>'+staffSelect('equipment','拍摄设备',settings.equipmentOptions||[])+'<span class="equipment-conflict-hint" data-equipment-conflict></span></div>'+
+ '<div class="difficulty-row"><span class="difficulty-label">难易程度</span><select aria-label="难易程度" form="'+formId+'" name="difficulty">'+options(['','简单','中等','难'],t.difficulty||'')+'</select></div></td>'+
  '<td class="ops-requirement" data-label="运营要求与对标链接">' +notesEditor(t,formId)+referenceEditor(t,formId)+referenceLinks(t,true,true)+
  '<div class="ops-actions"><form id="'+formId+'" data-row-form="'+esc(t.id)+'"><button class="primary">'+(t.id?'保存':'保存新安排')+'</button></form>'+(t.id?'<button type="button" data-delete="'+esc(t.id)+'">删除</button>':'<button type="button" data-cancel-row="'+index+'">取消</button>')+(safeLink(t.workOrder)?'<a target="_blank" rel="noopener noreferrer" href="'+esc(t.workOrder)+'">打开工单</a>':'')+overtime+'</div></td></tr>'+
- '<tr class="row-edit"><td colspan="6"><details><summary>工单与交付 · '+esc(t.status)+' · '+esc(t.title)+'</summary><div class="grid">'+detail.map(([label,field])=>'<label>'+label+field+'</label>').join('')+'</div>'+perfEditor(t,formId)+acceptanceEditor(t,formId)+'</details></td></tr>';
+ '<tr class="row-edit"><td colspan="6"><details><summary>工单与交付 · '+esc(t.status)+' · '+esc(t.title)+'</summary><div class="grid">'+detail.map(([label,field])=>'<label>'+label+field+'</label>').join('')+'</div>'+acceptanceEditor(t,formId)+'</details></td></tr>';
 }
 // 拍摄设备同日撞档检测：返回被重复安排的设备及对应任务描述，无冲突返回空字符串
 // 某设备当天被哪些其他任务占用：返回描述文本
@@ -2568,31 +2549,28 @@ function outputBreakdown(name,entries){
 // 当天人效看板：完成率为主(实际÷目标)+难度加权，含品类/未达标原因/组内等级排名
 function renderDayBoard(rows,entries){
  const chart=document.querySelector('#outputChart');
- const LEVEL_W={简:1,中:1.15,难:1.3};
+ const LEVEL_W={'简单':1,'中等':1.15,'难':1.3};
  const gradeColor={S:'#ffd76a',A:'#9be08a',B:'#8fc4f5',C:'#e8b96b',D:'#e08a8a'};
- // 按「摄影师+模特」小组聚合：一条任务的目标/完成/难度是整组的，模特跟随摄影师共享组完成率
+ // 按「摄影师+模特」小组聚合：目标用任务下发量(target)，完成用当日拍摄量，难度用工作安排填的 difficulty
  const people=new Map();
  const isLeadRole=role=>['基础摄影','拍摄组','创新组'].includes(role)||outputGroup(role)==='摄影师组';
  for(const [name,role] of rows.map(r=>[r[0],r[1]])){
-  if(!isLeadRole(role))continue; // 只以摄影师为主键建组，模特不单独建卡
-  let target=0,done=0,lvSum=0,lvN=0,hasGoal=false;const cats=new Set(),models=new Set();let reason='',waived=false;
+  if(!isLeadRole(role))continue;
+  let target=0,done=0,lvSum=0,lvN=0,hasGoal=false;const cats=new Set(),models=new Set();let waived=false;
   for(const t of entries){
    if(!members(t.lead).includes(name))continue;
-   const g=t.perfGoals?.[name]||{};
-   const gt=Number(g.target)||0,lvl=g.level||'';
+   const gt=Number(t.target)||0,dvl=t.difficulty||'';
    const actual=Number(t.dailyShotCount??t.actual)||0;
-   if(gt>0){target+=gt;done+=actual;hasGoal=true;if(lvl){lvSum+=LEVEL_W[lvl]||1;lvN++;}}
+   if(gt>0){target+=gt;done+=actual;hasGoal=true;if(dvl){lvSum+=LEVEL_W[dvl]||1;lvN++;}}
    members(t.model).forEach(m=>models.add(m));
    if(t.product)cats.add(t.product);
-   if(t.unfinishedReason)reason=t.unfinishedReason;
    if(t.shootingCompletion==='complete')waived=true;
   }
   const avgLv=lvN?lvSum/lvN:1;
   let rate=hasGoal&&target>0?(done/target)*avgLv:null;
   if(waived&&rate!=null)rate=Math.max(rate,1);
-  // 卡片名：摄影师（+模特），如 陈丽娜 · 何雨馨
   const label=name+(models.size?' · '+[...models].join('、'):'');
-  people.set(name,{name,role,label,members:[name,...models],target,done,rate,cats:[...cats],reason,waived,lv:lvN?(lvSum/lvN>=1.25?'难':(lvSum/lvN>=1.08?'中':'简')):'—'});
+  people.set(name,{name,role,label,target,done,rate,cats:[...cats],waived,lv:lvN?(lvSum/lvN>=1.25?'难':(lvSum/lvN>=1.08?'中':'简')):'—'});
  }
  // 分组：小组卡归到摄影师所在组；模特组不再单独出卡（已并入摄影师小组）
  const groups=['摄影师组','摄助/助理组','创新组','其他岗位'];
@@ -2600,7 +2578,7 @@ function renderDayBoard(rows,entries){
  for(const p of people.values()){const g=outputGroup(p.role);if(board.has(g))board.get(g).push(p);}
  const cap=n=>Number.isFinite(n)?Math.round(n*100):0;
  chart.innerHTML='<div class="chart-switch" role="group" aria-label="图表统计周期">'+['日产出','周产出','月产出','当天看板'].map((label,index)=>'<button type="button" data-chart-period="'+index+'" aria-pressed="'+(index===chartPeriod)+'">'+label+'</button>').join('')+'</div>'+
- '<p class="chart-caption">📊 <b>当天看板</b>：按「摄影师＋模特」一组算完成率（模特跟随摄影师，不单独排名）。完成率＝当天完成÷计划目标（难的活算得更高）。没填计划目标显示「未设目标」。点「为什么」看未完成原因。</p>'+
+ '<p class="chart-caption">📊 <b>当天看板</b>：按「摄影师＋模特」一组算（模特跟随摄影师）。完成率＝当日拍摄量÷任务下发量×难度系数。目标用填报里的「任务下发量」，难度在工作安排表填。没填目标显示「未设目标」。</p>'+
  groups.map(g=>{
   const arr=board.get(g).sort((a,b)=>(b.rate??-1)-(a.rate??-1));
   if(!arr.length)return '';
@@ -2616,11 +2594,11 @@ function renderDayBoard(rows,entries){
     '<div class="db-track"><i class="db-fill '+cls+'" style="width:'+barW+'%"></i></div>'+
     '<div class="db-meta"><span>完成 '+p.done+' / 目标 '+(p.target||'—')+'</span><span class="db-lv lv-'+p.lv+'">难度 '+p.lv+'</span></div>'+
     (p.cats.length?'<div class="db-cats">'+p.cats.map(c=>'<span class="tag">'+esc(c)+'</span>').join('')+'</div>':'')+
-    (p.reason?'<details class="db-why"><summary>为什么没完成</summary><p>'+esc(p.reason)+'</p>'+(p.waived?'<p class="db-waived">已标记：特殊原因视同达标</p>':'')+'</details>':'')+
+    (p.waived?'<div class="db-waived">✓ 特殊原因·视同达标</div>':'')+
     '</div>';
   }).join('')+'</div></section>';
  }).join('')+
- '<p class="chart-foot">完成率口径：当天完成 ÷ 计划目标 × 难度系数（简1.0/中1.15/难1.3）；标记视同达标者按≥100%计。目标在工作安排→工单与交付里填写。</p>';
+ '<p class="chart-foot">完成率＝当日拍摄量÷任务下发量×难度系数（简单1.0/中等1.15/难1.3）。目标与未完成原因在填报卡片里填，难度在工作安排表填。</p>';
  chart.querySelectorAll('[data-chart-period]').forEach(button=>button.onclick=()=>{
   chartPeriod=Number(button.dataset.chartPeriod);
   renderOutputChart(rows,ranges,estimateOctober,note);
