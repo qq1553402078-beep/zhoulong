@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='32';
+ var V='33';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -171,7 +171,7 @@ main:not(.home-page) h1 {
 .schedule-page .edit-grid .multi-picker[open] > summary::after { transform:rotate(225deg); }
 .schedule-field-value { color:#f5effc; font-size:14px; font-weight:700; overflow-wrap:anywhere; }
 .schedule-field-value[data-empty="true"] { color:#bdb2ca; font-weight:500; }
-.schedule-page .edit-grid td[data-label="摄影师"] .multi-picker > summary{border-left:3px solid #75b8ff;background:#183b66}.schedule-page .edit-grid td[data-label="手模"] .multi-picker > summary{border-left:3px solid #ffc878;background:#51381d}.schedule-page .edit-grid td[data-label="模特"] .multi-picker > summary{border-left:3px solid #79dbbb;background:#173d38}.schedule-page .edit-grid td[data-label="品类 / 拍摄类型"] .multi-picker > summary{border-left:3px solid #b99aff;background:#332653}.schedule-page .edit-grid .row-edit summary{color:#ffd98b;font-size:15px;font-weight:800}.schedule-page .mobile-task .schedule-field{margin-top:8px;padding:8px 10px;border-left:3px solid var(--field-accent);border-radius:8px;background:#1a2438}.schedule-page .mobile-task .schedule-field dt{color:var(--field-accent);font-size:12px;font-weight:800}.schedule-page .mobile-task .schedule-field dd{margin:3px 0 0;color:#fff;font-size:15px;font-weight:750}
+.schedule-page .edit-grid td[data-label="摄影师"] .multi-picker > summary{border-left:3px solid #75b8ff;background:#183b66}.schedule-page .edit-grid td[data-label="手模"] .multi-picker > summary{border-left:3px solid #ffc878;background:#51381d}.schedule-page .edit-grid td[data-label="模特"] .multi-picker > summary{border-left:3px solid #79dbbb;background:#173d38}.schedule-page .edit-grid td[data-label="品类 / 拍摄类型"] .multi-picker > summary{border-left:3px solid #b99aff;background:#332653}.schedule-page .edit-grid .row-edit summary{color:#ffd98b;font-size:15px;font-weight:800}.schedule-page .edit-grid .row-more summary{color:#8fa08c;font-size:11px;font-weight:400;opacity:.75;padding:2px 0}.schedule-page .edit-grid .row-more summary:hover{opacity:1;color:#c9b58b}.schedule-page .mobile-task .schedule-field{margin-top:8px;padding:8px 10px;border-left:3px solid var(--field-accent);border-radius:8px;background:#1a2438}.schedule-page .mobile-task .schedule-field dt{color:var(--field-accent);font-size:12px;font-weight:800}.schedule-page .mobile-task .schedule-field dd{margin:3px 0 0;color:#fff;font-size:15px;font-weight:750}
 .schedule-page .edit-grid .multi-picker + .multi-picker { margin-block-start:6px; }
 .mobile-task .schedule-field dt { color:var(--field-accent); font-weight:750; }
 .rest-group-legend button[aria-pressed="true"] { outline:2px solid var(--rest-group-color,#eee); outline-offset:2px; font-weight:750; }
@@ -1379,7 +1379,7 @@ function taskRow(t,index){
  '<div class="difficulty-row"><span class="difficulty-label">难易程度</span><select aria-label="难易程度" form="'+formId+'" name="difficulty">'+options(['','简单','中等','难'],t.difficulty||'')+'</select></div></td>'+
  '<td class="ops-requirement" data-label="运营要求与对标链接">' +notesEditor(t,formId)+referenceEditor(t,formId)+referenceLinks(t,true,true)+
  '<div class="ops-actions"><form id="'+formId+'" data-row-form="'+esc(t.id)+'"><button class="primary">'+(t.id?'保存':'保存新安排')+'</button></form>'+(t.id?'<button type="button" data-delete="'+esc(t.id)+'">删除</button>':'<button type="button" data-cancel-row="'+index+'">取消</button>')+(safeLink(t.workOrder)?'<a target="_blank" rel="noopener noreferrer" href="'+esc(t.workOrder)+'">打开工单</a>':'')+overtime+'</div></td></tr>'+
- '<tr class="row-edit"><td colspan="6"><details><summary>工单与交付 · '+esc(t.status)+' · '+esc(t.title)+'</summary><div class="grid">'+detail.map(([label,field])=>'<label>'+label+field+'</label>').join('')+'</div>'+acceptanceEditor(t,formId)+'</details></td></tr>';
+ '<tr class="row-edit"><td colspan="6"><details class="row-more"><summary>更多字段（工单/验收，一般用不到）</summary><div class="grid">'+detail.map(([label,field])=>'<label>'+label+field+'</label>').join('')+'</div>'+acceptanceEditor(t,formId)+'</details></td></tr>';
 }
 // 拍摄设备同日撞档检测：返回被重复安排的设备及对应任务描述，无冲突返回空字符串
 // 某设备当天被哪些其他任务占用：返回描述文本
