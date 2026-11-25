@@ -35,13 +35,14 @@
    else pending.reject(Error('模型未返回文本'));
   }
  });
- panel.querySelector('form').onsubmit=async event=>{
-  event.preventDefault();
-  const content=input.value.trim();
-  if(!ready||busy||!content)return;
-  if(!bridge||bridge.closed){setReady(false,'连接窗口已关闭，请重新连接。');return}
+ // 供页面其它地方调用：ask(prompt) -> Promise<回复文本>
+ async function ask(content,external){
+  content=String(content||'').trim();
+  if(!content)throw Error('内容为空');
+  if(!ready||!bridge||bridge.closed)throw Error('豆包未连接，请先点右下角「豆包助手→连接豆包」并保持连接窗口打开');
+  if(busy)throw Error('豆包正在处理上一条，请稍候');
   busy=true;send.disabled=true;send.textContent='生成中…';
-  add('user',content);input.value='';
+  if(!external){add('user',content);input.value='';}
   const next=[...history,{role:'user',content}].slice(-10);
   let timeout;
   try{
@@ -51,9 +52,17 @@
     timeout=setTimeout(()=>reject(Error('请求超时，请检查连接窗口后重试。')),47000);
     bridge.postMessage({type:'studio-doubao-chat',id,messages:next},server);
    });
-   add('assistant',reply);
+   if(!external){add('assistant',reply);}
    history=[...next,{role:'assistant',content:reply}];
-  }catch(error){add('assistant',error.message);if(!input.value)input.value=content}
-  finally{clearTimeout(timeout);pending=null;busy=false;send.disabled=!ready;send.textContent='发送'}
+   return reply;
+  }finally{clearTimeout(timeout);pending=null;busy=false;send.disabled=!ready;send.textContent='发送'}
+ }
+ window.StudioDoubao={ask, isReady:()=>ready};
+ panel.querySelector('form').onsubmit=async event=>{
+  event.preventDefault();
+  const content=input.value.trim();
+  if(!content)return;
+  try{await ask(content,false)}
+  catch(error){add('assistant',error.message);if(!input.value)input.value=content}
  };
 })();

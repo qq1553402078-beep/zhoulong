@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='30';
+ var V='31';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -28,7 +28,8 @@
 *{box-sizing:border-box}body{margin:0;background:#f4f6fa;color:#182438;font:14px system-ui,sans-serif}header{background:#14223b;color:white;padding:22px 5%;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}header strong{font-size:20px}nav{display:flex;gap:8px}button,input,select,textarea{font:inherit}button{border:0;border-radius:8px;padding:9px 14px;cursor:pointer;background:#e9eff8;color:#203853}nav button{background:#263753;color:#e4edff}nav .active,.primary{background:#2855d9;color:white}main{max-width:1420px;margin:auto;padding:28px 5%}h1{font-size:28px;margin:0 0 8px}p{line-height:1.65;color:#52637b;margin:8px 0 18px}.bar{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:20px 0}.spacer{flex:1}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin:22px 0}.card,.panel{background:white;border:1px solid #dde5f0;border-radius:12px}.card{padding:16px;color:#52637b}.card b{display:block;margin-top:8px;font-size:27px;color:#162b4f}.panel{overflow:auto}table{width:100%;border-collapse:collapse;text-align:left}th,td{padding:13px 14px;border-bottom:1px solid #e8edf5;vertical-align:top}th{background:#edf2fb;white-space:nowrap;color:#364a67}td{min-width:72px}td.notes{min-width:235px;white-space:pre-wrap;overflow-wrap:anywhere}.empty{text-align:center;padding:38px;color:#52637b}.tag{display:inline-block;background:#eaf0ff;color:#2548a4;border-radius:6px;padding:4px 7px;white-space:nowrap}.late{background:#fff0ed;color:#a02b23}label{display:grid;gap:5px;color:#394e69}input,select,textarea{width:100%;border:1px solid #ccd7e7;border-radius:7px;padding:8px;background:white;color:#172438}dialog{width:min(840px,95vw);max-height:90vh;border:0;border-radius:14px;padding:24px;color:inherit;box-shadow:0 16px 64px #14223b44}dialog::backdrop{background:#14223b88}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.wide{grid-column:1/-1}textarea{min-height:75px}a{color:#2855d9}small{color:#5c708d}.danger{color:#a02b23}.plan{padding:18px;margin:12px 0}.plan h3{margin:0}.plan p{margin:8px 0}.crew td:nth-child(n+3){white-space:nowrap}
 .entry{padding:18px;margin:20px 0}.entry h2{font-size:17px;margin:0 0 12px}.entry textarea{min-height:60px}.entry .bar{margin:10px 0 0}.assign{min-width:110px;padding:5px 7px}.report th,.report td{white-space:nowrap}.report tbody tr:nth-child(even){background:#f6f8fc}.report td:nth-child(n+3),.report th:nth-child(n+3){text-align:right}.report-meta{padding:16px 18px;border-bottom:1px solid #dde5f0}.report-meta strong{font-size:17px}td.actions button{margin-bottom:5px;white-space:nowrap}.entry select{min-width:145px}
 .intro{background:#eaf0ff;border:1px solid #dce6ff;border-radius:14px;padding:24px;margin-bottom:24px}.intro p{max-width:760px}.home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;margin:16px 0 24px}.home-grid .panel{padding:18px}.home-grid h3{margin:0 0 8px}.home-grid p{margin:0}.chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 24px}.home-title{font-size:20px;margin:24px 0 12px}.formulas{margin-top:20px}.formulas th:first-child{min-width:155px}.formulas td{line-height:1.6}
-.schedule-page{--ink:#243a32;--muted:#59685e;--line:#dcded3;--paper:#fffef9;color:var(--ink)}body:has(.schedule-page){background:#f4f2ea}body:has(.schedule-page) header{background:#162d26}body:has(.schedule-page) nav button{background:transparent;color:#dee9dc}body:has(.schedule-page) nav .active{background:#dce7cb;color:#173129}.schedule-page h1,.schedule-page h2{font-family:"Noto Serif SC","Songti SC",SimSun,serif}.schedule-hero{padding:clamp(24px,5vw,58px);border-radius:22px;background:radial-gradient(ellipse at 92% 15%,#536c4f 0%,transparent 58%),linear-gradient(115deg,#142d25,#28463b);color:#fffdf2;display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap}.schedule-hero h1{font-size:clamp(32px,5vw,56px);letter-spacing:.06em}.schedule-hero p{color:#d8e4d3;margin:8px 0 0}.schedule-hero time{font-size:22px;color:#e2edcc;font-variant-numeric:tabular-nums}.schedule-page .card,.schedule-page .panel{background:var(--paper);border-color:var(--line);border-radius:16px}.schedule-page .card{color:var(--muted);padding:18px}.schedule-page .card b{color:var(--ink)}.schedule-page .entry{padding:clamp(16px,3vw,28px)}.schedule-page .entry h2{font-size:25px}.schedule-page .entry textarea{min-height:100px}.schedule-page input,.schedule-page select,.schedule-page textarea{border-color:#cbd4c7;background:#fffefa}.schedule-page label,.schedule-page p{color:var(--muted)}.schedule-page button{background:#e7ebdf;color:#253e32}.schedule-page .primary{background:#214538;color:white}.schedule-page input:focus,.schedule-page textarea:focus,.schedule-page select:focus{outline:2px solid #65855f;outline-offset:1px}.schedule-page .tag{background:#e9efdf;color:#33513b}.schedule-page .late{background:#fae8df;color:#a23f2a}.schedule-page th{background:#e8ebdf;color:#384b3d}.schedule-page td,.schedule-page th{border-color:#e5e7dc}.schedule-page tbody tr:hover{background:#f5f7ec}.schedule-page td.notes{min-width:210px}.schedule-tools{align-items:center}.schedule-tools label{min-width:125px}.schedule-tools .search{flex:1;min-width:165px}.schedule-section h2{margin:24px 0 0}.schedule-page .empty{padding:44px 14px}.schedule-page .schedule-count{font-variant-numeric:tabular-nums}
+.schedule-page{--ink:#243a32;--muted:#59685e;--line:#dcded3;--paper:#fffef9;color:var(--ink)}body:has(.schedule-page){background:#f4f2ea}body:has(.schedule-page) header{background:#162d26}body:has(.schedule-page) nav button{background:transparent;color:#dee9dc}body:has(.schedule-page) nav .active{background:#dce7cb;color:#173129}.schedule-page h1,.schedule-page h2{font-family:"Noto Serif SC","Songti SC",SimSun,serif}.schedule-hero{padding:clamp(24px,5vw,58px);border-radius:22px;background:radial-gradient(ellipse at 92% 15%,#536c4f 0%,transparent 58%),linear-gradient(115deg,#142d25,#28463b);color:#fffdf2;display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap}.schedule-hero h1{font-size:clamp(32px,5vw,56px);letter-spacing:.06em}.schedule-hero p{color:#d8e4d3;margin:8px 0 0}.schedule-hero time{font-size:22px;color:#e2edcc;font-variant-numeric:tabular-nums}.schedule-page .card,.schedule-page .panel{background:var(--paper);border-color:var(--line);border-radius:16px}.schedule-page .card{color:var(--muted);padding:18px}.schedule-page .card b{color:var(--ink)}.schedule-page .entry{padding:clamp(16px,3vw,28px)}.schedule-page .entry h2{font-size:25px}.schedule-page .entry textarea{min-height:100px}.schedule-page input,.schedule-page select,.schedule-page textarea{border-color:#cbd4c7;background:#fffefa}.schedule-page label,.schedule-page p{color:var(--muted)}.schedule-page button{background:#e7ebdf;color:#253e32}.schedule-page .primary{background:#214538;color:white}.schedule-page input:focus,.schedule-page textarea:focus,.schedule-page select:focus{outline:2px solid #65855f;outline-offset:1px}.schedule-page .tag{background:#e9efdf;color:#33513b}.schedule-page .late{background:#fae8df;color:#a23f2a}.schedule-page th{background:#e8ebdf;color:#384b3d}.schedule-page td,.schedule-page th{border-color:#e5e7dc}.schedule-page tbody tr:hover{background:#f5f7ec}.schedule-page td.notes{min-width:210px}.staffing-summary{padding:12px 16px;border:1px solid var(--line,#dcded3);border-radius:12px;background:var(--paper,#fffef9);margin:10px 0}.staffing-summary>strong{display:block;margin-bottom:8px}.staffing-summary>strong small{font-weight:400;opacity:.7}.ss-row{display:grid;grid-template-columns:70px 1fr 80px;gap:10px;align-items:center;padding:4px 0;font-size:13px;border-bottom:1px dashed var(--line,#dcded3)}.ss-label{font-weight:700}.ss-missing b{color:#b4552e}.ss-missing em{color:#3a8b5b;font-style:normal}.ss-arranged{text-align:right;color:var(--muted,#59685e);font-size:12px}
+.schedule-tools{align-items:center}.schedule-tools label{min-width:125px}.schedule-tools .search{flex:1;min-width:165px}.schedule-section h2{margin:24px 0 0}.schedule-page .empty{padding:44px 14px}.schedule-page .schedule-count{font-variant-numeric:tabular-nums}
 .org-map{padding:clamp(16px,3vw,36px);border:1px solid #e5dfda;border-radius:20px;background:radial-gradient(ellipse at 10% 48%,#eef0ff 0,transparent 24%),radial-gradient(ellipse at 94% 90%,#fdf1e5 0,transparent 31%),#fffdf8;color:#202438}.org-layout{display:grid;grid-template-columns:minmax(115px,.55fr) minmax(350px,2.3fr) minmax(215px,1.18fr);gap:20px;align-items:center}.org-root,.org-node,.org-leaves span,.mentor-name{border:1px solid var(--branch);background:var(--wash);color:#25253a}.org-root{--branch:#b1b2e7;--wash:#e4e5ff;border-radius:43% 50% 44% 36%;text-align:center;padding:26px 12px;font:bold clamp(19px,2.2vw,30px) "KaiTi","STKaiti",serif;position:relative}.org-root::after{content:"";position:absolute;left:100%;top:50%;width:20px;border-top:2px solid #a4a3cd}.org-tree{display:grid;gap:15px;position:relative;padding:4px 0 4px 23px}.org-tree::before{content:"";position:absolute;left:0;top:26px;bottom:26px;border-left:2px solid #a4a3cd;border-radius:25%}.org-branch{position:relative;display:grid;grid-template-columns:112px 1fr;align-items:center;gap:15px}.org-branch::before{content:"";position:absolute;left:-23px;top:50%;width:23px;height:12px;border-top:2px solid var(--branch);border-radius:9px 0 0 0}.org-node,.mentor-name{border-radius:16px 12px 15px 12px;text-align:center;padding:10px 6px;font:bold 18px "KaiTi","STKaiti",serif}.org-leaves{display:flex;align-items:center;flex-wrap:wrap;gap:6px;position:relative}.org-leaves::before{content:"";position:absolute;right:100%;top:50%;width:15px;border-top:2px solid var(--branch)}.org-leaves span{padding:4px 9px;border-radius:9px;white-space:nowrap}.org-detail{grid-column:2;margin-top:-9px;color:#59596d;font-size:12px}.mentor-box{padding:16px;border:1px dashed #dca9b7;border-radius:19px;background:#fff5f5}.mentor-box h3{margin:0 0 16px;font:bold 22px "KaiTi","STKaiti",serif}.mentor-row{display:grid;gap:8px;margin-top:14px}.mentor-row .org-leaves{padding-left:12px;border-left:2px solid var(--branch)}.mentor-row .org-leaves::before{display:none}@media(max-width:1000px){.org-layout{grid-template-columns:minmax(110px,.45fr) minmax(0,2fr)}.mentor-box{grid-column:2}}@media(max-width:610px){.org-layout{grid-template-columns:1fr;gap:14px}.org-root{justify-self:start;padding:12px 20px}.org-root::after{display:none}.mentor-box{grid-column:auto}.org-branch{grid-template-columns:95px 1fr}.org-node{font-size:16px}.org-tree{padding-left:15px}.org-branch::before{left:-15px;width:15px}}
 .team-rings{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:12px;padding:0 18px 14px}.team-ring-card{border:1px solid #ded7c9;border-radius:14px;background:#f9f6ec;padding:18px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}.team-ring-card h3{margin:0 0 8px;font-size:18px}.team-ring{width:126px;aspect-ratio:1;border-radius:50%;display:grid;place-items:center;flex:none;background:conic-gradient(var(--ring-fill));position:relative}.team-ring::before{content:"";position:absolute;inset:13px;background:#f9f6ec;border-radius:50%}.team-ring strong{position:relative;font-size:23px;font-variant-numeric:tabular-nums}.ring-details{flex:1;min-width:145px}.ring-details p{font-size:13px}.ring-key{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--key)}.team-rings-note{padding:0 18px 12px}
 .hero-art-bg{position:relative;color-scheme:dark;background-color:#0b100d;background-image:linear-gradient(90deg,rgba(9,13,11,.98) 0%,rgba(9,13,11,.92) 42%,rgba(9,13,11,.6) 64%,rgba(9,13,11,.12) 86%),url("./hero-infinite.jpg");background-repeat:no-repeat;background-position:center,right center;background-size:cover,calc(var(--hero-art-size,1) * 55%) auto}
@@ -637,7 +638,8 @@ function notesEditor(task,formId){
  '<input type="hidden" name="noteMarks" form="'+formId+'" value="'+esc(JSON.stringify(marks))+'">'+
  '<div class="note-actions" aria-label="运营要求重点标注"><button type="button" data-note-style="bold">加粗</button>'+
  Object.entries(noteColors).map(([id,label])=>'<button type="button" class="note-color-'+id+'" data-note-style="'+id+'">'+label+'</button>').join('')+
-  '<button type="button" data-note-style="clear">清除标注</button><small role="status"></small></div>'+recentNotesRef(task)+'</div>';
+  '<button type="button" data-note-style="clear">清除标注</button>'+
+  '<button type="button" class="ai-write-note" data-ai-note="'+esc(task.id||'')+'" title="根据对标链接自动生成拍摄需求写进这里（需先连接豆包助手）">✦ AI写需求</button><small role="status"></small></div>'+recentNotesRef(task)+'</div>';
 }
 function readReferenceNames(task,fields){
  const urls=fields.getAll('referenceUrl').map(value=>value.trim());
@@ -856,8 +858,16 @@ function assignmentHint(name,date,id){
 function staffingSummary(date){
  if(!date)return '';
  const off=readRest(),available=restStaff.filter(p=>!resting(off,date,p.name));
- const missing=available.filter(p=>(roleNames.lead.includes(p.name)||roleNames.model.includes(p.name))&&!tasks.some(t=>t.date===date&&participates(t,p.name)));
- return '<section class="staffing-summary"><strong>当日人员核对</strong><p>未安排摄影师 / 模特：'+(missing.map(p=>esc(p.name)).join(' · ')||'已全部安排')+'</p><small>休息：'+(restStaff.filter(p=>resting(off,date,p.name)).map(p=>esc(p.name)).join(' · ')||'无')+'。已安排人员可再次选择，选项内显示现有搭档。</small></section>';
+ const groups=[['摄影师',roleNames.lead],['模特',roleNames.model],['摄助',roleNames.assistant],['手模',roster['handModel']||[]],['修片',roleNames.retouch]];
+ const isArranged=p=>tasks.some(t=>t.date===date&&participates(t,p.name));
+ const rows=groups.map(([label,names])=>{
+  const list=[...new Set(names||[])].filter(n=>available.some(p=>p.name===n));
+  const missing=list.filter(n=>!isArranged({name:n}));
+  const arranged=list.filter(n=>isArranged({name:n}));
+  return '<div class="ss-row"><span class="ss-label">'+label+'</span><span class="ss-missing">'+(missing.length?'未排：<b>'+missing.map(esc).join(' · ')+'</b>':'<em>已全排</em>')+'</span><span class="ss-arranged">已排 '+arranged.length+'/'+list.length+'</span></div>';
+ }).join('');
+ const restNames=restStaff.filter(p=>resting(off,date,p.name)).map(p=>p.name);
+ return '<section class="staffing-summary"><strong>当日人员核对 <small>（谁还没安排一眼看清）</small></strong>'+rows+'<small>休息：'+(restNames.map(esc).join(' · ')||'无')+'。选项里已安排的人会标「今日已排」，不禁用但请核对避免重复。</small></section>';
 }
 
 let lastScheduleChange, lastUndoneScheduleChange;
@@ -1128,6 +1138,28 @@ function schedule(){
     refresh();
    };
   });
+  // AI写需求：根据对标链接自动生成拍摄需求，写回备注框
+  editor.querySelectorAll('[data-ai-note]').forEach(button=>{
+   button.onmousedown=event=>event.preventDefault();
+   button.onclick=async()=>{
+    const status=editor.querySelector('[role="status"]');
+    if(!window.StudioDoubao?.isReady?.()){status.textContent='请先点右下角「豆包助手→连接豆包」，保持连接窗口打开';return}
+    const refs=[...editor.querySelectorAll('input[name="referenceUrl"]')].map(i=>i.value.trim()).filter(Boolean);
+    const curTask=tasks.find(t=>t.id===button.dataset.aiNote)||{};
+    const product=curTask.product||'';
+    if(!refs.length&&!curTask.link){status.textContent='请先填对标链接（运营要求里的对标）';return}
+    const links=refs.length?refs:String(curTask.link||'').split('\n').filter(Boolean);
+    const prompt='你是短视频拍摄需求整理助手。请根据以下对标链接的内容（如能读取）和品类，写一段清晰的中文拍摄需求，包含：场景、道具、模特动作、镜头/运镜、拍摄角度、注意事项。直接给可执行的要点，不要解释。\n品类：'+product+'\n对标链接：\n'+links.join('\n');
+    button.disabled=true;const old=button.textContent;button.textContent='生成中…';status.textContent='AI 正在写需求…';
+    try{
+     const reply=await window.StudioDoubao.ask(prompt,true);
+     field.textContent=(field.textContent.trim()?field.textContent.trim()+'\n':'')+reply.trim();
+     stored.value=field.textContent;
+     status.textContent='已写入，检查后点保存';
+    }catch(e){status.textContent='生成失败：'+(e.message||'请重试')}
+    finally{button.disabled=false;button.textContent=old}
+   };
+  });
   // 参考今日/昨日/前天拍摄任务：复制该段文字到剪贴板
   editor.querySelectorAll('[data-copy-notes]').forEach(button=>{
    button.onclick=()=>{
@@ -1332,13 +1364,12 @@ function taskRow(t,index){
  const isEquip=k==='equipment';
  const equipUsed=isEquip?equipmentUsage(name,t.date,t.id):'';
  const equipOff=isEquip&&!!equipUsed&&!chosen.includes(name); // 已被别处占用且本任务未选 → 禁用
- // 模特/手模：检测当天是否已被安排到其它任务（显示占用+重复安排需确认）
- const isBookableField=k==='model'||k==='handModel';
- const booking=isBookableField&&!chosen.includes(name)?staffBookingUsage(name,t.date,t.id,k):'';
- const reuseKey=isBookableField?(t.date+'|'+k+'|'+t.id+'|'+name):'';
+ // 所有岗位：检测当天是否已被安排到其它任务（只提示不禁用）
+ const isBookableField=BOOK_FIELDS.includes(k);
+ const booking=isBookableField&&!chosen.includes(name)?staffBookingUsage(name,t.date,t.id):'';
  const disabled=(off&&!chosen.includes(name))||equipOff;
  const onChange=isBookableField?'onStaffPickerChange(this)':'updateMultiSummary(this)';
- return '<label'+(isStaff?' data-staff-role="'+esc(sp?'特殊':roleByName.get(name))+'"':'')+(isEquip&&equipUsed?' data-equip-used="1"':'')+(booking?' data-booked="1"':'')+'><input type="checkbox" '+(isStaff?'data-staff-picker ':'')+'form="'+formId+'" name="'+k+'" value="'+esc(name)+'" '+(chosen.includes(name)?'checked ':'')+(disabled?'disabled ':'')+(booking?' data-booked="'+esc(booking)+'" data-reuse-key="'+esc(reuseKey)+'"':'')+' onchange="'+onChange+'"><span>'+esc(name)+(retired?' · 离职':off?' · 休息':'')+(booking?'<small class="busy-hint booking-busy">⚠'+esc(booking)+'</small>':equipUsed?'<small class="busy-hint equip-busy">'+esc(equipUsed)+'</small>':hint?'<small class="busy-hint">'+esc(hint)+'</small>':'')+'</span></label>';
+ return '<label'+(isStaff?' data-staff-role="'+esc(sp?'特殊':roleByName.get(name))+'"':'')+(isEquip&&equipUsed?' data-equip-used="1"':'')+(booking?' data-booked="1"':'')+'><input type="checkbox" '+(isStaff?'data-staff-picker ':'')+'form="'+formId+'" name="'+k+'" value="'+esc(name)+'" '+(chosen.includes(name)?'checked ':'')+(disabled?'disabled ':'')+(booking?' data-booked="'+esc(booking)+'"':'')+' onchange="'+onChange+'"><span>'+esc(name)+(retired?' · 离职':off?' · 休息':'')+(booking?'<small class="busy-hint booking-busy">⚠'+esc(booking)+'</small>':equipUsed?'<small class="busy-hint equip-busy">'+esc(equipUsed)+'</small>':hint?'<small class="busy-hint">'+esc(hint)+'</small>':'')+'</span></label>';
  }).join('')+'</div>'+(isStaff?'<small class="staff-no-results" hidden>没有匹配的姓名</small>':'')+'</details>';
  };
  const quantity='min="0" step="1" placeholder="—"';
@@ -1379,25 +1410,18 @@ function equipmentUsage(name,date,excludeId){
  }).filter(Boolean);
  return parts.length?'已安排：'+parts.join('；'):'';
 }
-// 模特/手模当天是否已被安排到其它任务（返回占用说明，空=未被占用）
-function staffBookingUsage(name,date,excludeId,field){
+// 某人当天是否已被安排到其它任务(任意岗位)：返回占用说明，空=未被占用
+const BOOK_FIELDS=['lead','handModel','model','assistant','retouch'];
+function staffBookingUsage(name,date,excludeId){
  if(!name||!date)return '';
  const parts=tasks.filter(t=>t.id!==excludeId&&t.date===date).map(t=>{
-  const used=members(t[field]||'');
-  return used.includes(name)?((members(t.lead).join('、')||'摄影师待定')+' · '+(t.product||t.title||'任务')):'';
+  const roles=BOOK_FIELDS.filter(f=>members(t[f]||'').includes(name)).map(f=>({lead:'摄影',model:'模特',handModel:'手模',assistant:'摄助',retouch:'修片'}[f]||f));
+  return roles.length?(roles.join('/')+' · '+(t.product||t.title||'任务')):'';
  }).filter(Boolean);
- return parts.length?'已安排：'+parts.join('；'):'';
+ return parts.length?'今日已排：'+parts.join('；'):'';
 }
-// 勾选被占用的模特/手模时：需确认才允许重复安排
+// 勾选已被安排的人：只提示不禁用（重复安排由人工判断）
 function onStaffPickerChange(input){
- const booked=input.dataset.booked||'';
- if(input.checked&&booked){
-  const key=input.dataset.reuseKey||'';
-  if(key&&!confirmedReuse.has(key)){
-   if(!confirm('【'+input.value+'】今天已经安排给其它任务：\n'+booked+'\n\n确定要重复安排吗？')){input.checked=false;}
-   else{confirmedReuse.add(key);}
-  }
- }
  updateMultiSummary(input);
 }
 // 切换填报分类：即时预览对应模板（拍摄组↔创新组），记住滚动位置并重新打开该卡片
@@ -2546,16 +2570,19 @@ function renderDayBoard(rows,entries){
  const chart=document.querySelector('#outputChart');
  const LEVEL_W={简:1,中:1.15,难:1.3};
  const gradeColor={S:'#ffd76a',A:'#9be08a',B:'#8fc4f5',C:'#e8b96b',D:'#e08a8a'};
- // 按人聚合：目标/完成/难度/品类/原因/视同达标
+ // 按「摄影师+模特」小组聚合：一条任务的目标/完成/难度是整组的，模特跟随摄影师共享组完成率
  const people=new Map();
+ const isLeadRole=role=>['基础摄影','拍摄组','创新组'].includes(role)||outputGroup(role)==='摄影师组';
  for(const [name,role] of rows.map(r=>[r[0],r[1]])){
-  let target=0,done=0,lvSum=0,lvN=0,hasGoal=false;const cats=new Set();let reason='',waived=false;
+  if(!isLeadRole(role))continue; // 只以摄影师为主键建组，模特不单独建卡
+  let target=0,done=0,lvSum=0,lvN=0,hasGoal=false;const cats=new Set(),models=new Set();let reason='',waived=false;
   for(const t of entries){
    if(!members(t.lead).includes(name))continue;
    const g=t.perfGoals?.[name]||{};
    const gt=Number(g.target)||0,lvl=g.level||'';
    const actual=Number(t.dailyShotCount??t.actual)||0;
    if(gt>0){target+=gt;done+=actual;hasGoal=true;if(lvl){lvSum+=LEVEL_W[lvl]||1;lvN++;}}
+   members(t.model).forEach(m=>models.add(m));
    if(t.product)cats.add(t.product);
    if(t.unfinishedReason)reason=t.unfinishedReason;
    if(t.shootingCompletion==='complete')waived=true;
@@ -2563,15 +2590,17 @@ function renderDayBoard(rows,entries){
   const avgLv=lvN?lvSum/lvN:1;
   let rate=hasGoal&&target>0?(done/target)*avgLv:null;
   if(waived&&rate!=null)rate=Math.max(rate,1);
-  people.set(name,{name,role,target,done,rate,cats:[...cats],reason,waived,lv:lvN?(lvSum/lvN>=1.25?'难':(lvSum/lvN>=1.08?'中':'简')):'—'});
+  // 卡片名：摄影师（+模特），如 陈丽娜 · 何雨馨
+  const label=name+(models.size?' · '+[...models].join('、'):'');
+  people.set(name,{name,role,label,members:[name,...models],target,done,rate,cats:[...cats],reason,waived,lv:lvN?(lvSum/lvN>=1.25?'难':(lvSum/lvN>=1.08?'中':'简')):'—'});
  }
- // 分组、组内排名与等级
- const groups=['摄影师组','摄助/助理组','模特组','创新组','其他岗位'];
+ // 分组：小组卡归到摄影师所在组；模特组不再单独出卡（已并入摄影师小组）
+ const groups=['摄影师组','摄助/助理组','创新组','其他岗位'];
  const board=new Map(groups.map(g=>[g,[]]));
  for(const p of people.values()){const g=outputGroup(p.role);if(board.has(g))board.get(g).push(p);}
  const cap=n=>Number.isFinite(n)?Math.round(n*100):0;
  chart.innerHTML='<div class="chart-switch" role="group" aria-label="图表统计周期">'+['日产出','周产出','月产出','当天看板'].map((label,index)=>'<button type="button" data-chart-period="'+index+'" aria-pressed="'+(index===chartPeriod)+'">'+label+'</button>').join('')+'</div>'+
- '<p class="chart-caption">📊 <b>当天看板</b>：完成率＝当天完成÷计划目标（难的活算得更高）。没填计划目标的显示「未设目标」。特殊原因可标记视同达标。点「为什么」看未完成原因。</p>'+
+ '<p class="chart-caption">📊 <b>当天看板</b>：按「摄影师＋模特」一组算完成率（模特跟随摄影师，不单独排名）。完成率＝当天完成÷计划目标（难的活算得更高）。没填计划目标显示「未设目标」。点「为什么」看未完成原因。</p>'+
  groups.map(g=>{
   const arr=board.get(g).sort((a,b)=>(b.rate??-1)-(a.rate??-1));
   if(!arr.length)return '';
@@ -2582,7 +2611,7 @@ function renderDayBoard(rows,entries){
    const grade=rate!=null?gradeOf(pct,cap(avg)):null;
    const cls=rate==null?'na':(rate>=1?'good':(rate>=0.6?'warn':'bad'));
    const barW=rate!=null?Math.min(100,pct):0;
-   return '<div class="db-card" data-name="'+esc(p.name)+'"><div class="db-head"><strong>'+esc(p.name)+'</strong>'+(grade?'<em class="grade-badge" style="background:'+gradeColor[grade]+'">'+grade+'</em>':'')+'<span class="db-rank">#'+(i+1)+'</span></div>'+
+   return '<div class="db-card" data-name="'+esc(p.name)+'"><div class="db-head"><strong>'+esc(p.label||p.name)+'</strong>'+(grade?'<em class="grade-badge" style="background:'+gradeColor[grade]+'">'+grade+'</em>':'')+'<span class="db-rank">#'+(i+1)+'</span></div>'+
     '<div class="db-rate '+cls+'">'+(rate!=null?pct+'%':'未设目标')+'</div>'+
     '<div class="db-track"><i class="db-fill '+cls+'" style="width:'+barW+'%"></i></div>'+
     '<div class="db-meta"><span>完成 '+p.done+' / 目标 '+(p.target||'—')+'</span><span class="db-lv lv-'+p.lv+'">难度 '+p.lv+'</span></div>'+
@@ -3214,7 +3243,7 @@ document.addEventListener('focusout',()=>{
  if(!teamRefreshPending)return;
  setTimeout(()=>{if(!isEditingNow()){teamRefreshPending=false;renderPreserving()}},150);
 });
-</script><script src="access.js?v=access-13" defer></script><script src="team-sync.js?v=shared-settings-4" defer></script>
+</script><script src="access.js?v=access-13" defer></script><script src="team-sync.js?v=shared-settings-4" defer></script><script src="doubao-chat.js?v=ai-1" defer></script>
 <script>
 if('serviceWorker' in navigator && location.protocol==='https:'){
   window.addEventListener('load',function(){
