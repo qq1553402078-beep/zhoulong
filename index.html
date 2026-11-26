@@ -3,7 +3,7 @@
 <script>
 /* 部署自愈：版本变化时清掉旧 SW 缓存并重载，确保所有人看到最新（尤其手机 PWA） */
 (function(){
- var V='34';
+ var V='35';
  try{
   if(sessionStorage.getItem('__bv')===V)return;
   sessionStorage.setItem('__bv',V);
@@ -1013,6 +1013,24 @@ function modelPortfolio(){
   }).join('')+'</section>';
 }
 function defaultTeamPhotos(){return [{"src": "./team-gallery/01.jpg", "caption": "一起，向自由出发"}, {"src": "./team-gallery/new-0.jpg", "caption": "暖光里的默契"}, {"src": "./team-gallery/new-1.jpg", "caption": "把日常拍成风景"}, {"src": "./team-gallery/new-5.jpg", "caption": "镜头背后的认真"}, {"src": "./team-gallery/nov18-warm-frame.jpg", "caption": "暖意里的同框"}, {"src": "./team-gallery/new-2.jpg", "caption": "黑白之间 · 群像"}, {"src": "./team-gallery/new-3.jpg", "caption": "黑白之间 · 姿态"}, {"src": "./team-gallery/new-7.jpg", "caption": "一起奔赴新一年"}, {"src": "./team-gallery/gallery-1118-milktea.jpg", "caption": "茶饮里的欢笑"}, {"src": "./team-gallery/new-4.jpg", "caption": "古巷里的伙伴"}, {"src": "./team-gallery/02.jpg", "caption": "日常里的默契"}, {"src": "./team-gallery/03.jpg", "caption": "古巷同行"}, {"src": "./team-gallery/04.jpg", "caption": "节日相聚"}, {"src": "./team-gallery/05.jpg", "caption": "在一起的日常"}, {"src": "./team-gallery/06.jpg", "caption": "围坐一桌"}, {"src": "./team-gallery/07.jpg", "caption": "分享甜蜜"}, {"src": "./team-gallery/08.jpg", "caption": "热闹的夜晚"}, {"src": "./team-gallery/09.jpg", "caption": "冬日同行"}, {"src": "./team-gallery/10.jpg", "caption": "镜头里的我们"}, {"src": "./team-gallery/11.jpg", "caption": "夜市小聚"}, {"src": "./team-gallery/12.jpg", "caption": "节日心意"}, {"src": "./team-gallery/new-6.jpg", "caption": "我们的默契"}, {"src": "./team-gallery/new-8.jpg", "caption": "创意封面实验"}, {"src": "./team-gallery/journal-add-01.jpg", "caption": "节日布景前的合影"}, {"src": "./team-gallery/journal-add-02.jpg", "caption": "一起布置现场"}, {"src": "./team-gallery/journal-add-03.jpg", "caption": "湖边夜拍"}, {"src": "./team-gallery/journal-add-04.jpg", "caption": "古巷拍摄现场"}, {"src": "./team-gallery/journal-add-05.jpg", "caption": "竹影下的拍摄"}, {"src": "./team-gallery/journal-add-06.jpg", "caption": "一起分享蛋糕"}, {"src": "./team-gallery/journal-add-07.jpg", "caption": "室内拍摄花絮"}, {"src": "./team-gallery/journal-add-08.jpg", "caption": "烟雾棚拍合影"}, {"src": "./team-gallery/journal-add-09.jpg", "caption": "节日礼物合影"}, {"src": "./team-gallery/journal-add-10.jpg", "caption": "古巷片场合影"}, {"src": "./team-gallery/journal-team-1.jpg", "caption": "树下合影"}, {"src": "./team-gallery/journal-team-2.jpg", "caption": "工作室合影"}, {"src": "./team-gallery/journal-team-3.jpg", "caption": "户外合影"}, {"src": "./team-gallery/nov18-sunset.jpg", "caption": "落日下的奔赴"}, {"src": "./team-gallery/nov18-gift.jpg", "caption": "礼赠里的心意"}, {"src": "./team-gallery/nov18-joy.jpg", "caption": "一起，乐享时光"}, {"src": "./team-gallery/nov18-snack.jpg", "caption": "把零食酿成欢喜"}, {"src": "./team-gallery/nov18-journey.jpg", "caption": "一起，奔赴新程"}, {"src": "./team-gallery/nov18-highlight.jpg", "caption": "喜悦里的高光"}, {"src": "./team-gallery/gallery-1118-training.jpg", "caption": "课堂里的并肩"}, {"src": "./team-gallery/gallery-1118-casual.jpg", "caption": "休闲日里的相聚"}];}
+// 恢复相册：把缺失的默认照片补回（保留用户自己加的，按默认顺序排），只跑一次
+(function restoreGallery20261126(){
+ var MK='studio-gallery-restore-20261126';
+ var done=false; try{done=localStorage.getItem(MK)==='1'}catch(e){}
+ if(done) return;
+ try{
+  var defaults=defaultTeamPhotos();
+  var cur=Array.isArray(settings.gallery)?settings.gallery:[];
+  var have=new Set(cur.map(function(p){return p&&p.src}));
+  var merged=cur.slice();
+  defaults.forEach(function(p){if(!have.has(p.src))merged.push({src:p.src,caption:p.caption})});
+  var order=new Map(defaults.map(function(p,i){return [p.src,i]}));
+  merged.sort(function(a,b){var ia=order.has(a&&a.src)?order.get(a.src):9999,ib=order.has(b&&b.src)?order.get(b.src):9999;return ia-ib});
+  settings.gallery=merged;
+  localStorage.setItem(settingsKey,JSON.stringify(settings));
+  localStorage.setItem(MK,'1');
+ }catch(e){}
+})();
 function teamGallery(){
  const teamPhotos=getTeamPhotos();
  if(!teamPhotos.length)return '';
