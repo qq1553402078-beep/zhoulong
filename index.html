@@ -2910,22 +2910,53 @@ function rosterEditorRow(name='',role='基础摄影'){
  '<td><select name="staffStatus" aria-label="在职状态">'+options(['在职','离职'],inactive?'离职':'在职')+'</select></td>'+
  '<td>'+(name?'':'<button type="button" data-cancel-staff>取消新增</button>')+'</td></tr>';
 }
+// 团队共享图片上限：压到约 60KB base64，确保能塞进团队同步（服务端单请求上限约 390KB）
+const IMG_MAX=60000;
+async function compressDataUrl(src){
+ const img=new Image();img.src=src;
+ await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(Error('图片读取失败'))});
+ let scale=Math.min(1,1280/Math.max(img.width,img.height));
+ for(const quality of [.82,.72,.62,.52,.42]){
+  for(let step=0;step<5;step++){
+   const width=Math.max(1,Math.round(img.width*scale));
+   const height=Math.max(1,Math.round(img.height*scale));
+   const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+   canvas.getContext('2d').drawImage(img,0,0,width,height);
+   const out=canvas.toDataURL('image/webp',quality);
+   if(out.length<=IMG_MAX)return out;
+   scale*=.82;
+   if(width<=320)break;
+  }
+ }
+ throw Error('图片压缩后仍过大，请换一张更简单的图片。');
+}
 async function compressSharedImage(file){
  if(!/^image\/(jpeg|png|webp)$/i.test(file.type))throw Error('仅支持 JPG、PNG 或 WebP 图片。');
  if(file.size>12*1024*1024)throw Error('单张原图请控制在 12 MB 以内。');
- const bitmap=await createImageBitmap(file);
- let longest=Math.max(bitmap.width,bitmap.height);
- let scale=Math.min(1,1600/longest);
- for(const quality of [.84,.76,.68]){
-  const width=Math.max(1,Math.round(bitmap.width*scale));
-  const height=Math.max(1,Math.round(bitmap.height*scale));
-  const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
-  canvas.getContext('2d').drawImage(bitmap,0,0,width,height);
-  const src=canvas.toDataURL('image/webp',quality);
-  if(src.length<=650000){bitmap.close?.();return {src,caption:file.name.replace(/\.[^.]+$/,'')};}
-  scale*=.8;
+ const dataUrl=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)});
+ const src=await compressDataUrl(dataUrl);
+ return {src,caption:file.name.replace(/\.[^.]+$/,'')};
+}
+// 一次性把本机历史大图压缩到共享上限，让之前上传的照片也能同步给团队
+async function compressLegacyImages(){
+ const jobs=[];
+ if(typeof settings.photo==='string'&&settings.photo.indexOf('data:image/')===0&&settings.photo.length>IMG_MAX)jobs.push({k:'photo'});
+ if(Array.isArray(settings.gallery))settings.gallery.forEach((p,i)=>{if(p&&typeof p.src==='string'&&p.src.indexOf('data:image/')===0&&p.src.length>IMG_MAX)jobs.push({k:'gallery',i:i})});
+ if(typeof settings.artwork==='string'&&settings.artwork.indexOf('data:image/')===0&&settings.artwork.length>IMG_MAX)jobs.push({k:'artwork'});
+ if(!jobs.length)return false;
+ let changed=false;
+ for(const job of jobs){
+  try{
+   const src=job.k==='photo'?settings.photo:job.k==='artwork'?settings.artwork:settings.gallery[job.i].src;
+   const out=await compressDataUrl(src);
+   if(job.k==='photo')settings.photo=out;
+   else if(job.k==='artwork')settings.artwork=out;
+   else settings.gallery[job.i].src=out;
+   changed=true;
+  }catch{}
  }
- bitmap.close?.();throw Error('图片压缩后仍过大，请换一张更小的图片。');
+ if(changed)try{localStorage.setItem(settingsKey,JSON.stringify(settings))}catch{}
+ return changed;
 }
 function adminView(message=''){
  const field=(key,label,kind='text',value=settings[key])=>'<label'+(kind==='area'?' class="wide"':'')+'>'+label+
@@ -3057,9 +3088,8 @@ function adminView(message=''){
   const photo=fields.get('photoUpload');
   if(fields.has('resetPhoto'))next.photo='';
   if(photo?.size){
-   if(photo.size>2*1024*1024||!/^image\/(jpeg|png|webp)$/.test(photo.type)){status.textContent='请上传 2 MB 以内的 JPG、PNG 或 WebP 图片。';return}
-   try{next.photo=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(photo)})}
-   catch{status.textContent='图片读取失败，请重新选择。';return}
+   try{next.photo=(await compressSharedImage(photo)).src}
+   catch(error){status.textContent=error.message||'图片处理失败，请重新选择。';return}
   }
   try{localStorage.setItem(settingsKey,JSON.stringify(next))}catch{status.textContent='保存失败，请检查浏览器存储空间。';return}
   settings=next;
@@ -3088,6 +3118,8 @@ if(typeof window!=='undefined'){
  main.addEventListener('invalid',event=>{event.target.closest('details')?.setAttribute('open','')},true);
 }
 render();
+// 一次性压缩历史大图（之前上传的未压缩照片），让它们也能进入团队同步。压缩在后台进行，完成后静默刷新。
+compressLegacyImages().then(function(changed){if(changed){settings={...defaults,...JSON.parse(localStorage.getItem(settingsKey)||'{}')};applySettings();render()}}).catch(function(){});
 // 数量类型：下拉添加 / 移除（事件委托 + 局部 DOM 操作，不整页刷新，保留已填内容与展开状态）
 const shotBaseTypes=['分镜素材','创新视频'];
 // 交付类型勾选变化时，联动同一卡片数量区对应类型的显隐
@@ -3247,7 +3279,7 @@ document.addEventListener('focusout',()=>{
  if(!teamRefreshPending)return;
  setTimeout(()=>{if(!isEditingNow()){teamRefreshPending=false;renderPreserving()}},150);
 });
-</script><script src="access.js?v=access-13" defer></script><script src="team-sync.js?v=shared-settings-9" defer></script><script src="doubao-chat.js?v=ai-1" defer></script>
+</script><script src="access.js?v=access-13" defer></script><script src="team-sync.js?v=shared-settings-10" defer></script><script src="doubao-chat.js?v=ai-1" defer></script>
 <script>
 if('serviceWorker' in navigator && location.protocol==='https:'){
   window.addEventListener('load',function(){
