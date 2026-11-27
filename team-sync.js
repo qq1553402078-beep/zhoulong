@@ -88,8 +88,9 @@
       headers: { Authorization: 'Bearer ' + code, 'Content-Type': 'application/json' }
     });
     if (response.status === 401) throw new Error('团队访问码无效');
-    if (response.status === 409) return null;
-    if (!response.ok) throw new Error('云端暂不可用');
+    // 409(版本冲突) 和 5xx(云端临时故障) 都交给外层重试，不再一次失败就放弃
+    if (response.status === 409 || response.status >= 500) return null;
+    if (!response.ok) throw new Error('云端暂不可用 ' + response.status);
     return response.json();
   };
 
@@ -101,6 +102,7 @@
         // 多人同时保存时略微错开重试，避免一直撞在同一个版本上
         if (attempt) await new Promise(resolve => setTimeout(resolve, 200 * attempt));
         const cloud = await request('GET');
+        if (!cloud) continue; // GET 遇到 5xx，稍后重试
         const local = capture();
         const baseline = read(localStorage, cacheKey, null);
         const merged = Object.assign(Object.create(null), cloud.records);
@@ -133,12 +135,12 @@
         status.textContent = '已同步';
         return;
       }
-      throw new Error('多人同时保存，稍后重试');
+      throw new Error('云端繁忙，稍后重试');
     } catch (error) {
       const reason = error.name === 'TimeoutError' || /timeout|abort/i.test(error.message || '') ? '连接超时'
         : error.message === '团队访问码无效' ? '访问码无效'
-        : error.message === '云端暂不可用' ? '云端暂不可用'
-        : error.message === '多人同时保存，稍后重试' ? '多人同时保存'
+        : /^云端暂不可用/.test(error.message || '') ? error.message
+        : error.message === '云端繁忙，稍后重试' ? '云端繁忙'
         : '网络异常';
       status.textContent = '同步待重试（' + reason + '）· 本机记录已保留';
       status.title = error.message || String(error);
