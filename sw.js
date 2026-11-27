@@ -1,5 +1,5 @@
 /* 中台拍摄工作台 PWA Service Worker */
-const CACHE = 'zhoulong-pwa-v43';
+const CACHE = 'zhoulong-pwa-v44';
 const PRECACHE = [
   './',
   './index.html',
@@ -7,7 +7,7 @@ const PRECACHE = [
   './studio-theme.css?v=v3',
   './studio-editorial.css?v=v7',
   './access.js?v=access-13',
-  './team-sync.js?v=shared-settings-12',
+  './team-sync.js?v=shared-settings-13',
   './doubao-chat.js?v=ai-1',
   './icon-192.png',
   './icon-512.png',
