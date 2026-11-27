@@ -389,8 +389,8 @@ const defaults={
  title:'中台拍摄工作台',homeTitle:'中台拍摄部门',intro:'承接运营拍摄需求，从人员排班、现场拍摄到修片和素材交付。主拍与模特每天按任务配对。',
  photo:'',leader:'周翔龙',opsLead:'周翔龙',opsSummary:'中台对接、问题汇总、整改复核',specialty:'',
  mentors:'杨建勋：游苗、陈丽娜、白炳锦\n勾应颖：刘意、张亚涛',
- products:['秘与紧致丹','秘与洗液','山药秘与葛根粉','除臭贴','LILIA二硫化硒洗发水','毛囊炎','LILOO紧致丹','其他'],
- types:['产品展示','内料展示','口播 · KOC达人','口播 · 营销活动','口播 · 人设','意识流','产品使用 · 美好展示','产品使用 · 痛点展示','产品使用 · 使用展示','创新'],
+ products:['秘与紧致丹','秘与洗液','山药秘与葛根粉','除臭贴','LILIA二硫化硒洗发水','毛囊炎','LILOO紧致丹','其他','玉米山药葛根粉'],
+ types:['产品展示','内料展示','口播 · KOC达人','口播 · 营销活动','口播 · 人设','意识流','产品使用 · 美好展示','产品使用 · 痛点展示','产品使用 · 使用展示','创新','摆摊'],
  shooting:'产品展示：拍摄产品外观、包装及细节。\n内料展示：呈现产品内料的形态、质地及流动效果。\n口播：KOC 达人、营销活动、人设。根据任务确认台词、场景和模特。\n意识流：以意境和氛围为主，表达自由、放松、洒脱与享受的状态。\n产品使用展示：产品美好展示、产品痛点展示、产品使用展示。',
  shiftIntro:'团队实行调休制，每天均有人值班。排班时根据当日任务和在岗人员确认承诺交付时间。',
  normalTitle:'常规任务 · 1–2 天',normalText:'从运营下发任务起算，根据任务数量和拍摄类型确认交付时间。',
@@ -427,10 +427,18 @@ let roster,products,types,staff,roleNames,restStaff,activeNames;
   settings.equipmentRevision=1;
   try{localStorage.setItem(settingsKey,JSON.stringify(settings))}catch{}
  }
- // 一次性迁移：拍摄类型里补回被同步覆盖掉的「创新」，不动其他类型
+ // 一次性迁移：补回被同步覆盖掉的选项，不动其他项
  if(!settings.typeInnovationFixed){
-  if(Array.isArray(settings.types)&&!settings.types.includes('创新'))settings.types.push('创新');
+  if(Array.isArray(settings.types)){
+   if(!settings.types.includes('创新'))settings.types.push('创新');
+   if(!settings.types.includes('摆摊'))settings.types.push('摆摊');
+  }
   settings.typeInnovationFixed=1;
+  try{localStorage.setItem(settingsKey,JSON.stringify(settings))}catch{}
+ }
+ if(!settings.productCornFixed){
+  if(Array.isArray(settings.products)&&!settings.products.includes('玉米山药葛根粉'))settings.products.push('玉米山药葛根粉');
+  settings.productCornFixed=1;
   try{localStorage.setItem(settingsKey,JSON.stringify(settings))}catch{}
  }
  if(settings.shootingTitle==='承接的拍摄类型')settings.shootingTitle='拍摄类型';
@@ -3293,7 +3301,7 @@ document.addEventListener('focusout',()=>{
  if(!teamRefreshPending)return;
  setTimeout(()=>{if(!isEditingNow()){teamRefreshPending=false;renderPreserving()}},150);
 });
-</script><script src="access.js?v=access-13" defer></script><script src="team-sync.js?v=shared-settings-12" defer></script><script src="doubao-chat.js?v=ai-1" defer></script>
+</script><script src="access.js?v=access-13" defer></script><script src="team-sync.js?v=shared-settings-13" defer></script><script src="doubao-chat.js?v=ai-1" defer></script>
 <script>
 if('serviceWorker' in navigator && location.protocol==='https:'){
   window.addEventListener('load',function(){
