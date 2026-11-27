@@ -31,12 +31,6 @@
     }
     return value;
   };
-  // 从本机当前数据里收集所有大图的路径和值，稍后写回云端数据时按路径恢复
-  const collectBig = (value, path, out) => {
-    if (isBig(value)) { out.push([path, value]); return; }
-    if (Array.isArray(value)) value.forEach((v, i) => collectBig(v, path.concat(i), out));
-    else if (value && typeof value === 'object') Object.keys(value).forEach(k => collectBig(value[k], path.concat(k), out));
-  };
   const restoreBig = (target, pairs) => {
     pairs.forEach(([path, value]) => {
       let node = target;
@@ -48,6 +42,34 @@
       if (node && typeof node === 'object') node[path[path.length - 1]] = value;
     });
     return target;
+  };
+  // 压缩后的图约 60KB，单张能同步；但多张累加仍可能超过服务端上限。
+  // 总量预算：超限时把最大的图片字段让位（置空），保证请求永远不超；本机图片在 apply 时恢复。
+  const SYNC_BUDGET = 360000;
+  const isImage = value => typeof value === 'string' && value.indexOf('data:image/') === 0;
+  const fitBudget = records => {
+    const size = () => JSON.stringify(records).length;
+    if (size() <= SYNC_BUDGET) return;
+    const imgs = [];
+    const scan = (value, path) => {
+      if (isImage(value)) { imgs.push({ path, len: value.length }); return; }
+      if (Array.isArray(value)) value.forEach((v, i) => scan(v, path.concat(i)));
+      else if (value && typeof value === 'object') Object.keys(value).forEach(k => scan(value[k], path.concat(k)));
+    };
+    Object.entries(records).forEach(([idx, v]) => scan(v, [idx]));
+    imgs.sort((a, b) => b.len - a.len);
+    for (const it of imgs) {
+      if (size() <= SYNC_BUDGET) break;
+      let node = records;
+      for (let i = 0; i < it.path.length - 1; i++) node = node[it.path[i]];
+      if (node && typeof node === 'object') node[it.path[it.path.length - 1]] = '';
+    }
+  };
+  // 恢复本机图片：收集所有 data:image 字段（含压缩后的 60KB 图），不只超大字段
+  const collectImages = (value, path, out) => {
+    if (isImage(value)) { out.push([path, value]); return; }
+    if (Array.isArray(value)) value.forEach((v, i) => collectImages(v, path.concat(i), out));
+    else if (value && typeof value === 'object') Object.keys(value).forEach(k => collectImages(value[k], path.concat(k), out));
   };
   // 旧版同步键与页面不一致，导致自定义类型/设置从未真正同步。首次运行把旧记录搬过来，已有设置优先。
   try {
@@ -81,6 +103,7 @@
         }
       }
     }
+    fitBudget(records);
     return records;
   }
 
@@ -102,7 +125,7 @@
       if (scope === 'settings') {
         const localSettings = read(localStorage, key, {});
         const bigPairs = [];
-        collectBig(localSettings, [], bigPairs);
+        collectImages(localSettings, [], bigPairs);
         const merged = bigPairs.length ? restoreBig(data.settings, bigPairs) : data.settings;
         localStorage.setItem(key, JSON.stringify(merged));
       } else {
