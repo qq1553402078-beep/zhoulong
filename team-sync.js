@@ -6,7 +6,7 @@
     daily: 'studio-ops-daily-output-v1',
     monthly: 'studio-ops-monthly-output-v1',
     management: 'studio-ops-management-v1',
-    settings: 'studio-settings-v1',
+    settings: 'studio-ops-settings-v1',
     requests: 'studio-ops-requests-v1'
   };
   const cacheKey = 'studio-team-sync-baseline-v1';
@@ -16,6 +16,14 @@
     catch { return fallback; }
   };
   const equal = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+  // 旧版同步键与页面不一致，导致自定义类型/设置从未真正同步。首次运行把旧记录搬过来，已有设置优先。
+  try {
+    const oldSettings = read(localStorage, 'studio-settings-v1', null);
+    const currentSettings = read(localStorage, 'studio-ops-settings-v1', null);
+    if (oldSettings && Object.keys(oldSettings).length && (!currentSettings || !Object.keys(currentSettings).length)) {
+      localStorage.setItem('studio-ops-settings-v1', JSON.stringify(oldSettings));
+    }
+  } catch {}
 
   const sameRecords = (left, right) => Object.keys(left).length === Object.keys(right).length
     && Object.entries(left).every(([index, value]) => equal(value, right[index]));
