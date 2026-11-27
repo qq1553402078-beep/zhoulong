@@ -16,6 +16,11 @@
     catch { return fallback; }
   };
   const equal = (left, right) => JSON.stringify(left) === JSON.stringify(right);
+  // 管理后台上传的照片以 base64 存在设置里，一张图可达数 MB；服务端单请求上限约 300KB。
+  // 超大字段不进团队同步，仅保留在本机，避免 413 让整个团队同步卡死。
+  const BIG_FIELD = 120000;
+  const isBig = value => typeof value === 'string' && value.length > BIG_FIELD;
+  const stripBig = data => { const out = {...data}; Object.keys(out).forEach(k => { if (isBig(out[k])) delete out[k]; }); return out; };
   // 旧版同步键与页面不一致，导致自定义类型/设置从未真正同步。首次运行把旧记录搬过来，已有设置优先。
   try {
     const oldSettings = read(localStorage, 'studio-settings-v1', null);
@@ -41,7 +46,7 @@
           }
         }
       } else if (scope === 'settings') {
-        records[JSON.stringify([scope, 'all'])] = data;
+        records[JSON.stringify([scope, 'all'])] = stripBig(data);
       } else {
         for (const [period, value] of Object.entries(data)) {
           records[JSON.stringify([scope, period])] = value;
@@ -64,7 +69,15 @@
       } else if (Object.hasOwn(scopes, scope)) data[scope][id] = value;
     }
     for (const [scope, key] of Object.entries(scopes)) {
-      localStorage.setItem(key, JSON.stringify(data[scope]));
+      if (scope === 'settings') {
+        // 云端设置覆盖本机时，把本机的大图字段恢复回去，避免照片丢失
+        const localSettings = read(localStorage, key, {});
+        const bigFields = {};
+        Object.keys(localSettings).forEach(k => { if (isBig(localSettings[k])) bigFields[k] = localSettings[k]; });
+        localStorage.setItem(key, JSON.stringify({...data.settings, ...bigFields}));
+      } else {
+        localStorage.setItem(key, JSON.stringify(data[scope]));
+      }
     }
   }
 
