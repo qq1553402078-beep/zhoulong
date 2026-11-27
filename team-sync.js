@@ -70,7 +70,7 @@
 
   const control = document.createElement('button');
   control.type = 'button';
-  control.textContent = '连接团队同步';
+  control.textContent = '团队同步';
   document.querySelector('header nav').after(control);
   const status = document.createElement('span');
   status.setAttribute('role', 'status');
@@ -84,7 +84,7 @@
   if (code) localStorage.setItem(codeKey, code);
   const request = async (method, body) => {
     const response = await fetch(endpoint, {
-      method, body: body && JSON.stringify(body), signal: AbortSignal.timeout(10000),
+      method, body: body && JSON.stringify(body), signal: AbortSignal.timeout(20000),
       headers: { Authorization: 'Bearer ' + code, 'Content-Type': 'application/json' }
     });
     if (response.status === 401) throw new Error('团队访问码无效');
@@ -97,7 +97,9 @@
     if (!code || syncing || document.hidden) return;
     syncing = true;
     try {
-      for (let attempt = 0; attempt < 3; attempt++) {
+      for (let attempt = 0; attempt < 6; attempt++) {
+        // 多人同时保存时略微错开重试，避免一直撞在同一个版本上
+        if (attempt) await new Promise(resolve => setTimeout(resolve, 200 * attempt));
         const cloud = await request('GET');
         const local = capture();
         const baseline = read(localStorage, cacheKey, null);
@@ -131,20 +133,29 @@
         status.textContent = '已同步';
         return;
       }
-      throw new Error('有其他同事正在保存，稍后重试');
+      throw new Error('多人同时保存，稍后重试');
     } catch (error) {
-      status.textContent = (error.message === '团队访问码无效' ? error.message : '同步待重试') + ' · 本机记录已保留';
+      const reason = error.name === 'TimeoutError' || /timeout|abort/i.test(error.message || '') ? '连接超时'
+        : error.message === '团队访问码无效' ? '访问码无效'
+        : error.message === '云端暂不可用' ? '云端暂不可用'
+        : error.message === '多人同时保存，稍后重试' ? '多人同时保存'
+        : '网络异常';
+      status.textContent = '同步待重试（' + reason + '）· 本机记录已保留';
+      status.title = error.message || String(error);
     } finally {
       syncing = false;
     }
   }
 
-  control.onclick = () => {
+  // 点按钮直接重试；不需要每次输码（换码用 Shift+点击，保留入口）
+  control.onclick = event => {
     if (syncing) return;
-    const next = prompt('输入团队同步访问码', '');
-    if (!next?.trim()) return;
-    code = next.trim();
-    localStorage.setItem(codeKey, code);
+    if (event.shiftKey) {
+      const next = prompt('输入团队同步访问码', code || '');
+      if (!next?.trim()) return;
+      code = next.trim();
+      localStorage.setItem(codeKey, code);
+    }
     status.textContent = '连接中…';
     sync();
   };
