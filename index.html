@@ -407,7 +407,7 @@ const defaults={
  scheduleTitle:'拍摄排班',scheduleIntro:'按运营工单排班，拍摄内容和运营要求可直接在表内修改。',
  restTitle:'中台休息表',peopleTitle:'中台人效与产出看板',
  navHome:'首页',navTasks:'任务中心',navSchedule:'工作安排',navRest:'休息表',navPeople:'个人人效',navPlan:'产能规划',navAdmin:'管理后台',
- artwork:'',gallery:null,roster:defaultRoster,inactiveStaff:[],dailyGroups:[],innovationDeliverableOptions:[],innovationShotTypes:[],specialOptions:['无'],equipmentOptions:['手机1','手机2','手机3','相机1','相机2']
+ artwork:'',gallery:null,roster:defaultRoster,inactiveStaff:[],dailyGroups:[],innovationDeliverableOptions:[],innovationShotTypes:[],specialOptions:['无'],equipmentOptions:['14pro-1','14pro-2','15promax','索尼A7M4-1','索尼A7M4-2','索尼A7M4-3']
 };
 let settings={...defaults};
 try{settings={...defaults,...JSON.parse(localStorage.getItem(settingsKey)||'{}')}}catch{}
@@ -419,6 +419,14 @@ let roster,products,types,staff,roleNames,restStaff,activeNames;
   if(!Array.isArray(settings.equipmentOptions)||!settings.equipmentOptions.length){
    settings.equipmentOptions=[...defaults.equipmentOptions];
   }
+ // 一次性迁移：本机还是旧占位清单时换成真设备名；用户自己改过的清单不动
+ if(!settings.equipmentRevision){
+  const old=['手机1','手机2','手机3','相机1','相机2'];
+  const same=settings.equipmentOptions.length===old.length&&old.every((v,i)=>settings.equipmentOptions[i]===v);
+  if(same)settings.equipmentOptions=[...defaults.equipmentOptions];
+  settings.equipmentRevision=1;
+  try{localStorage.setItem(settingsKey,JSON.stringify(settings))}catch{}
+ }
  if(settings.shootingTitle==='承接的拍摄类型')settings.shootingTitle='拍摄类型';
  settings.roster={...defaultRoster,...settings.roster};
  if((settings.rosterRevision||0)<3){
@@ -2988,7 +2996,7 @@ function adminView(message=''){
  field('mentors','带教关系（每行一组，例如 杨建勋：游苗、陈丽娜）','area'))+
  panel('品类与拍摄类型',field('products','品类选项（每行一项）','area',products.join('\n'))+field('types','拍摄类型选项（每行一项）','area',types.join('\n'))+field('shooting','首页拍摄类型介绍（每行填写 类型：说明）','area'))+
  panel('人员特殊选项',field('specialOptions','人员选择框里的特殊选项（每行一项，例如 无、不需要、待定）。排班时可与真人互斥选择，用于对某些任务标记「无需此类人员」。','area',(settings.specialOptions||[]).join('\n'))+'<p class="wide">增删后点「保存网站设置」生效。特殊选项会出现在摄影师、手模、模特、摄助、修片的下拉里，排在真人前面；勾选后会自动取消已选真人。</p>')+
- panel('拍摄设备',field('equipmentOptions','拍摄设备清单（每行一项，可改名、增删。例如 手机1、手机2、手机3、相机1、相机2）','area',(settings.equipmentOptions||defaults.equipmentOptions).join('\n'))+'<p class="wide">每一项会出现在排班表「拍摄内容」里的「拍摄设备」一栏，可多选。改名后已安排任务里的设备名会自动更新；同一天同一设备被重复安排会给出黄色撞档提示（仍可保存）。</p>')+
+ panel('拍摄设备',field('equipmentOptions','拍摄设备清单（每行一项，可改名、增删。例如 14pro-1、索尼A7M4-1）','area',(settings.equipmentOptions||defaults.equipmentOptions).join('\n'))+'<p class="wide">每一项会出现在排班表「拍摄内容」里的「拍摄设备」一栏，可多选。改名后已安排任务里的设备名会自动更新；同一天同一设备被重复安排会给出黄色撞档提示（仍可保存）。</p>')+
  panel('交付时效与运营对接',field('shiftIntro','调休与交付说明','area')+field('normalTitle','常规时效标题')+field('urgentTitle','加急时效标题')+field('normalText','常规交付说明','area')+field('urgentText','加急交付说明','area')+
  field('opsLead','运营对接负责人')+field('opsSummary','对接职责')+field('orderFlow','下单与确认','area')+field('deliveryFlow','拍摄与交付','area')+field('feedbackFlow','反馈与复核','area'))+
  panel('产能规划',field('planTitle','页面标题')+field('planIntro','规划说明','area')+field('planNotes','补充安排','area'))+
@@ -3279,7 +3287,7 @@ document.addEventListener('focusout',()=>{
  if(!teamRefreshPending)return;
  setTimeout(()=>{if(!isEditingNow()){teamRefreshPending=false;renderPreserving()}},150);
 });
-</script><script src="access.js?v=access-13" defer></script><script src="team-sync.js?v=shared-settings-10" defer></script><script src="doubao-chat.js?v=ai-1" defer></script>
+</script><script src="access.js?v=access-13" defer></script><script src="team-sync.js?v=shared-settings-11" defer></script><script src="doubao-chat.js?v=ai-1" defer></script>
 <script>
 if('serviceWorker' in navigator && location.protocol==='https:'){
   window.addEventListener('load',function(){
