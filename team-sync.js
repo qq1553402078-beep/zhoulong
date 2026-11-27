@@ -16,11 +16,39 @@
     catch { return fallback; }
   };
   const equal = (left, right) => JSON.stringify(left) === JSON.stringify(right);
-  // 管理后台上传的照片以 base64 存在设置里，一张图可达数 MB；服务端单请求上限约 300KB。
-  // 超大字段不进团队同步，仅保留在本机，避免 413 让整个团队同步卡死。
+  // 管理后台上传的照片以 base64 存在设置里，一张图可达 650KB；服务端单请求上限约 300KB。
+  // 图片可能藏在数组里（gallery[].src），必须递归清理所有层级，否则仍会 413。
+  // 清理只影响上传副本，本机数据不动；云端写回时再把大图按原路径恢复。
   const BIG_FIELD = 120000;
   const isBig = value => typeof value === 'string' && value.length > BIG_FIELD;
-  const stripBig = data => { const out = {...data}; Object.keys(out).forEach(k => { if (isBig(out[k])) delete out[k]; }); return out; };
+  const stripBigDeep = value => {
+    if (isBig(value)) return '';
+    if (Array.isArray(value)) return value.map(stripBigDeep);
+    if (value && typeof value === 'object') {
+      const out = {};
+      Object.keys(value).forEach(k => { out[k] = stripBigDeep(value[k]); });
+      return out;
+    }
+    return value;
+  };
+  // 从本机当前数据里收集所有大图的路径和值，稍后写回云端数据时按路径恢复
+  const collectBig = (value, path, out) => {
+    if (isBig(value)) { out.push([path, value]); return; }
+    if (Array.isArray(value)) value.forEach((v, i) => collectBig(v, path.concat(i), out));
+    else if (value && typeof value === 'object') Object.keys(value).forEach(k => collectBig(value[k], path.concat(k), out));
+  };
+  const restoreBig = (target, pairs) => {
+    pairs.forEach(([path, value]) => {
+      let node = target;
+      for (let i = 0; i < path.length - 1; i++) {
+        const key = path[i];
+        if (node[key] == null || typeof node[key] !== 'object') return;
+        node = node[key];
+      }
+      if (node && typeof node === 'object') node[path[path.length - 1]] = value;
+    });
+    return target;
+  };
   // 旧版同步键与页面不一致，导致自定义类型/设置从未真正同步。首次运行把旧记录搬过来，已有设置优先。
   try {
     const oldSettings = read(localStorage, 'studio-settings-v1', null);
@@ -38,18 +66,18 @@
     for (const [scope, key] of Object.entries(scopes)) {
       const data = read(localStorage, key, (scope === 'tasks' || scope === 'requests') ? [] : {});
       if (scope === 'tasks' || scope === 'requests') {
-        for (const task of data) if (task?.id) records[JSON.stringify([scope, task.id])] = task;
+        for (const task of data) if (task?.id) records[JSON.stringify([scope, task.id])] = stripBigDeep(task);
       } else if (scope === 'rest' || scope === 'daily' || scope === 'monthly') {
         for (const [date, people] of Object.entries(data)) {
           for (const [name, value] of Object.entries(people ?? {})) {
-            records[JSON.stringify([scope, date, name])] = value;
+            records[JSON.stringify([scope, date, name])] = stripBigDeep(value);
           }
         }
       } else if (scope === 'settings') {
-        records[JSON.stringify([scope, 'all'])] = stripBig(data);
+        records[JSON.stringify([scope, 'all'])] = stripBigDeep(data);
       } else {
         for (const [period, value] of Object.entries(data)) {
-          records[JSON.stringify([scope, period])] = value;
+          records[JSON.stringify([scope, period])] = stripBigDeep(value);
         }
       }
     }
@@ -69,12 +97,14 @@
       } else if (Object.hasOwn(scopes, scope)) data[scope][id] = value;
     }
     for (const [scope, key] of Object.entries(scopes)) {
+      // 云端数据覆盖本机时，把本机的大图按原路径恢复回去，避免照片丢失。
+      // 大图只存在于设置（首页主视觉/配图/相册），且设置为固定对象结构，按路径恢复不会错位。
       if (scope === 'settings') {
-        // 云端设置覆盖本机时，把本机的大图字段恢复回去，避免照片丢失
         const localSettings = read(localStorage, key, {});
-        const bigFields = {};
-        Object.keys(localSettings).forEach(k => { if (isBig(localSettings[k])) bigFields[k] = localSettings[k]; });
-        localStorage.setItem(key, JSON.stringify({...data.settings, ...bigFields}));
+        const bigPairs = [];
+        collectBig(localSettings, [], bigPairs);
+        const merged = bigPairs.length ? restoreBig(data.settings, bigPairs) : data.settings;
+        localStorage.setItem(key, JSON.stringify(merged));
       } else {
         localStorage.setItem(key, JSON.stringify(data[scope]));
       }
