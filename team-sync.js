@@ -149,10 +149,18 @@
   let code = localStorage.getItem(codeKey) || sessionStorage.getItem(codeKey) || BUILTIN_CODE;
   if (code) localStorage.setItem(codeKey, code);
   const request = async (method, body) => {
-    const response = await fetch(endpoint, {
+    const send = useCode => fetch(endpoint, {
       method, body: body && JSON.stringify(body), signal: AbortSignal.timeout(20000),
-      headers: { Authorization: 'Bearer ' + code, 'Content-Type': 'application/json' }
+      headers: { Authorization: 'Bearer ' + useCode, 'Content-Type': 'application/json' }
     });
+    let response = await send(code);
+    // 本机存过错误访问码（以前手动输错过被记住）会自动回退到内置正确码并纠正本地存储，
+    // 之后所有人都不会再因为本机旧码一直卡在「访问码无效」。
+    if (response.status === 401 && code !== BUILTIN_CODE) {
+      code = BUILTIN_CODE;
+      try { localStorage.setItem(codeKey, code); sessionStorage.setItem(codeKey, code); } catch {}
+      response = await send(code);
+    }
     if (response.status === 401) throw new Error('团队访问码无效');
     // 409(版本冲突) 和 5xx(云端临时故障) 都交给外层重试，不再一次失败就放弃
     if (response.status === 409 || response.status >= 500) return null;
